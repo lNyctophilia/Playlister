@@ -496,9 +496,8 @@ class App:
         # Context Menu (Yedek olarak kalsın veya kaldırılabilir, kullanıcı buton istedi)
         # Ancak sağ tık yine de çalışabilir.
         
+        # Context Menu (Dinamik olarak show_context_menu içinde dolacak)
         self.context_menu_search = tk.Menu(self.root, tearoff=0)
-        self.context_menu_search.add_command(label="▶ Müziği Oynat", command=self.play_selected_song)
-        self.context_menu_search.add_command(label="🔗 Linki Kopyala", command=self.copy_link_selected_song)
         
         self.tree_pop.bind("<Button-3>", lambda e: self.show_context_menu(e, self.tree_pop, self.context_menu_search))
         self.tree_views.bind("<Button-3>", lambda e: self.show_context_menu(e, self.tree_views, self.context_menu_search))
@@ -1332,6 +1331,9 @@ class App:
         self.tree_fav.tag_configure('odd', background='#f9f9f9')
         self.tree_fav.tag_configure('even', background='white')
         
+        # Sağ tık menüsü (Mod 1'deki menüyü kullan)
+        self.tree_fav.bind("<Button-3>", lambda e: self.show_context_menu(e, self.tree_fav, self.context_menu_search))
+        
     def load_fav_ui(self):
         # Temizle
         for item in self.tree_fav.get_children():
@@ -1500,9 +1502,93 @@ class App:
 
     def show_context_menu(self, event, tree, menu):
         item = tree.identify_row(event.y)
-        if item:
-            tree.selection_set(item)
-            menu.post(event.x_root, event.y_root)
+        if not item: return
+        
+        tree.selection_set(item)
+        
+        # Mod 1 (Arama) ve Mod 4 (Fav) için Dinamik Menü
+        is_search_tree = (tree in [self.tree_pop, self.tree_views, self.tree_smart])
+        is_fav_tree = (tree == self.tree_fav)
+        
+        if is_search_tree or is_fav_tree:
+             # Menüyü temizle ve yeniden oluştur
+             menu.delete(0, tk.END)
+             
+             # Veriyi çek
+             video_id = None
+             song_title = ""
+             
+             if is_search_tree:
+                 vals = tree.item(item)['values']
+                 # values=(Sıra, Şarkı, Sanatçı, Albüm, Dinlenme, Süre, İşlemler, VideoID)
+                 if len(vals) >= 8:
+                     video_id = vals[7] # VideoID gizli kolon
+                     song_title = f"{vals[1]} - {vals[2]}"
+             elif is_fav_tree:
+                 data = self.fav_map.get(item)
+                 if data:
+                     video_id = data.get('video_id')
+                     song_title = f"{data.get('title')} - {data.get('artist')}"
+            
+             if video_id:
+                 menu.add_command(label="▶ Müziği Oynat", command=lambda: self.play_music_start(video_id, song_title))
+                 menu.add_command(label="🔗 Linki Kopyala", command=lambda: self.copy_link_by_id(video_id))
+                 menu.add_separator()
+                 
+                 is_fav = self.is_favorite(video_id)
+                 if is_fav:
+                     menu.add_command(label="💔 Favorilerden Çıkar", command=lambda: self.context_toggle_fav(video_id, tree, item))
+                 else:
+                     menu.add_command(label="❤ Favorilere Ekle", command=lambda: self.context_toggle_fav(video_id, tree, item))
+             
+             menu.post(event.x_root, event.y_root)
+             
+        else:
+             # Diğer modlar (Chart/Genre) için varsayılan davranış (statik menü)
+             menu.post(event.x_root, event.y_root)
+
+    def context_toggle_fav(self, video_id, tree, item):
+        # Şarkı verisini toparla
+        song_data = {}
+        if tree in [self.tree_pop, self.tree_views, self.tree_smart]:
+             vals = tree.item(item)['values']
+             # ("Sıra", "Şarkı", "Sanatçı", "Albüm", "Dinlenme", "Süre", "İşlemler", "VideoID")
+             song_data = {
+                 "video_id": video_id,
+                 "title": vals[1],
+                 "artist": vals[2],
+                 "album": vals[3],
+                 "views_text": vals[4],
+                 "duration": vals[5]
+             }
+        elif tree == self.tree_fav:
+             song_data = self.fav_map.get(item)
+             
+        is_added = self.toggle_favorite(song_data)
+        
+        # UI Güncelleme Logic
+        if tree == self.tree_fav:
+            # Favoriler ekranındayız
+            if not is_added: # Çıkarıldı
+                self.tree_fav.delete(item)
+                if item in self.fav_map: del self.fav_map[item]
+                self.update_status("Favorilerden çıkarıldı.", "orange")
+        else:
+            # Arama ekranındayız, ikonu güncelle
+            vals = tree.item(item)['values']
+            # Tuple değiştirilemez, listeye çevirip güncelle
+            # values=(Sıra, Şarkı, Sanatçı, Albüm, Dinlenme, Süre, İşlemler, VideoID)
+            if len(vals) >= 7:
+                new_icon = "♥" if is_added else "♡"
+                new_action_text = f"🔗             ▶             {new_icon}" # Boşlukları koru
+                
+                # Sadece set metoduyla spesifik kolonu güncellemek daha güvenlidir
+                tree.set(item, "İşlemler", new_action_text)
+                
+            if is_added:
+                self.update_status("Favorilere eklendi.", "green")
+            else:
+                self.update_status("Favorilerden çıkarıldı.", "orange")
 
     def play_by_id(self, video_id):
         if video_id:
