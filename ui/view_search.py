@@ -208,9 +208,16 @@ class ViewSearch:
             fetch_limit = min(target_count * 4, 1500) 
             self.update_status(f"Hedef: {artist_true_name}. Şarkılar taranıyor... (Geniş Tarama: {fetch_limit})")
             
-            song_results = self.yt.search(query=f"{artist_true_name}", filter="songs", limit=fetch_limit)
+            # Hem Şarkıları Hem Videoları Tara (Remixler genelde video kategorisinde olabilir)
+            self.update_status(f"Hedef: {artist_true_name}. Şarkılar ve Videolar taranıyor... (Geniş Tarama: {fetch_limit})")
             
-            if not song_results:
+            song_results = self.yt.search(query=f"{artist_true_name}", filter="songs", limit=fetch_limit)
+            video_results = self.yt.search(query=f"{artist_true_name}", filter="videos", limit=fetch_limit)
+            
+            # Sonuçları birleştir
+            combined_results = (song_results or []) + (video_results or [])
+            
+            if not combined_results:
                 self.update_status("Şarkı bulunamadı.", "red")
                 return
             
@@ -219,16 +226,59 @@ class ViewSearch:
             observed_video_ids = set()
             observed_titles = set()
             
-            for song in song_results:
+            for song in combined_results:
                 if self.stop_listing:
                     self.update_status("Arama kullanıcı tarafından durduruldu.", "red")
                     break
                     
                 artists = song.get('artists', [])
-                a_names = [a['name'].lower() for a in artists]
+                if not artists: continue 
                 
-                # Sanatçı doğrulama
-                if artist_true_name.lower() not in a_names and artist_name.lower() not in a_names:
+                # --- Sanatçı Doğrulama (Akıllı ve Katı Mod) ---
+                # Sorun: "UZI" aratınca "Lil Uzi Vert" çıkmamalı (Substring hatası)
+                # Sorun: "Motive & Pango" aratınca "Motive x Pango" formatındakiler de bulunmalı
+                # Sorun: "Ajdar Anık" (harf duyarlılığı) çözülmeli
+                
+                # 1. Şarkının sanatçı listesini al ve parçala (örn: "Motive x Pango" -> ["motive", "pango"])
+                raw_artists = [a['name'] for a in artists]
+                expanded_song_artists = set()
+                
+                # YouTube bazen sanatçıları "A x B" veya "A & B" diye tek string olarak döner. Bunları ayıralım.
+                separators = [" ft ", " ft.", " feat ", " feat.", " featuring ", " & ", " x ", " ve ", ",", " and ", "/", " + "]
+                
+                for r_art in raw_artists:
+                    # Case-insensitive işlem için lowercase/casefold
+                    temp_art = r_art.lower() if hasattr(r_art, 'lower') else str(r_art).lower()
+                    
+                    # Tüm ayraçları tek bir ayraça (|) çevir
+                    for sep in separators:
+                        temp_art = temp_art.replace(sep, "|")
+                    
+                    # Parçala ve temizle
+                    tokens = [t.strip() for t in temp_art.split("|") if t.strip()]
+                    expanded_song_artists.update(tokens)
+
+                # 2. Aranacak kelimeleri hazırla
+                search_targets = set()
+                
+                # Girilen metni parçala (Motive & Pango -> Motive, Pango)
+                user_query_parts = artist_name.lower().replace(" & ", "&").replace(" ve ", "&").replace(",", "&").split("&")
+                for q in user_query_parts:
+                    clean_q = q.strip()
+                    if clean_q: search_targets.add(clean_q)
+                
+                if artist_true_name:
+                    search_targets.add(artist_true_name.lower().strip())
+                
+                # 3. Eşleştirme (Tam Eşleşme)
+                # target "uzi" ise, artist listesinde tam olarak "uzi" olmalı. "lil uzi vert" olamaz.
+                match_found = False
+                for target in search_targets:
+                    if target in expanded_song_artists:
+                        match_found = True
+                        break
+                
+                if not match_found:
                     continue
 
                 processed_count += 1
@@ -252,7 +302,7 @@ class ViewSearch:
                 data = {
                     "title": title,
                     "artist": ", ".join([a['name'] for a in artists]),
-                    "album": song.get('album', {}).get('name', 'Single'),
+                    "album": song.get('album', {}).get('name', 'Single'), # Videolarda albüm olmayabilir
                     "views_text": song.get('views', '0'),
                     "duration": song.get('duration', ''),
                     "video_id": vid_id
