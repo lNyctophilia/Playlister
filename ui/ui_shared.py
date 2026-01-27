@@ -3,6 +3,7 @@ from tkinter import ttk, messagebox
 import webbrowser
 import json
 import os
+from utils_downloader import Downloader
 
 FAV_FILE = "favorites.json"
 
@@ -94,9 +95,9 @@ class UiShared:
                 x, y, w, h = bbox
                 click_relative_x = event.x - x
                 
-                # Hücreyi üçe böl: Link, Play, Fav
-                # Text: "🔗   ▶   ♥"
-                section = w / 3
+                # Hücreyi 4'e böl: Link, Play, Fav, Download
+                # Text formatı: "🔗   ▶   [♥|♡]   [⬇|🗑]"
+                section = w / 4
                 
                 vals = tree.item(item_id)['values']
                 # Make sure we have enough values
@@ -111,7 +112,7 @@ class UiShared:
                     # Play
                     song_title = f"{vals[1]} - {vals[2]}"
                     self.play_music_start(video_id, song_title)
-                else:
+                elif click_relative_x < section * 3:
                     # Fav Toggle
                     # Mevcut veriyi al
                     # Construct song data based on columns
@@ -129,7 +130,13 @@ class UiShared:
                     
                     # UI güncelle
                     new_icon = "♥" if is_added else "♡"
-                    new_action_text = f"🔗             ▶             {new_icon}"
+                    
+                    # Mevcut download ikonunu koru
+                    old_text = vals[6] # "🔗    ▶    ♥    ⬇"
+                    dl_part = old_text.split()[-1] if old_text else "⬇"
+                    if dl_part not in ["⬇", "🗑"]: dl_part = "⬇" # Fallback
+                    
+                    new_action_text = f"🔗    ▶    {new_icon}    {dl_part}"
                     
                     # Update Treeview Cell
                     tree.set(item_id, "İşlemler", new_action_text)
@@ -138,8 +145,48 @@ class UiShared:
                         self.update_status("Favorilere eklendi.", "green")
                     else:
                         self.update_status("Favorilerden çıkarıldı.", "orange")
+                else:
+                    # Download İşlemi
+                    self.handle_shared_download_click(tree, item_id, vals)
         except Exception as e:
             print(f"Click Error: {e}")
+
+    def handle_shared_download_click(self, tree, item_id, vals):
+        video_id = vals[7]
+        title = vals[1]
+        artist = vals[2]
+        
+        if Downloader.is_downloaded(video_id, artist, title):
+            if messagebox.askyesno("Sil", f"'{title}' dosyası silinsin mi?"):
+                if Downloader.delete_content(video_id, artist, title):
+                    self.update_row_dl_icon(tree, item_id, "⬇")
+                    self.update_status("Silindi.", "orange")
+        else:
+            self.update_status(f"İndiriliyor: {title}...", "blue")
+            import threading
+            threading.Thread(target=self.shared_download_thread, args=(tree, item_id, video_id, title, artist), daemon=True).start()
+
+    def shared_download_thread(self, tree, item_id, video_id, title, artist):
+        def cb(success, msg):
+            if success:
+                self.root.after(0, lambda: self.update_row_dl_icon(tree, item_id, "🗑"))
+                self.update_status(f"İndirildi: {title}", "green")
+            else:
+                 self.update_status(f"Hata: {msg}", "red")
+        Downloader.download_song(video_id, title, artist, cb)
+
+    def update_row_dl_icon(self, tree, item_id, icon):
+        if not tree.exists(item_id): return
+        current_vals = tree.item(item_id)['values']
+        # current action text -> index 6
+        old_text = current_vals[6]
+        # "🔗    ▶    [♥|♡]    OLD"
+        parts = old_text.split()
+        if len(parts) >= 3:
+            # Reconstruct with new icon
+            # parts[0]=Link, parts[1]=Play, parts[2]=Fav
+            new_text = f"{parts[0]}    {parts[1]}    {parts[2]}    {icon}"
+            tree.set(item_id, "İşlemler", new_text)
 
     def show_context_menu(self, event, tree, menu):
         item = tree.identify_row(event.y)
@@ -183,6 +230,28 @@ class UiShared:
                      menu.add_command(label="💔 Favorilerden Çıkar", command=lambda v=video_id, tr=tree, it=item: self.context_toggle_fav(v, tr, it))
                  else:
                      menu.add_command(label="❤ Favorilere Ekle", command=lambda v=video_id, tr=tree, it=item: self.context_toggle_fav(v, tr, it))
+                 
+                 menu.add_separator()
+                 menu.add_separator()
+                 # İsim bazlı kontrol için artist/title'a ihtiyacımız var ama burada sadece video_id var
+                 # Map üzerinden almayı deneyelim veya title string'den parse edelim
+                 # Treeview ise item values'den alabiliriz
+                 
+                 artist_chk = ""
+                 title_chk = ""
+                 
+                 # Basit çözüm: Treeview'den çek
+                 vals = tree.item(item)['values']
+                 if len(vals) >= 3:
+                     # values=(Sıra, Şarkı, Sanatçı, ...)
+                     title_chk = vals[1]
+                     artist_chk = vals[2]
+                     
+                 is_down = Downloader.is_downloaded(video_id, artist_chk, title_chk)
+                 if is_down:
+                     menu.add_command(label="🗑 Dosyayı Sil", command=lambda v=video_id, tr=tree, it=item, t=song_title: self.context_delete_file(v, tr, it, t))
+                 else:
+                     menu.add_command(label="⬇ İndir", command=lambda v=video_id, tr=tree, it=item, t=song_title: self.context_download_file(v, tr, it, t))
              
              menu.post(event.x_root, event.y_root)
              
@@ -233,3 +302,33 @@ class UiShared:
                 self.update_status("Favorilere eklendi.", "green")
             else:
                 self.update_status("Favorilerden çıkarıldı.", "orange")
+
+    def context_download_file(self, video_id, tree, item, title_full):
+        # Title parse (Artist - Song)
+        # title_full format: "Song - Artist" usually
+        parts = title_full.rsplit(' - ', 1) 
+        if len(parts) > 1:
+            title = parts[0]
+            artist = parts[1]
+        else:
+            title = title_full
+            artist = ""
+        
+        self.update_status(f"İndiriliyor: {title}...", "blue")
+        import threading
+        threading.Thread(target=self.shared_download_thread, args=(tree, item, video_id, title, artist), daemon=True).start()
+
+    def context_delete_file(self, video_id, tree, item, title_full):
+        # Parse title/artist from full title string or just use what we have
+        parts = title_full.rsplit(' - ', 1) 
+        if len(parts) > 1:
+            title = parts[0]
+            artist = parts[1]
+        else:
+            title = title_full
+            artist = ""
+
+        if messagebox.askyesno("Sil", "Dosya silinsin mi?"):
+            if Downloader.delete_content(video_id, artist, title):
+                 self.root.after(0, lambda: self.update_row_dl_icon(tree, item, "⬇"))
+                 self.update_status("Silindi.", "orange")
