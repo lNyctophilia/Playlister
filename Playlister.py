@@ -85,7 +85,7 @@ def decrypt_text(text):
 class App:
     def __init__(self, root):
         self.root = root
-        self.root.title("Playlister - YouTube Music")
+        self.root.title("Playlister")
         self.root.geometry("1100x700")
         
         try:
@@ -388,7 +388,7 @@ class App:
         btn_frame = tk.Frame(self.player_frame, bg="#202020")
         btn_frame.grid(row=0, column=0, rowspan=2, padx=10)
         
-        self.btn_player_play = tk.Button(btn_frame, text="▶", font=("Arial", 14), 
+        self.btn_player_play = tk.Button(btn_frame, text="▶", font=("Arial", 14), width=4, 
                                          command=self.toggle_player_state, 
                                          bg="#202020", fg="white", bd=0, activebackground="#404040", activeforeground="white")
         self.btn_player_play.pack(side=tk.LEFT, padx=5)
@@ -611,7 +611,7 @@ class App:
                     
                     is_fav = self.is_favorite(song['video_id'])
                     fav_icon = "♥" if is_fav else "♡"
-                    action_text = f"🔗   ▶   {fav_icon}"
+                    action_text = f"🔗             ▶             {fav_icon}"
 
                     iid = tree.insert("", "end", values=(
                         str(i + 1), song['title'], song['artist'], song['album'], 
@@ -1340,7 +1340,7 @@ class App:
         # Sanatçı ismiyle sırala
         sorted_favs = sorted(favs, key=lambda x: x.get('artist', '').lower())
         
-        action_text = "🔗   ▶   ♥" # Favoriler listesinde zaten favori olduğu için dolu kalp
+        action_text = "🔗             ▶             ♥" # Favoriler listesinde zaten favori olduğu için dolu kalp
         
         for i, song in enumerate(sorted_favs):
              tag = 'odd' if (i + 1) % 2 == 1 else 'even'
@@ -1460,7 +1460,7 @@ class App:
                     
                     # UI güncelle
                     new_icon = "♥" if is_added else "♡"
-                    new_action_text = f"🔗   ▶   {new_icon}"
+                    new_action_text = f"🔗             ▶             {new_icon}"
                     
                     # Update Treeview Cell
                     # Treeview set metodu: item, column_id, value

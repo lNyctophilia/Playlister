@@ -32,14 +32,6 @@
         "duration": "2:30"
     },
     {
-        "video_id": "eN6hMB18P1w",
-        "title": "Italy Forma",
-        "artist": "Ati242",
-        "album": "Manifesto",
-        "views_text": "68M",
-        "duration": "3:02"
-    },
-    {
         "video_id": "8dYXgp5TbHc",
         "title": "Değişmene Rağmen",
         "artist": "Ati242",
@@ -94,5 +86,13 @@
         "album": "Unutulmayanlar (Unutulan)",
         "views_text": "42M",
         "duration": "4:42"
+    },
+    {
+        "video_id": "eN6hMB18P1w",
+        "title": "Her Nerdeysen",
+        "artist": "Ati242",
+        "album": "Manifesto",
+        "views_text": "41M",
+        "duration": "2:30"
     }
 ]
