@@ -38,7 +38,7 @@ class ViewFav:
         self.tree_fav.column("Albüm", width=140)
         self.tree_fav.column("Dinlenme", width=90)
         self.tree_fav.column("Süre", width=60)
-        self.tree_fav.column("İşlemler", width=160, anchor=tk.CENTER) # Genişletildi
+        self.tree_fav.column("İşlemler", width=240, anchor=tk.CENTER) # Genişletildi
         
         sb = ttk.Scrollbar(self.fav_view, orient=tk.VERTICAL, command=self.tree_fav.yview)
         self.tree_fav.configure(yscroll=sb.set)
@@ -91,7 +91,7 @@ class ViewFav:
              dl_icon = "🗑" if is_downloaded else "⬇"
              
              # Action text: Link | Play | Fav | Download
-             full_action_text = f"🔗    ▶    ♥    {dl_icon}"
+             full_action_text = f"🔗            ▶            ♥            {dl_icon}"
              
              iid = self.tree_fav.insert("", "end", values=(
                  str(i + 1), 
@@ -253,7 +253,7 @@ class ViewFav:
         if self.tree_fav.exists(item_id):
             # Mevcut texti alıp son ikonu güncelle
             # Text format: "🔗    ▶    ♥    ICON"
-            new_text = f"🔗    ▶    ♥    {dl_icon}"
+            new_text = f"🔗            ▶            ♥            {dl_icon}"
             self.tree_fav.set(item_id, "İşlemler", new_text)
             self.refresh_action_buttons_state()
 

@@ -114,7 +114,7 @@ class ViewSearch:
         tree.column("Albüm", width=140)
         tree.column("Dinlenme", width=90)
         tree.column("Süre", width=60)
-        tree.column("İşlemler", width=160, anchor=tk.CENTER) # Butonlar için kolon (Link, Play, Fav, DL)
+        tree.column("İşlemler", width=240, anchor=tk.CENTER) # Butonlar için kolon (Link, Play, Fav, DL)
         
         # Scrollbar Ekle
         sb = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=tree.yview)
@@ -180,7 +180,7 @@ class ViewSearch:
                     is_down = Downloader.is_downloaded(song['video_id'], song.get('artist'), song.get('title'))
                     dl_icon = "🗑" if is_down else "⬇"
                     
-                    action_text = f"🔗    ▶    {fav_icon}    {dl_icon}"
+                    action_text = f"🔗            ▶            {fav_icon}            {dl_icon}"
 
                     iid = tree.insert("", "end", values=(
                         str(i + 1), song['title'], song['artist'], song['album'], 

@@ -136,7 +136,7 @@ class UiShared:
                     dl_part = old_text.split()[-1] if old_text else "⬇"
                     if dl_part not in ["⬇", "🗑"]: dl_part = "⬇" # Fallback
                     
-                    new_action_text = f"🔗    ▶    {new_icon}    {dl_part}"
+                    new_action_text = f"🔗            ▶            {new_icon}            {dl_part}"
                     
                     # Update Treeview Cell
                     tree.set(item_id, "İşlemler", new_action_text)
@@ -185,7 +185,7 @@ class UiShared:
         if len(parts) >= 3:
             # Reconstruct with new icon
             # parts[0]=Link, parts[1]=Play, parts[2]=Fav
-            new_text = f"{parts[0]}    {parts[1]}    {parts[2]}    {icon}"
+            new_text = f"{parts[0]}            {parts[1]}            {parts[2]}            {icon}"
             tree.set(item_id, "İşlemler", new_text)
 
     def show_context_menu(self, event, tree, menu):
@@ -295,7 +295,13 @@ class UiShared:
             vals = tree.item(item)['values']
             if len(vals) >= 7:
                 new_icon = "♥" if is_added else "♡"
-                new_action_text = f"🔗             ▶             {new_icon}" 
+                old_text = vals[6]
+                parts = old_text.split()
+                dl_part = parts[-1] if parts else "⬇"
+                if dl_part not in ["⬇", "🗑"]: dl_part = "⬇"
+                
+                new_icon = "♥" if is_added else "♡"
+                new_action_text = f"🔗            ▶            {new_icon}            {dl_part}" 
                 tree.set(item, "İşlemler", new_action_text)
                 
             if is_added:
