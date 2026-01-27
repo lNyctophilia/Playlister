@@ -68,7 +68,11 @@ class ViewFav:
         self.fav_map.clear()
         
         # Verileri al ve sırala
-        favs = self.load_favorites()
+        self.favorites = self.load_favorites()
+        favs = self.favorites
+        
+        self.refresh_action_buttons_state()
+
         if not favs:
             self.update_status("Favori listeniz boş.", "blue")
             return
@@ -101,6 +105,34 @@ class ViewFav:
              self.fav_map[iid] = song 
 
         self.update_status(f"Favoriler listelendi: {len(favs)} şarkı.", "green")
+
+    def refresh_action_buttons_state(self):
+        """
+        Favori listesindeki indirilme durumuna göre butonları
+        aktif veya pasif yapar.
+        """
+        if not hasattr(self, 'favorites') or not self.favorites:
+            self.btn_download_all.config(state=tk.DISABLED)
+            self.btn_delete_all_dl.config(state=tk.DISABLED)
+            return
+
+        total = len(self.favorites)
+        downloaded = 0
+        for s in self.favorites:
+            if Downloader.is_downloaded(s.get('video_id'), s.get('artist'), s.get('title')):
+                downloaded += 1
+        
+        # Tümü indirilmişse -> İndir butonu pasif
+        if downloaded == total and total > 0:
+            self.btn_download_all.config(state=tk.DISABLED)
+        else:
+            self.btn_download_all.config(state=tk.NORMAL)
+            
+        # Hiçbiri indirilmemişse -> Sil butonu pasif
+        if downloaded == 0:
+            self.btn_delete_all_dl.config(state=tk.DISABLED)
+        else:
+            self.btn_delete_all_dl.config(state=tk.NORMAL)
 
     def on_fav_list_click(self, event):
         try:
@@ -140,6 +172,7 @@ class ViewFav:
                         self.toggle_favorite(song_data)
                         self.tree_fav.delete(item_id)
                         del self.fav_map[item_id]
+                        self.refresh_action_buttons_state()
                 else:
                     # Download / Delete (Buton 4)
                     self.handle_download_click(item_id, song_data)
@@ -222,6 +255,7 @@ class ViewFav:
             # Text format: "🔗    ▶    ♥    ICON"
             new_text = f"🔗    ▶    ♥    {dl_icon}"
             self.tree_fav.set(item_id, "İşlemler", new_text)
+            self.refresh_action_buttons_state()
 
     def download_all_favs(self):
         favs = self.load_favorites()
