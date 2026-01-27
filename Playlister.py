@@ -214,6 +214,12 @@ class App:
         
         # Startup check trigger removed
         
+        self.stop_listing = False
+        
+    def stop_current_listing(self):
+        self.stop_listing = True
+        self.update_status("Durduruluyor...", "orange")
+        
     def load_favorites(self):
         if os.path.exists(FAV_FILE):
              try:
@@ -438,6 +444,9 @@ class App:
         
         self.btn_search = tk.Button(top_frame, text="Şarkıları Ara", command=self.start_search, bg="#2196F3", fg="white")
         self.btn_search.pack(side=tk.LEFT, padx=10)
+
+        self.btn_search_stop = tk.Button(top_frame, text="Durdur", command=self.stop_current_listing, bg="#F44336", fg="white")
+        self.btn_search_stop.pack(side=tk.LEFT, padx=2)
         
         # Limit Seçimi
         tk.Label(top_frame, text="Limit:").pack(side=tk.LEFT, padx=(10, 2))
@@ -586,6 +595,7 @@ class App:
             self.entry_search_limit.insert(0, "50")
             
         self.btn_search.config(state=tk.DISABLED)
+        self.stop_listing = False
         self.update_status(f"Hazırlanıyor... (Limit: {limit})", "blue")
         threading.Thread(target=self.search_artist_thread, args=(artist_name, limit), daemon=True).start()
 
@@ -640,6 +650,10 @@ class App:
             observed_titles = set()
             
             for song in song_results:
+                if self.stop_listing:
+                    self.update_status("Arama kullanıcı tarafından durduruldu.", "red")
+                    break
+                    
                 artists = song.get('artists', [])
                 a_names = [a['name'].lower() for a in artists]
                 
@@ -789,6 +803,9 @@ class App:
         self.btn_chart_load = tk.Button(ctrl_frame, text="Listele", command=self.start_chart_load, bg="#FF9800", fg="white", width=25)
         self.btn_chart_load.pack(side=tk.LEFT, padx=20)
         
+        self.btn_chart_stop = tk.Button(ctrl_frame, text="Durdur", command=self.stop_current_listing, bg="#F44336", fg="white", width=10)
+        self.btn_chart_stop.pack(side=tk.LEFT, padx=5)
+        
         self.lbl_chart_progress = tk.Label(ctrl_frame, text="", fg="gray")
         self.lbl_chart_progress.pack(side=tk.LEFT)
         
@@ -868,6 +885,9 @@ class App:
             self.tree_chart.delete(item)
         self.chart_map.clear()
             
+        self.chart_map.clear()
+        
+        self.stop_listing = False
         threading.Thread(target=self.load_charts_thread, args=(country_code, limit), daemon=True).start()
 
     def update_chart_progress(self, text, insert_item=None):
@@ -914,6 +934,10 @@ class App:
             self.update_status(f"Toplam {total_artists} sanatçı bulundu. Detaylı dinlenme verileri çekiliyor...", "orange")
 
             for idx, art in enumerate(artists):
+                if self.stop_listing:
+                    self.update_status("Listeleme durduruldu.", "red")
+                    break
+
                 browse_id = art.get('browseId')
                 name = art.get('title', 'Bilinmiyor')
                 views_text = "..."
@@ -1001,6 +1025,9 @@ class App:
                                         command=self.start_genre_load, 
                                         bg="#b90000", fg="white", width=25)
         self.btn_genre_load.pack(side=tk.LEFT, padx=10)
+
+        self.btn_genre_stop = tk.Button(ctrl_frame, text="Durdur", command=self.stop_current_listing, bg="#F44336", fg="white", width=10)
+        self.btn_genre_stop.pack(side=tk.LEFT, padx=5)
         
         self.lbl_genre_progress = tk.Label(ctrl_frame, text="", fg="gray")
         self.lbl_genre_progress.pack(side=tk.LEFT)
@@ -1117,6 +1144,7 @@ class App:
         for item in self.tree_genre.get_children():
             self.tree_genre.delete(item)
             
+        self.stop_listing = False
         threading.Thread(target=self.load_genre_thread, args=(genre, country_name, limit), daemon=True).start()
 
     def update_genre_progress(self, text, insert_item=None):
@@ -1196,6 +1224,10 @@ class App:
             self.update_status(f"{len(artists)} sanatçı bulundu. Listeleniyor...", "orange")
             
             for i, art in enumerate(artists):
+                if self.stop_listing:
+                    self.update_status("Tür taraması durduruldu.", "red")
+                    break
+                    
                 name = art.get('name')
                 if not name: continue
 
