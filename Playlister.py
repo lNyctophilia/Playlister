@@ -548,7 +548,7 @@ class App:
                     insert_item['rank'], insert_item['title'], insert_item['views_text'], insert_item['trend'], "🔍"
                 ), tags=(tag_zebra,))
                 self.chart_map[iid] = insert_item['title']
-                self.tree_chart.see(iid) # Otomatik kaydır
+                # self.tree_chart.see(iid) # Otomatik kaydır iptal edildi
         self.root.after(0, _update)
 
     def load_charts_thread(self, country_code, limit):
