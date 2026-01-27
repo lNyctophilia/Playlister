@@ -10,6 +10,15 @@ import base64
 import os
 from tkinter import simpledialog
 import webbrowser
+import os
+
+FAV_FILE = "favorites.json"
+try:
+    import vlc
+    import yt_dlp
+except ImportError:
+    vlc = None
+    yt_dlp = None
 
 
 def parse_views(view_text):
@@ -131,6 +140,12 @@ class App:
                                         bg="#ddd", fg="#333", relief=tk.RAISED)
         self.btn_mode_genre.pack(side=tk.LEFT, padx=5, pady=5)
 
+        self.btn_mode_fav = tk.Button(self.nav_frame, text="❤ Favoriler",
+                                        command=self.show_fav_view,
+                                        font=("Helvetica", 10, "bold"),
+                                        bg="#ddd", fg="#333", relief=tk.RAISED)
+        self.btn_mode_fav.pack(side=tk.LEFT, padx=5, pady=5)
+
         # Ayarlar Butonu (Sağ Üst)
         self.btn_settings = tk.Button(self.nav_frame, text="⚙ Ayarlar",
                                       command=self.open_settings,
@@ -147,14 +162,34 @@ class App:
         self.search_view = tk.Frame(self.container)
         self.chart_view = tk.Frame(self.container)
         self.genre_view = tk.Frame(self.container)
+        self.fav_view = tk.Frame(self.container)
         
         # Status Bar
         self.status_bar = tk.Label(root, text="Hazır", bd=1, relief=tk.SUNKEN, anchor=tk.W, bg="#f0f0f0", font=("Consolas", 9))
         self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
 
+        # Player Init
+        self.vlc_instance = None
+        self.player = None
+        self.is_playing = False
+        self.is_looping = False
+        self.current_video_id = None
+        self.total_duration = 0
+        self.is_dragging_time = False
+        
+        if vlc:
+            try:
+                self.vlc_instance = vlc.Instance()
+                self.player = self.vlc_instance.media_player_new()
+            except Exception as e:
+                print(f"VLC Init Error: {e}")
+                
+        self.setup_player_view()
+
         self.setup_search_view()
         self.setup_chart_view()
         self.setup_genre_view()
+        self.setup_fav_view()
         
         # Varsayılan görünüm
         self.show_search_view()
@@ -163,6 +198,8 @@ class App:
         self.song_map = {} 
         self.song_map = {} 
         self.chart_map = {} 
+        self.fav_map = {} # Mode 4 map
+        self.favorites = self.load_favorites()
         # Ikon tanımları artık gerekli değil, text rengi kullanılacak
         
         # Last.fm API Init
@@ -176,7 +213,47 @@ class App:
         # We need to insert the settings button in __init__ nav section
         
         # Startup check trigger removed
-        # self.root.after(500, self.startup_check)
+        
+    def load_favorites(self):
+        if os.path.exists(FAV_FILE):
+             try:
+                 with open(FAV_FILE, "r", encoding="utf-8") as f:
+                     return json.load(f)
+             except:
+                 return []
+        return []
+
+    def save_favorites(self):
+        try:
+            with open(FAV_FILE, "w", encoding="utf-8") as f:
+                json.dump(self.favorites, f, indent=4, ensure_ascii=False)
+        except Exception as e:
+            print(f"Fav Save Error: {e}")
+
+    def is_favorite(self, video_id):
+        return any(f['video_id'] == video_id for f in self.favorites)
+
+    def toggle_favorite(self, song_data):
+        video_id = song_data.get('video_id')
+        if self.is_favorite(video_id):
+            # Remove
+            self.favorites = [f for f in self.favorites if f['video_id'] != video_id]
+            self.save_favorites()
+            return False # Removed
+        else:
+            # Add
+            # Minimize data to save
+            saved_item = {
+                "video_id": video_id,
+                "title": song_data.get('title'),
+                "artist": song_data.get('artist'),
+                "album": song_data.get('album'),
+                "views_text": song_data.get('views_text'),
+                "duration": song_data.get('duration')
+            }
+            self.favorites.append(saved_item)
+            self.save_favorites()
+            return True # Added
 
 
         
@@ -188,6 +265,7 @@ class App:
         self.btn_mode_search.config(bg="#ddd", fg="#333", relief=tk.RAISED)
         self.btn_mode_chart.config(bg="#ddd", fg="#333", relief=tk.RAISED)
         self.btn_mode_genre.config(bg="#ddd", fg="#333", relief=tk.RAISED)
+        self.btn_mode_fav.config(bg="#ddd", fg="#333", relief=tk.RAISED)
         
         if mode == "search":
             self.btn_mode_search.config(bg="#4CAF50", fg="white", relief=tk.SUNKEN)
@@ -195,12 +273,15 @@ class App:
             self.btn_mode_chart.config(bg="#4CAF50", fg="white", relief=tk.SUNKEN)
         elif mode == "genre":
             self.btn_mode_genre.config(bg="#4CAF50", fg="white", relief=tk.SUNKEN)
+        elif mode == "fav":
+            self.btn_mode_fav.config(bg="#4CAF50", fg="white", relief=tk.SUNKEN)
 
     # ======================== GÖRÜNÜM YÖNETİMİ ========================
     def show_search_view(self):
         self.set_active_mode_button("search")
         self.chart_view.pack_forget()
         self.genre_view.pack_forget()
+        self.fav_view.pack_forget()
         self.search_view.pack(fill="both", expand=True)
         self.update_status("Mod: Sanatçı & Şarkı Arama - Sanatçı adı girerek şarkılarını listeleyin.")
 
@@ -256,6 +337,7 @@ class App:
         self.set_active_mode_button("chart")
         self.search_view.pack_forget()
         self.genre_view.pack_forget()
+        self.fav_view.pack_forget()
         self.chart_view.pack(fill="both", expand=True)
         self.update_status("Mod: Ülke Listeleri - Ülke seçimi yaparak en popüler sanatçıları görün.")
 
@@ -275,8 +357,72 @@ class App:
         self.set_active_mode_button("genre")
         self.search_view.pack_forget()
         self.chart_view.pack_forget()
+        self.fav_view.pack_forget()
         self.genre_view.pack(fill="both", expand=True)
         self.update_status("Mod: Türe Göre (Beta) - Pop, Rock, Rap gibi türlerde popüler sanatçıları keşfedin.")
+
+    def show_fav_view(self):
+        self.set_active_mode_button("fav")
+        self.search_view.pack_forget()
+        self.chart_view.pack_forget()
+        self.genre_view.pack_forget()
+        self.fav_view.pack(fill="both", expand=True)
+        self.update_status("Mod: Favoriler - Kaydettiğiniz şarkılar.")
+        self.load_fav_ui()
+
+    # ======================== PLAYER GÖRÜNÜMÜ ========================
+    def setup_player_view(self):
+        self.player_frame = tk.Frame(self.root, bg="#202020", height=80, bd=1, relief=tk.RAISED)
+        self.player_frame.pack(side=tk.BOTTOM, fill=tk.X)
+        
+        # Grid Layout
+        self.player_frame.columnconfigure(1, weight=1)
+        
+        # Sol: Play/Pause ve Kontroller
+        btn_frame = tk.Frame(self.player_frame, bg="#202020")
+        btn_frame.grid(row=0, column=0, rowspan=2, padx=10)
+        
+        self.btn_player_play = tk.Button(btn_frame, text="▶", font=("Arial", 14), 
+                                         command=self.toggle_player_state, 
+                                         bg="#202020", fg="white", bd=0, activebackground="#404040", activeforeground="white")
+        self.btn_player_play.pack(side=tk.LEFT, padx=5)
+        
+        self.btn_player_loop = tk.Button(btn_frame, text="🔁", font=("Arial", 12),
+                                         command=self.toggle_player_loop,
+                                         bg="#202020", fg="gray", bd=0, activebackground="#404040", activeforeground="white")
+        self.btn_player_loop.pack(side=tk.LEFT, padx=5)
+
+        # Orta: Bilgi ve Slider
+        info_frame = tk.Frame(self.player_frame, bg="#202020")
+        info_frame.grid(row=0, column=1, sticky="ew", padx=10, pady=(5,0))
+        
+        self.lbl_player_title = tk.Label(info_frame, text="Müzik Seçilmedi", bg="#202020", fg="white", font=("Helvetica", 10, "bold"))
+        self.lbl_player_title.pack(anchor=tk.W)
+        
+        slider_frame = tk.Frame(self.player_frame, bg="#202020")
+        slider_frame.grid(row=1, column=1, sticky="ew", padx=10, pady=(0,5))
+        
+        self.var_time = tk.DoubleVar()
+        self.scale_time = ttk.Scale(slider_frame, from_=0, to=100, variable=self.var_time, command=self.on_seek_start)
+        self.scale_time.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        # Bind release event (ttk.Scale doesn't support built-in command for release, using bind)
+        self.scale_time.bind("<ButtonRelease-1>", self.on_seek_end)
+        
+        self.lbl_player_time = tk.Label(slider_frame, text="00:00 / 00:00", bg="#202020", fg="#aaa", font=("Consolas", 8))
+        self.lbl_player_time.pack(side=tk.LEFT, padx=5)
+
+        # Sağ: Ses
+        vol_frame = tk.Frame(self.player_frame, bg="#202020")
+        vol_frame.grid(row=0, column=2, rowspan=2, padx=10)
+        
+        tk.Label(vol_frame, text="🔊", bg="#202020", fg="white").pack(side=tk.LEFT)
+        
+        self.scale_vol = ttk.Scale(vol_frame, from_=0, to=100, orient=tk.HORIZONTAL, length=80, command=self.set_player_volume)
+        self.scale_vol.set(70) # Default val
+        self.scale_vol.pack(side=tk.LEFT, padx=5)
+        
+        # Timer Loop başlat
+        self.update_player_loop()
 
     # ======================== ARAMA GÖRÜNÜMÜ ========================
     def setup_search_view(self):
@@ -340,8 +486,9 @@ class App:
         
         # Context Menu (Yedek olarak kalsın veya kaldırılabilir, kullanıcı buton istedi)
         # Ancak sağ tık yine de çalışabilir.
+        
         self.context_menu_search = tk.Menu(self.root, tearoff=0)
-        self.context_menu_search.add_command(label="▶ Tarayıcıda Oynat", command=self.play_selected_song)
+        self.context_menu_search.add_command(label="▶ Müziği Oynat", command=self.play_selected_song)
         self.context_menu_search.add_command(label="🔗 Linki Kopyala", command=self.copy_link_selected_song)
         
         self.tree_pop.bind("<Button-3>", lambda e: self.show_context_menu(e, self.tree_pop, self.context_menu_search))
@@ -392,7 +539,7 @@ class App:
         tree.column("Albüm", width=140)
         tree.column("Dinlenme", width=90)
         tree.column("Süre", width=60)
-        tree.column("İşlemler", width=100, anchor=tk.CENTER) # Butonlar için kolon
+        tree.column("İşlemler", width=120, anchor=tk.CENTER) # Butonlar için kolon (Link, Play, Fav)
         
         # Scrollbar Ekle
         sb = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=tree.yview)
@@ -444,11 +591,16 @@ class App:
 
     def populate_tabs(self, pop_list, views_list, smart_list):
         def _job():
-            action_text = "🔗      ▶"
+
             
             def insert_to_tree(tree, data_list):
                  for i, song in enumerate(data_list):
                     tag = 'odd' if (i + 1) % 2 == 1 else 'even'
+                    
+                    is_fav = self.is_favorite(song['video_id'])
+                    fav_icon = "♥" if is_fav else "♡"
+                    action_text = f"🔗   ▶   {fav_icon}"
+
                     iid = tree.insert("", "end", values=(
                         str(i + 1), song['title'], song['artist'], song['album'], 
                         song['views_text'], song['duration'], action_text
@@ -1082,11 +1234,123 @@ class App:
             self.root.after(0, lambda: self.lbl_genre_progress.config(text=""))
             
 
-    def reset_chart_ui(self):
-        def _reset():
-            self.btn_chart_load.config(state=tk.NORMAL, text="Listele")
-            self.lbl_chart_progress.config(text="")
-        self.root.after(0, _reset)
+            
+    
+    # ======================== FAV GÖRÜNÜMÜ ========================
+    def setup_fav_view(self):
+        # Üst Panel
+        top_frame = tk.Frame(self.fav_view, pady=10)
+        top_frame.pack(side=tk.TOP, fill=tk.X)
+        
+        tk.Label(top_frame, text="Favorilerim", font=("Helvetica", 12, "bold")).pack(side=tk.LEFT, padx=10)
+        
+        self.btn_refresh_fav = tk.Button(top_frame, text="Yenile", command=self.load_fav_ui, bg="#2196F3", fg="white")
+        self.btn_refresh_fav.pack(side=tk.RIGHT, padx=10)
+
+        # Liste
+        # Mod 1 ile aynı kolonlar
+        cols = ("Sıra", "Şarkı", "Sanatçı", "Albüm", "Dinlenme", "Süre", "İşlemler")
+        self.tree_fav = ttk.Treeview(self.fav_view, columns=cols, show='headings')
+        
+        for col in cols:
+            self.tree_fav.heading(col, text=col)
+            
+        self.tree_fav.column("Sıra", width=40, anchor=tk.CENTER)
+        self.tree_fav.column("Şarkı", width=200)
+        self.tree_fav.column("Sanatçı", width=140)
+        self.tree_fav.column("Albüm", width=140)
+        self.tree_fav.column("Dinlenme", width=90)
+        self.tree_fav.column("Süre", width=60)
+        self.tree_fav.column("İşlemler", width=120, anchor=tk.CENTER)
+        
+        sb = ttk.Scrollbar(self.fav_view, orient=tk.VERTICAL, command=self.tree_fav.yview)
+        self.tree_fav.configure(yscroll=sb.set)
+        
+        sb.pack(side=tk.RIGHT, fill=tk.Y)
+        self.tree_fav.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
+        self.tree_fav.bind("<ButtonRelease-1>", self.on_fav_list_click)
+        self.tree_fav.tag_configure('odd', background='#f9f9f9')
+        self.tree_fav.tag_configure('even', background='white')
+        
+    def load_fav_ui(self):
+        # Temizle
+        for item in self.tree_fav.get_children():
+            self.tree_fav.delete(item)
+        self.fav_map.clear()
+        
+        # Verileri al ve sırala (Sanatçıya göre A-Z)
+        favs = self.load_favorites()
+        if not favs:
+            self.update_status("Favori listeniz boş.", "blue")
+            return
+            
+        # Sanatçı ismiyle sırala
+        sorted_favs = sorted(favs, key=lambda x: x.get('artist', '').lower())
+        
+        action_text = "🔗   ▶   ♥" # Favoriler listesinde zaten favori olduğu için dolu kalp
+        
+        for i, song in enumerate(sorted_favs):
+             tag = 'odd' if (i + 1) % 2 == 1 else 'even'
+             iid = self.tree_fav.insert("", "end", values=(
+                 str(i + 1), 
+                 song.get('title', ''), 
+                 song.get('artist', ''), 
+                 song.get('album', ''), 
+                 song.get('views_text', ''), 
+                 song.get('duration', ''), 
+                 action_text
+             ), tags=(tag,))
+             self.fav_map[iid] = song 
+             # Map stores full object to allow easy access
+
+        self.update_status(f"Favoriler listelendi: {len(favs)} şarkı.", "green")
+
+    def on_fav_list_click(self, event):
+        try:
+            tree = event.widget
+            region = tree.identify_region(event.x, event.y)
+            if region != "cell": return
+            
+            col = tree.identify_column(event.x)
+            # #7 -> İşlemler
+            if col == "#7":
+                item_id = tree.identify_row(event.y)
+                if not item_id: return
+                
+                bbox = tree.bbox(item_id, col)
+                if not bbox: return
+                x, y, w, h = bbox
+                click_x = event.x - x
+                
+                # 3 Buton: [Link] [Play] [Fav]
+                # Yaklaşık 3'e böl
+                section = w / 3
+                
+                song_data = self.fav_map.get(item_id)
+                if not song_data: return
+                video_id = song_data.get('video_id')
+
+                if click_x < section:
+                    # Link
+                    self.copy_link_by_id(video_id)
+                elif click_x < section * 2:
+                    # Play
+                    title = f"{song_data.get('title')} - {song_data.get('artist')}"
+                    self.play_music_start(video_id, title)
+                else:
+                    # Remove Fav
+                    res = messagebox.askyesno("Onay", "Bu şarkıyı favorilerden kaldırmak istiyor musunuz?")
+                    if res:
+                        self.toggle_favorite(song_data)
+                        self.tree_fav.delete(item_id)
+                        del self.fav_map[item_id]
+                        # Refresh visual indexes logic implied but not strictly necessary for simple remove
+                        
+        except Exception as e:
+            print(f"Fav Click Error: {e}")
+
+
 
     # ======================== ORTAK ========================
     # ======================== TIKLAMA VE AKSİYONLAR ========================
@@ -1111,15 +1375,49 @@ class App:
                 x, y, w, h = bbox
                 click_relative_x = event.x - x
                 
-                # Hücreyi ikiye böl: Sol taraf = Link, Sağ taraf = Play
-                # Text: "🔗      ▶"
+                # Hücreyi üçe böl: Link, Play, Fav
+                # Text: "🔗   ▶   ♥"
+                section = w / 3
+                
                 video_id = self.song_map.get(item_id)
                 if not video_id: return
 
-                if click_relative_x < w / 2:
+                if click_relative_x < section:
                     self.copy_link_by_id(video_id)
+                elif click_relative_x < section * 2:
+                    # Play
+                    vals = tree.item(item_id)['values']
+                    song_title = f"{vals[1]} - {vals[2]}"
+                    self.play_music_start(video_id, song_title)
                 else:
-                    self.play_by_id(video_id)
+                    # Fav Toggle
+                    # Mevcut veriyi al
+                    vals = tree.item(item_id)['values']
+                    # Construct song data based on columns
+                    # ("Sıra", "Şarkı", "Sanatçı", "Albüm", "Dinlenme", "Süre", "İşlemler")
+                    song_data = {
+                        "video_id": video_id,
+                        "title": vals[1],
+                        "artist": vals[2],
+                        "album": vals[3],
+                        "views_text": vals[4],
+                        "duration": vals[5]
+                    }
+                    
+                    is_added = self.toggle_favorite(song_data)
+                    
+                    # UI güncelle
+                    new_icon = "♥" if is_added else "♡"
+                    new_action_text = f"🔗   ▶   {new_icon}"
+                    
+                    # Update Treeview Cell
+                    # Treeview set metodu: item, column_id, value
+                    tree.set(item_id, "İşlemler", new_action_text)
+                    
+                    if is_added:
+                        self.update_status("Favorilere eklendi.", "green")
+                    else:
+                        self.update_status("Favorilerden çıkarıldı.", "orange")
         except Exception as e:
             print(f"Click Error: {e}")
 
@@ -1157,8 +1455,15 @@ class App:
             messagebox.showinfo("Bilgi", "Link kopyalandı!")
 
     def play_selected_song(self):
-        sel = self.get_selected_item_data(self.song_map, [self.tree_pop, self.tree_views, self.tree_smart])
-        if sel: self.play_by_id(sel)
+        for tree in [self.tree_pop, self.tree_views, self.tree_smart]:
+             sel_ids = tree.selection()
+             if sel_ids:
+                 vals = tree.item(sel_ids[0])['values']
+                 title = f"{vals[1]} - {vals[2]}"
+                 video_id = self.song_map.get(sel_ids[0])
+                 if video_id:
+                     self.play_music_start(video_id, title)
+                 return
 
     def copy_link_selected_song(self):
         sel = self.get_selected_item_data(self.song_map, [self.tree_pop, self.tree_views, self.tree_smart])
@@ -1184,6 +1489,118 @@ class App:
             sel = tree.selection()
             if sel: return map_data.get(sel[0])
         return None
+
+    # ======================== PLAYER MANTIK ========================
+    def play_music_start(self, video_id, title_info="Yükleniyor..."):
+        if not self.player:
+            # VLC yoksa tarayıcıda aç
+            messagebox.showinfo("Player Hatası", "VLC Modülü bulunamadı. Lütfen VLC Player ve python-vlc kurulumunu yapın.\nŞarkı tarayıcıda açılıyor.")
+            webbrowser.open(f"https://music.youtube.com/watch?v={video_id}")
+            return
+            
+        self.lbl_player_title.config(text=f"Yükleniyor: {title_info}...")
+        self.btn_player_play.config(text="⏳")
+        
+        threading.Thread(target=self.player_load_thread, args=(video_id, title_info), daemon=True).start()
+
+    def player_load_thread(self, video_id, title_info):
+        try:
+            ydl_opts = {
+                'format': 'bestaudio/best',
+                'noplaylist': True,
+                'quiet': True,
+            }
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(video_id, download=False)
+                url = info.get('url')
+                duration = info.get('duration', 0)
+                
+            if url:
+                self.root.after(0, lambda: self.start_vlc_stream(url, duration, title_info))
+            else:
+                self.update_status("Ses linki alınamadı.", "red")
+        except Exception as e:
+            self.update_status(f"Oynatma hatası: {e}", "red")
+            self.root.after(0, lambda: self.btn_player_play.config(text="▶"))
+
+    def start_vlc_stream(self, url, duration, title):
+        self.player.stop()
+        media = self.vlc_instance.media_new(url)
+        self.player.set_media(media)
+        self.player.play()
+        
+        self.is_playing = True
+        self.total_duration = duration
+        self.lbl_player_title.config(text=title)
+        self.btn_player_play.config(text="⏸")
+        self.scale_time.config(to=duration)
+        
+        # Volume set (VLC bazen resetler)
+        vol = int(self.scale_vol.get())
+        self.player.audio_set_volume(vol)
+
+    def toggle_player_state(self):
+        if not self.player: return
+        if self.is_playing:
+            self.player.pause()
+            self.btn_player_play.config(text="▶")
+            self.is_playing = False
+        else:
+            self.player.play()
+            self.btn_player_play.config(text="⏸")
+            self.is_playing = True
+
+    def toggle_player_loop(self):
+        self.is_looping = not self.is_looping
+        if self.is_looping:
+            self.btn_player_loop.config(fg="#4CAF50") # Yeşil
+        else:
+            self.btn_player_loop.config(fg="gray")
+
+    def set_player_volume(self, val):
+        if self.player:
+            self.player.audio_set_volume(int(float(val)))
+
+    def on_seek_start(self, val):
+        self.is_dragging_time = True
+
+    def on_seek_end(self, event):
+        if self.player:
+            time_sec = self.var_time.get()
+            self.player.set_time(int(time_sec * 1000))
+        self.is_dragging_time = False
+
+    def update_player_loop(self):
+        if self.player:
+            # Durum kontrol
+            state = self.player.get_state()
+            
+            # Müzik bitti mi?
+            if state == vlc.State.Ended:
+                if self.is_looping:
+                    self.player.stop()
+                    self.player.play()
+                else:
+                    self.is_playing = False
+                    self.btn_player_play.config(text="▶")
+                    # self.player.stop() # Stop yapınca siyah ekran/boşluk olabilir, pause daha iyi?
+                    # VLC'de Stop yapınca süre 0'a döner, pause olduğu yerde kalır.
+                    # Bittiği için stop mantıklı.
+
+            # Süre güncelle (Sadece kullanıcı kaydırmıyorsa ve oynuyorsa)
+            if not self.is_dragging_time and state == vlc.State.Playing:
+                # VLC milliseconds döner
+                current_ms = self.player.get_time()
+                if current_ms >= 0:
+                    current_sec = current_ms / 1000
+                    self.var_time.set(current_sec)
+                    
+                    # Label güncelle
+                    cur_str = time.strftime('%M:%S', time.gmtime(current_sec))
+                    tot_str = time.strftime('%M:%S', time.gmtime(self.total_duration))
+                    self.lbl_player_time.config(text=f"{cur_str} / {tot_str}")
+        
+        self.root.after(500, self.update_player_loop)
 
 if __name__ == "__main__":
     root = tk.Tk()
