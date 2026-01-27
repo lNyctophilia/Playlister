@@ -595,6 +595,8 @@ class App:
             self.entry_search_limit.insert(0, "50")
             
         self.btn_search.config(state=tk.DISABLED)
+        self.entry_artist.config(state=tk.DISABLED)
+        self.entry_search_limit.config(state=tk.DISABLED)
         self.stop_listing = False
         self.update_status(f"Hazırlanıyor... (Limit: {limit})", "blue")
         threading.Thread(target=self.search_artist_thread, args=(artist_name, limit), daemon=True).start()
@@ -740,6 +742,8 @@ class App:
         finally:
             self.root.after(0, lambda: self.lbl_search_progress.config(text=""))
             self.root.after(0, lambda: self.btn_search.config(state=tk.NORMAL))
+            self.root.after(0, lambda: self.entry_artist.config(state=tk.NORMAL))
+            self.root.after(0, lambda: self.entry_search_limit.config(state=tk.NORMAL))
 
 
     # ======================== CHART GÖRÜNÜMÜ ========================
@@ -878,6 +882,8 @@ class App:
             self.entry_chart_limit.insert(0, "40")
 
         self.btn_chart_load.config(state=tk.DISABLED, text="Veriler Çekiliyor...")
+        self.combo_country.config(state=tk.DISABLED)
+        self.entry_chart_limit.config(state=tk.DISABLED)
         self.update_status(f"{country_name} listeleri ve dinlenme sayıları çekiliyor... (Limit: {limit})", "blue")
         
         # Temizle
@@ -908,6 +914,8 @@ class App:
         def _reset():
             self.btn_chart_load.config(state=tk.NORMAL, text="Listele")
             self.lbl_chart_progress.config(text="")
+            self.combo_country.config(state="readonly")
+            self.entry_chart_limit.config(state=tk.NORMAL)
         self.root.after(0, _reset)
 
     def load_charts_thread(self, country_code, limit):
@@ -1139,6 +1147,9 @@ class App:
             self.entry_genre_limit.insert(0, "50")
         
         self.btn_genre_load.config(state=tk.DISABLED, text="Taranıyor...")
+        self.combo_genre.config(state=tk.DISABLED)
+        self.combo_genre_country.config(state=tk.DISABLED)
+        self.entry_genre_limit.config(state=tk.DISABLED)
         self.update_status(f"{country_name} için {genre} listeleri taranıyor... (Limit: {limit})", "purple")
         
         for item in self.tree_genre.get_children():
@@ -1270,6 +1281,9 @@ class App:
         finally:
             self.root.after(0, lambda: self.btn_genre_load.config(state=tk.NORMAL, text="Sanatçıları Listele"))
             self.root.after(0, lambda: self.lbl_genre_progress.config(text=""))
+            self.root.after(0, lambda: self.combo_genre.config(state="readonly"))
+            self.root.after(0, lambda: self.combo_genre_country.config(state="readonly"))
+            self.root.after(0, lambda: self.entry_genre_limit.config(state=tk.NORMAL))
             
 
             
