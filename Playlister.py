@@ -1531,15 +1531,15 @@ class App:
                      song_title = f"{data.get('title')} - {data.get('artist')}"
             
              if video_id:
-                 menu.add_command(label="▶ Müziği Oynat", command=lambda: self.play_music_start(video_id, song_title))
-                 menu.add_command(label="🔗 Linki Kopyala", command=lambda: self.copy_link_by_id(video_id))
+                 menu.add_command(label="▶ Müziği Oynat", command=lambda v=video_id, t=song_title: self.play_music_start(v, t))
+                 menu.add_command(label="🔗 Linki Kopyala", command=lambda v=video_id: self.copy_link_by_id(v))
                  menu.add_separator()
                  
                  is_fav = self.is_favorite(video_id)
                  if is_fav:
-                     menu.add_command(label="💔 Favorilerden Çıkar", command=lambda: self.context_toggle_fav(video_id, tree, item))
+                     menu.add_command(label="💔 Favorilerden Çıkar", command=lambda v=video_id, tr=tree, it=item: self.context_toggle_fav(v, tr, it))
                  else:
-                     menu.add_command(label="❤ Favorilere Ekle", command=lambda: self.context_toggle_fav(video_id, tree, item))
+                     menu.add_command(label="❤ Favorilere Ekle", command=lambda v=video_id, tr=tree, it=item: self.context_toggle_fav(v, tr, it))
              
              menu.post(event.x_root, event.y_root)
              
@@ -1662,16 +1662,26 @@ class App:
                 'format': 'bestaudio/best',
                 'noplaylist': True,
                 'quiet': True,
+                'nocheckcertificate': True,
+                'ignoreerrors': True,
+                'no_warnings': True,
+                'cachedir': False,
             }
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(video_id, download=False)
+                if not info:
+                     self.update_status("Video bilgisi alınamadı.", "red")
+                     self.root.after(0, lambda: self.btn_player_play.config(text="▶"))
+                     return
+
                 url = info.get('url')
                 duration = info.get('duration', 0)
                 
             if url:
                 self.root.after(0, lambda: self.start_vlc_stream(url, duration, title_info))
             else:
-                self.update_status("Ses linki alınamadı.", "red")
+                self.update_status("Ses linki alınamadı (URL yok).", "red")
+                self.root.after(0, lambda: self.btn_player_play.config(text="▶"))
         except Exception as e:
             self.update_status(f"Oynatma hatası: {e}", "red")
             self.root.after(0, lambda: self.btn_player_play.config(text="▶"))
