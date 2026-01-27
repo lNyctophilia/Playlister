@@ -94,5 +94,29 @@
         "album": "Manifesto",
         "views_text": "41M",
         "duration": "2:30"
+    },
+    {
+        "video_id": "_I16BvBG4tQ",
+        "title": "Kapak Olsun",
+        "artist": "Defkhan, NELLIE, Fredo",
+        "album": "Kapak Olsun",
+        "views_text": "91M",
+        "duration": "2:28"
+    },
+    {
+        "video_id": "AWUKqQ_25Mk",
+        "title": "Aşk Yok Olmaktır",
+        "artist": "Yıldız Tilbe",
+        "album": "Aşkperest",
+        "views_text": "30M",
+        "duration": "4:41"
+    },
+    {
+        "video_id": "SafSeS7cux0",
+        "title": "Delikanlım",
+        "artist": "Yıldız Tilbe",
+        "album": "Delikanlım",
+        "views_text": "97M",
+        "duration": "5:15"
     }
 ]

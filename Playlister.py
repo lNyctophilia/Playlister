@@ -445,7 +445,7 @@ class App:
         self.btn_search = tk.Button(top_frame, text="Şarkıları Ara", command=self.start_search, bg="#2196F3", fg="white")
         self.btn_search.pack(side=tk.LEFT, padx=10)
 
-        self.btn_search_stop = tk.Button(top_frame, text="Durdur", command=self.stop_current_listing, bg="#F44336", fg="white")
+        self.btn_search_stop = tk.Button(top_frame, text="Durdur", command=self.stop_current_listing, bg="#F44336", fg="white", state=tk.DISABLED)
         self.btn_search_stop.pack(side=tk.LEFT, padx=2)
         
         # Limit Seçimi
@@ -598,6 +598,7 @@ class App:
         self.entry_artist.config(state=tk.DISABLED)
         self.entry_search_limit.config(state=tk.DISABLED)
         self.stop_listing = False
+        self.btn_search_stop.config(state=tk.NORMAL)
         self.update_status(f"Hazırlanıyor... (Limit: {limit})", "blue")
         threading.Thread(target=self.search_artist_thread, args=(artist_name, limit), daemon=True).start()
 
@@ -742,6 +743,7 @@ class App:
         finally:
             self.root.after(0, lambda: self.lbl_search_progress.config(text=""))
             self.root.after(0, lambda: self.btn_search.config(state=tk.NORMAL))
+            self.root.after(0, lambda: self.btn_search_stop.config(state=tk.DISABLED))
             self.root.after(0, lambda: self.entry_artist.config(state=tk.NORMAL))
             self.root.after(0, lambda: self.entry_search_limit.config(state=tk.NORMAL))
 
@@ -807,7 +809,7 @@ class App:
         self.btn_chart_load = tk.Button(ctrl_frame, text="Listele", command=self.start_chart_load, bg="#FF9800", fg="white", width=25)
         self.btn_chart_load.pack(side=tk.LEFT, padx=20)
         
-        self.btn_chart_stop = tk.Button(ctrl_frame, text="Durdur", command=self.stop_current_listing, bg="#F44336", fg="white", width=10)
+        self.btn_chart_stop = tk.Button(ctrl_frame, text="Durdur", command=self.stop_current_listing, bg="#F44336", fg="white", width=10, state=tk.DISABLED)
         self.btn_chart_stop.pack(side=tk.LEFT, padx=5)
         
         self.lbl_chart_progress = tk.Label(ctrl_frame, text="", fg="gray")
@@ -894,6 +896,7 @@ class App:
         self.chart_map.clear()
         
         self.stop_listing = False
+        self.btn_chart_stop.config(state=tk.NORMAL)
         threading.Thread(target=self.load_charts_thread, args=(country_code, limit), daemon=True).start()
 
     def update_chart_progress(self, text, insert_item=None):
@@ -916,6 +919,7 @@ class App:
             self.lbl_chart_progress.config(text="")
             self.combo_country.config(state="readonly")
             self.entry_chart_limit.config(state=tk.NORMAL)
+            self.btn_chart_stop.config(state=tk.DISABLED)
         self.root.after(0, _reset)
 
     def load_charts_thread(self, country_code, limit):
@@ -1034,7 +1038,7 @@ class App:
                                         bg="#b90000", fg="white", width=25)
         self.btn_genre_load.pack(side=tk.LEFT, padx=10)
 
-        self.btn_genre_stop = tk.Button(ctrl_frame, text="Durdur", command=self.stop_current_listing, bg="#F44336", fg="white", width=10)
+        self.btn_genre_stop = tk.Button(ctrl_frame, text="Durdur", command=self.stop_current_listing, bg="#F44336", fg="white", width=10, state=tk.DISABLED)
         self.btn_genre_stop.pack(side=tk.LEFT, padx=5)
         
         self.lbl_genre_progress = tk.Label(ctrl_frame, text="", fg="gray")
@@ -1156,6 +1160,7 @@ class App:
             self.tree_genre.delete(item)
             
         self.stop_listing = False
+        self.btn_genre_stop.config(state=tk.NORMAL)
         threading.Thread(target=self.load_genre_thread, args=(genre, country_name, limit), daemon=True).start()
 
     def update_genre_progress(self, text, insert_item=None):
@@ -1280,6 +1285,7 @@ class App:
             self.update_status(f"Hata: {e}", "red")
         finally:
             self.root.after(0, lambda: self.btn_genre_load.config(state=tk.NORMAL, text="Sanatçıları Listele"))
+            self.root.after(0, lambda: self.btn_genre_stop.config(state=tk.DISABLED))
             self.root.after(0, lambda: self.lbl_genre_progress.config(text=""))
             self.root.after(0, lambda: self.combo_genre.config(state="readonly"))
             self.root.after(0, lambda: self.combo_genre_country.config(state="readonly"))
