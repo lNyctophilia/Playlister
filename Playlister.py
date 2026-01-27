@@ -536,9 +536,10 @@ class App:
         
         # 'İşlemler' kolonu eklendi (🔗  ▶)
         # "Sıra" kolonu eklendi
-        columns = ("Sıra", "Şarkı", "Sanatçı", "Albüm", "Dinlenme", "Süre", "İşlemler")
+        # VideoID hidden column added
+        columns = ("Sıra", "Şarkı", "Sanatçı", "Albüm", "Dinlenme", "Süre", "İşlemler", "VideoID")
         
-        tree = ttk.Treeview(frame, columns=columns, show='headings')
+        tree = ttk.Treeview(frame, columns=columns, show='headings', displaycolumns=("Sıra", "Şarkı", "Sanatçı", "Albüm", "Dinlenme", "Süre", "İşlemler"))
         for col in columns:
             tree.heading(col, text=col)
             
@@ -616,9 +617,9 @@ class App:
 
                     iid = tree.insert("", "end", values=(
                         str(i + 1), song['title'], song['artist'], song['album'], 
-                        song['views_text'], song['duration'], action_text
+                        song['views_text'], song['duration'], action_text, song['video_id']
                     ), tags=(tag,))
-                    self.song_map[iid] = song['video_id']
+                    # self.song_map[iid] = song['video_id'] # Removed shared map logic
             
             insert_to_tree(self.tree_pop, pop_list)
             insert_to_tree(self.tree_views, views_list)
@@ -1437,22 +1438,24 @@ class App:
                 # Text: "🔗   ▶   ♥"
                 section = w / 3
                 
-                video_id = self.song_map.get(item_id)
+                vals = tree.item(item_id)['values']
+                # Make sure we have enough values
+                if len(vals) < 8: return
+
+                video_id = vals[7] # Hidden column
                 if not video_id: return
 
                 if click_relative_x < section:
                     self.copy_link_by_id(video_id)
                 elif click_relative_x < section * 2:
                     # Play
-                    vals = tree.item(item_id)['values']
                     song_title = f"{vals[1]} - {vals[2]}"
                     self.play_music_start(video_id, song_title)
                 else:
                     # Fav Toggle
                     # Mevcut veriyi al
-                    vals = tree.item(item_id)['values']
                     # Construct song data based on columns
-                    # ("Sıra", "Şarkı", "Sanatçı", "Albüm", "Dinlenme", "Süre", "İşlemler")
+                    # ("Sıra", "Şarkı", "Sanatçı", "Albüm", "Dinlenme", "Süre", "İşlemler", "VideoID")
                     song_data = {
                         "video_id": video_id,
                         "title": vals[1],
@@ -1517,15 +1520,21 @@ class App:
              sel_ids = tree.selection()
              if sel_ids:
                  vals = tree.item(sel_ids[0])['values']
-                 title = f"{vals[1]} - {vals[2]}"
-                 video_id = self.song_map.get(sel_ids[0])
-                 if video_id:
-                     self.play_music_start(video_id, title)
+                 if len(vals) >= 8:
+                     title = f"{vals[1]} - {vals[2]}"
+                     video_id = vals[7]
+                     if video_id:
+                         self.play_music_start(video_id, title)
                  return
 
     def copy_link_selected_song(self):
-        sel = self.get_selected_item_data(self.song_map, [self.tree_pop, self.tree_views, self.tree_smart])
-        if sel: self.copy_link_by_id(sel)
+        for tree in [self.tree_pop, self.tree_views, self.tree_smart]:
+            sel = tree.selection()
+            if sel:
+                vals = tree.item(sel[0])['values']
+                if len(vals) >= 8:
+                    self.copy_link_by_id(vals[7])
+                return
 
     def switch_to_artist_from_chart(self, override_item_id=None):
         if override_item_id:
