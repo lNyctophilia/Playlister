@@ -87,6 +87,12 @@ class App:
                                         bg="#ddd", fg="#333", relief=tk.RAISED)
         self.btn_mode_chart.pack(side=tk.LEFT, padx=5, pady=5)
 
+        self.btn_mode_genre = tk.Button(self.nav_frame, text="🎸 Türe Göre (Beta)",
+                                        command=self.show_genre_view,
+                                        font=("Helvetica", 10, "bold"),
+                                        bg="#ddd", fg="#333", relief=tk.RAISED)
+        self.btn_mode_genre.pack(side=tk.LEFT, padx=5, pady=5)
+
         # --- Ana Konteyner ---
         self.container = tk.Frame(root)
         self.container.pack(fill="both", expand=True, pady=5)
@@ -94,6 +100,7 @@ class App:
         # --- Görünümler ---
         self.search_view = tk.Frame(self.container)
         self.chart_view = tk.Frame(self.container)
+        self.genre_view = tk.Frame(self.container)
         
         # Status Bar
         self.status_bar = tk.Label(root, text="Hazır", bd=1, relief=tk.SUNKEN, anchor=tk.W, bg="#f0f0f0", font=("Consolas", 9))
@@ -101,6 +108,7 @@ class App:
 
         self.setup_search_view()
         self.setup_chart_view()
+        self.setup_genre_view()
         
         # Varsayılan görünüm
         self.show_search_view()
@@ -115,25 +123,39 @@ class App:
         self.root.after(0, lambda: self.status_bar.config(text=text, fg=color))
 
     def set_active_mode_button(self, mode):
+        # Reset all
+        self.btn_mode_search.config(bg="#ddd", fg="#333", relief=tk.RAISED)
+        self.btn_mode_chart.config(bg="#ddd", fg="#333", relief=tk.RAISED)
+        self.btn_mode_genre.config(bg="#ddd", fg="#333", relief=tk.RAISED)
+        
         if mode == "search":
             self.btn_mode_search.config(bg="#4CAF50", fg="white", relief=tk.SUNKEN)
-            self.btn_mode_chart.config(bg="#ddd", fg="#333", relief=tk.RAISED)
-        else:
-            self.btn_mode_search.config(bg="#ddd", fg="#333", relief=tk.RAISED)
+        elif mode == "chart":
             self.btn_mode_chart.config(bg="#4CAF50", fg="white", relief=tk.SUNKEN)
+        elif mode == "genre":
+            self.btn_mode_genre.config(bg="#4CAF50", fg="white", relief=tk.SUNKEN)
 
     # ======================== GÖRÜNÜM YÖNETİMİ ========================
     def show_search_view(self):
         self.set_active_mode_button("search")
         self.chart_view.pack_forget()
+        self.genre_view.pack_forget()
         self.search_view.pack(fill="both", expand=True)
-        self.update_status("Mod: Sanatçı Şarkı Arama - Sanatçı adı girerek şarkılarını listeleyin.")
+        self.update_status("Mod: Sanatçı & Şarkı Arama - Sanatçı adı girerek şarkılarını listeleyin.")
 
     def show_chart_view(self):
         self.set_active_mode_button("chart")
         self.search_view.pack_forget()
+        self.genre_view.pack_forget()
         self.chart_view.pack(fill="both", expand=True)
-        self.update_status("Mod: Ülke Listeleri - Ülke seçimi yaparak en popüler sanatçıları ve dinlenme sayılarını görün.")
+        self.update_status("Mod: Ülke Listeleri - Ülke seçimi yaparak en popüler sanatçıları görün.")
+
+    def show_genre_view(self):
+        self.set_active_mode_button("genre")
+        self.search_view.pack_forget()
+        self.chart_view.pack_forget()
+        self.genre_view.pack(fill="both", expand=True)
+        self.update_status("Mod: Türe Göre (Beta) - Pop, Rock, Rap gibi türlerde popüler sanatçıları keşfedin.")
 
     # ======================== ARAMA GÖRÜNÜMÜ ========================
     def setup_search_view(self):
@@ -622,6 +644,239 @@ class App:
             self.update_status(f"Hata: {e}", "red")
         finally:
             self.reset_chart_ui()
+
+    # ======================== GENRE GÖRÜNÜMÜ (BETA) ========================
+    def setup_genre_view(self):
+        ctrl_frame = tk.Frame(self.genre_view, pady=10)
+        ctrl_frame.pack(side=tk.TOP, fill=tk.X)
+        
+        # Tür Seçimi
+        tk.Label(ctrl_frame, text="Tür Seç:").pack(side=tk.LEFT, padx=10)
+        self.combo_genre = ttk.Combobox(ctrl_frame, values=[
+            "Rock", "Pop", "Rap", "Arabesk", "Elektronik", "Indie", "Metal", "Jazz", "Hip Hop", "Klasik", "Halk Müziği"
+        ], state="readonly", width=15)
+        self.combo_genre.current(1) # Pop varsayılan
+        self.combo_genre.pack(side=tk.LEFT, padx=5)
+        
+        # Ülke Seçimi (Mevcut 'countries' sözlüğünü kullanacağız, ama combo_genre için ayrı bir combo)
+        tk.Label(ctrl_frame, text="Ülke:").pack(side=tk.LEFT, padx=10)
+        
+        # Chart view'daki listeyi kopyalayalım veya yeniden üretelim
+        # self.countries zaten init içinde tanımlı
+        local_name = "Türkiye"
+        other_countries = [k for k in self.countries.keys() if k != local_name and k != "Global"]
+        other_countries.sort()
+        display_values = [local_name, "Global"] + other_countries
+        
+        self.combo_genre_country = ttk.Combobox(ctrl_frame, values=display_values, state="readonly", width=15)
+        self.combo_genre_country.current(0) # Türkiye
+        self.combo_genre_country.pack(side=tk.LEFT, padx=5)
+        
+        # Buton
+        self.btn_genre_load = tk.Button(ctrl_frame, text="Sanatçıları Listele", 
+                                        command=self.start_genre_load, 
+                                        bg="#9C27B0", fg="white", width=20)
+        self.btn_genre_load.pack(side=tk.LEFT, padx=20)
+        
+        self.lbl_genre_progress = tk.Label(ctrl_frame, text="", fg="gray")
+        self.lbl_genre_progress.pack(side=tk.LEFT)
+        
+        # Liste
+        cols = ("Rank", "Sanatçı", "Tür", "Durum", "Ara")
+        self.tree_genre = ttk.Treeview(self.genre_view, columns=cols, show='headings')
+        self.tree_genre.heading("Rank", text="Sıra")
+        self.tree_genre.heading("Sanatçı", text="Sanatçı")
+        self.tree_genre.heading("Tür", text="Kategori")
+        self.tree_genre.heading("Durum", text="Durum")
+        self.tree_genre.heading("Ara", text="İşlem")
+        
+        self.tree_genre.column("Rank", width=50, anchor=tk.CENTER)
+        self.tree_genre.column("Sanatçı", width=200)
+        self.tree_genre.column("Tür", width=100)
+        self.tree_genre.column("Durum", width=100)
+        self.tree_genre.column("Ara", width=60, anchor=tk.CENTER)
+        
+        sb = ttk.Scrollbar(self.genre_view, orient=tk.VERTICAL, command=self.tree_genre.yview)
+        self.tree_genre.configure(yscroll=sb.set)
+        sb.pack(side=tk.RIGHT, fill=tk.Y)
+        self.tree_genre.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        # Tıklama ve Context
+        self.tree_genre.bind("<ButtonRelease-1>", self.on_genre_list_click)
+        self.tree_genre.tag_configure('odd', background='#f9f9f9')
+        self.tree_genre.tag_configure('even', background='white')
+        
+        # Sağ tık aynı menüyü kullanabilir (Chart ile benzer)
+        self.tree_genre.bind("<Button-3>", lambda e: self.show_context_menu(e, self.tree_genre, self.context_menu_chart))
+
+    def on_genre_list_click(self, event):
+        """Genre listesindeki arama butonuna tıklamayı algılar"""
+        try:
+            tree = event.widget
+            region = tree.identify_region(event.x, event.y)
+            if region != "cell": return
+            
+            # Kolon kontrolü (#5 'Ara' kolonu mu?)
+            col = tree.identify_column(event.x)
+            if col == "#5":
+                item_id = tree.identify_row(event.y)
+                if not item_id: return
+                self.switch_to_artist_from_genre(override_item_id=item_id)
+        except:
+            pass
+            
+    def switch_to_artist_from_genre(self, override_item_id=None):
+        if override_item_id:
+            item_id = override_item_id
+        else:
+            sel = self.tree_genre.selection()
+            if not sel: return
+            item_id = sel[0]
+            
+        # Chart map ile aynı mantıkta tek bir map kullansak da olur ama karışmasın
+        # Item values'dan alalım: values=(Rank, Artist, ...)
+        val = self.tree_genre.item(item_id)['values']
+        artist_name = val[1] # 2. kolon Sanatçı
+        
+        if artist_name:
+            self.show_search_view()
+            self.entry_artist.delete(0, tk.END)
+            self.entry_artist.insert(0, artist_name)
+            self.start_search()
+
+    def start_genre_load(self):
+        genre = self.combo_genre.get()
+        country_name = self.combo_genre_country.get()
+        
+        self.btn_genre_load.config(state=tk.DISABLED, text="Taranıyor...")
+        self.update_status(f"{country_name} için {genre} listeleri taranıyor...", "purple")
+        
+        for item in self.tree_genre.get_children():
+            self.tree_genre.delete(item)
+            
+        threading.Thread(target=self.load_genre_thread, args=(genre, country_name), daemon=True).start()
+
+    def update_genre_progress(self, text, insert_item=None):
+        def _update():
+            self.lbl_genre_progress.config(text=text)
+            if insert_item:
+                count = len(self.tree_genre.get_children())
+                tag_zebra = 'odd' if (count + 1) % 2 == 1 else 'even'
+                self.tree_genre.insert("", "end", values=(
+                    insert_item['rank'], insert_item['artist'], insert_item['genre'], 
+                    "Popüler", "🔍"
+                ), tags=(tag_zebra,))
+        self.root.after(0, _update)
+
+    def load_genre_thread(self, genre, country_name):
+        try:
+            # 1. Arama Sorgusu Oluştur
+            # Türkiye için özel sorgular, diğerleri için genel
+            query = ""
+            if country_name == "Türkiye":
+                base_queries = [
+                    f"Türkçe {genre} Top Hits",
+                    f"En İyi Türkçe {genre} Şarkılar",
+                    f"Popüler {genre} Türkiye"
+                ]
+                if genre == "Pop": base_queries = ["Türkçe Pop Top Hits", "Kral Pop En İyiler", "Power Türk Pop"]
+                elif genre == "Rock": base_queries = ["Türkçe Rock Top 50", "Anadolu Rock Efsaneleri", "Türk Rock Hits"]
+                elif genre == "Rap": base_queries = ["Türkçe Rap Top 50", "Hiphop Türkiye", "Türkçe Rap Hits"]
+                elif genre == "Arabesk": base_queries = ["Damar Arabesk Top List", "Arabesk Klasikleri", "Kral FM Arabesk"]
+                elif genre == "Halk Müziği": base_queries = ["Türk Halk Müziği Seçmeler", "Türkülerimiz", "Anadolu Türküleri"]
+            else:
+                # Global veya Yabancı
+                c_term = "" if country_name == "Global" else country_name
+                base_queries = [
+                    f"Top {genre} Hits {c_term}",
+                    f"Best {genre} Songs {c_term}",
+                    f"{c_term} {genre} Charts"
+                ]
+
+            self.update_status(f"Birden fazla kaynaktan {genre} listeleri taranıyor...", "purple")
+            
+            seen_artists = set()
+            unique_artists_list = []
+            
+            # 3 Farklı Sorgu ile Arayıp Birleştirelim (Çeşitlilik Artar)
+            # Her sorgudan en iyi 1 playlisti alacağız
+            playlists_to_scan = []
+            
+            for q in base_queries[:2]: # İlk 2 sorguyu kullan (Fazla vakit kaybetmemek için)
+                s_results = self.yt.search(q, filter="playlists")
+                if s_results:
+                    playlists_to_scan.append(s_results[0]) # En iyi eşleşen
+            
+            if not playlists_to_scan:
+                self.update_status("Uygun playlist bulunamadı.", "red")
+                return
+
+            total_playlists = len(playlists_to_scan)
+            
+            for idx, pl in enumerate(playlists_to_scan):
+                pl_id = pl['browseId']
+                pl_title = pl['title']
+                self.update_status(f"Kaynak {idx+1}/{total_playlists}: {pl_title} inceleniyor...", "purple")
+                
+                try:
+                    # Playlistten 50 şarkı çek
+                    pl_data = self.yt.get_playlist(pl_id, limit=50)
+                    tracks = pl_data.get('tracks', [])
+                    
+                    for track in tracks:
+                        if len(unique_artists_list) >= 60: break # Toplam limit
+                        
+                        artists = track.get('artists', [])
+                        if not artists: continue
+                        
+                        # Kanal isimlerini elemek için kontrol:
+                        # Gerçek sanatçıların genellikle 'id'si olur ve 'id'si 24 karakterli channel ID olmaz (Genelde)
+                        # Ancak en garantisi: Birden fazla şarkıda geçiyorsa o sanatçıdır (Bu karmaşık).
+                        # Basit yöntem: 'id' alanı varsa sanatçı profilidir.
+                        
+                        main_artist_obj = artists[0]
+                        art_name = main_artist_obj.get('name')
+                        art_id = main_artist_obj.get('id')
+                        
+                        # Filtreleme Kuralları:
+                        # 1. İsmi boş olmasın
+                        # 2. Daha önce eklenmemiş olsun
+                        # 3. ID'si olsun (Bu genellikle resmi sanatçı olduğunu gösterir, kanal değil)
+                        if art_name and (art_name not in seen_artists) and art_id:
+                            # Bazı "Various Artists" veya "Çeşitli Sanatçılar" gibi jenerik isimleri de eleyelim
+                            if "Various" in art_name or "Çeşitli" in art_name:
+                                continue
+                                
+                            seen_artists.add(art_name)
+                            unique_artists_list.append({
+                                'name': art_name, 
+                                'id': art_id # İlerde profil linki için kullanılabilir
+                            })
+                except:
+                    continue
+            
+            # Listeleme
+            if not unique_artists_list:
+                self.update_status("Sanatçı bulunamadı.", "red")
+                return
+
+            # Sonuçları listeye bas
+            for i, art_data in enumerate(unique_artists_list):
+                item = {
+                    "rank": str(i+1),
+                    "artist": art_data['name'],
+                    "genre": genre
+                }
+                self.update_genre_progress(f"Bulundu: {art_data['name']}", insert_item=item)
+                time.sleep(0.01)
+                
+            self.update_status(f"Tamamlandı. {len(unique_artists_list)} sanatçı, {total_playlists} farklı listeden derlendi.", "green")
+            
+        except Exception as e:
+            self.update_status(f"Hata: {e}", "red")
+        finally:
+            self.root.after(0, lambda: self.btn_genre_load.config(state=tk.NORMAL, text="Sanatçıları Listele"))
+            self.root.after(0, lambda: self.lbl_genre_progress.config(text=""))
 
     def reset_chart_ui(self):
         def _reset():
