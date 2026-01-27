@@ -884,6 +884,12 @@ class App:
                 # self.tree_chart.see(iid) # Otomatik kaydır iptal edildi
         self.root.after(0, _update)
 
+    def reset_chart_ui(self):
+        def _reset():
+            self.btn_chart_load.config(state=tk.NORMAL, text="Listele")
+            self.lbl_chart_progress.config(text="")
+        self.root.after(0, _reset)
+
     def load_charts_thread(self, country_code, limit):
         try:
             charts = self.yt.get_charts(country=country_code)
