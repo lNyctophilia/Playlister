@@ -114,6 +114,8 @@ class Downloader:
         # Video ID artık isme eklenmiyor
         fname = f"{clean(artist)} - {clean(title)}.%(ext)s"
         
+        
+        # Tarayıcı Deneme Sırası: Edge -> Chrome -> Firefox -> None (Cookie'siz)
         opts = {
             'format': 'bestaudio/best',
             'outtmpl': os.path.join(DOWNLOAD_DIR, fname),

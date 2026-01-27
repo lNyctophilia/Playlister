@@ -265,10 +265,30 @@ class ViewFav:
             # UI güncelle (listedeki ilgili satırı bulup ikonunu güncelle)
             self.root.after(0, lambda vid=s['video_id']: self.update_icon_by_videoid(vid))
             
-            # Anti-ban beklemesi (3-7 sn)
+            # Burst Logic:
+            # - Her şarkı arası 1 sn bekle
+            # - Her 3 şarkıda bir 10 sn dinlen (Cooldown)
+            
             if i < total - 1:
-                wait_time = random.uniform(3, 7)
-                time.sleep(wait_time)
+                # 3. şarkıdan sonra uzun dinlenme
+                # i+1 çünkü i 0'dan başlıyor. (i+1) % 3 == 0 ise 3, 6, 9...
+                if (i + 1) % 3 == 0:
+                    cooldown_count = (i + 1) // 3
+                    
+                    # Tek sayılarda (1, 3, 5...): 7-10 sn
+                    # Çift sayılarda (2, 4, 6...): 10-16 sn
+                    if cooldown_count % 2 == 1:
+                        wait = random.uniform(7, 10)
+                        msg = f"Soğuma (Kısa): {wait:.1f}s..."
+                    else:
+                        wait = random.uniform(10, 16)
+                        msg = f"Soğuma (Uzun): {wait:.1f}s..."
+                    
+                    self.update_status(msg, "orange")
+                    time.sleep(wait)
+                else:
+                    # 1-3 sn arası rastgele
+                    time.sleep(random.uniform(1, 3))
             
         self.update_status("Tüm indirmeler tamamlandı!", "green")
         self.root.after(0, lambda: self.btn_download_all.config(state=tk.NORMAL))
