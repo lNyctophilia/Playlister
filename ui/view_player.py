@@ -96,9 +96,10 @@ class ViewPlayer:
 
                 url = info.get('url')
                 duration = info.get('duration', 0)
+                http_headers = info.get('http_headers', {})
                 
             if url:
-                self.root.after(0, lambda: self.start_vlc_stream(url, duration, title_info))
+                self.root.after(0, lambda: self.start_vlc_stream(url, duration, title_info, http_headers))
             else:
                 self.update_status("Ses linki alınamadı (URL yok).", "red")
                 self.root.after(0, lambda: self.btn_player_play.config(text="▶"))
@@ -106,9 +107,14 @@ class ViewPlayer:
             self.update_status(f"Oynatma hatası: {e}", "red")
             self.root.after(0, lambda: self.btn_player_play.config(text="▶"))
 
-    def start_vlc_stream(self, url, duration, title):
+    def start_vlc_stream(self, url, duration, title, http_headers=None):
         self.player.stop()
         media = self.vlc_instance.media_new(url)
+        
+        # Youtube 403 hatasını önlemek için User-Agent ekle
+        if http_headers and 'User-Agent' in http_headers:
+            media.add_option(f":http-user-agent={http_headers['User-Agent']}")
+            
         self.player.set_media(media)
         self.player.play()
         
