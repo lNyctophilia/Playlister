@@ -1,10 +1,16 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, simpledialog
+import requests
 from ytmusicapi import YTMusic
 import threading
-import webbrowser
 import time
 import locale
+import json
+import base64
+import os
+from tkinter import simpledialog
+import webbrowser
+
 
 def parse_views(view_text):
     """
@@ -34,6 +40,38 @@ def parse_views(view_text):
         return int(float(text) * multiplier)
     except ValueError:
         return 0
+
+# --- Simple Encryption Helper ---
+# Not military grade, but prevents plain text reading
+ENC_KEY = "PlaylisterAppSecretKey"
+
+def encrypt_text(text):
+    if not text: return ""
+    try:
+        # Simple XOR
+        chars = []
+        key_len = len(ENC_KEY)
+        for i, char in enumerate(text):
+            x = ord(char) ^ ord(ENC_KEY[i % key_len])
+            chars.append(chr(x))
+        return base64.b64encode("".join(chars).encode('utf-8')).decode('utf-8')
+    except:
+        return text
+
+def decrypt_text(text):
+    if not text: return ""
+    try:
+        # Decode Base64
+        decoded = base64.b64decode(text.encode('utf-8')).decode('utf-8')
+        chars = []
+        key_len = len(ENC_KEY)
+        for i, char in enumerate(decoded):
+            x = ord(char) ^ ord(ENC_KEY[i % key_len])
+            chars.append(chr(x))
+        return "".join(chars)
+    except:
+        return ""
+
 
 class App:
     def __init__(self, root):
@@ -87,11 +125,19 @@ class App:
                                         bg="#ddd", fg="#333", relief=tk.RAISED)
         self.btn_mode_chart.pack(side=tk.LEFT, padx=5, pady=5)
 
-        self.btn_mode_genre = tk.Button(self.nav_frame, text="🎸 Türe Göre (Beta)",
+        self.btn_mode_genre = tk.Button(self.nav_frame, text="🎸 Türe Göre Öneri",
                                         command=self.show_genre_view,
                                         font=("Helvetica", 10, "bold"),
                                         bg="#ddd", fg="#333", relief=tk.RAISED)
         self.btn_mode_genre.pack(side=tk.LEFT, padx=5, pady=5)
+
+        # Ayarlar Butonu (Sağ Üst)
+        self.btn_settings = tk.Button(self.nav_frame, text="⚙ Ayarlar",
+                                      command=self.open_settings,
+                                      font=("Helvetica", 9),
+                                      bg="#555", fg="white", relief=tk.RAISED)
+        self.btn_settings.pack(side=tk.RIGHT, padx=20, pady=5)
+
 
         # --- Ana Konteyner ---
         self.container = tk.Frame(root)
@@ -117,7 +163,22 @@ class App:
         self.song_map = {} 
         self.song_map = {} 
         self.chart_map = {} 
-        # (Ikon tanımları artık gerekli değil, text rengi kullanılacak)
+        # Ikon tanımları artık gerekli değil, text rengi kullanılacak
+        
+        # Last.fm API Init
+        self.config_file = "config.json"
+        
+        conf = self.load_config()
+        encrypted_key = conf.get("lastfm_api_key", "")
+        self.lastfm_api_key = decrypt_text(encrypted_key) if encrypted_key else ""
+        
+        # Setup Settings Button in UI (Wait for UI logic or insert here)
+        # We need to insert the settings button in __init__ nav section
+        
+        # Startup check trigger removed
+        # self.root.after(500, self.startup_check)
+
+
         
     def update_status(self, text, color="black"):
         self.root.after(0, lambda: self.status_bar.config(text=text, fg=color))
@@ -143,6 +204,54 @@ class App:
         self.search_view.pack(fill="both", expand=True)
         self.update_status("Mod: Sanatçı & Şarkı Arama - Sanatçı adı girerek şarkılarını listeleyin.")
 
+    def open_settings(self):
+        win = tk.Toplevel(self.root)
+        win.title("Ayarlar")
+        win.geometry("400x250")
+        
+        tk.Label(win, text="🔧 Uygulama Ayarları", font=("Helvetica", 14, "bold")).pack(pady=15)
+        
+        # Last.fm Section
+        # ttk.LabelFrame 'padding' destekler
+        lf_frame = ttk.LabelFrame(win, text="Last.fm API", padding=10)
+
+        lf_frame.pack(fill=tk.X, padx=20, pady=10)
+        
+        status_text = "DURUM: Kayıtlı ✅" if self.lastfm_api_key else "DURUM: Kayıtlı Değil ❌"
+        lbl_status = tk.Label(lf_frame, text=status_text, fg="green" if self.lastfm_api_key else "red", font=("Consolas", 10, "bold"))
+        lbl_status.pack()
+        
+        btn_frame = tk.Frame(lf_frame)
+        btn_frame.pack(pady=10)
+        
+        def delete_key():
+            self.lastfm_api_key = ""
+            self.save_config({"lastfm_api_key": ""})
+            lbl_status.config(text="DURUM: Silindi ❌", fg="red")
+            messagebox.showinfo("Bilgi", "API Anahtarı silindi.")
+            win.destroy()
+            # Eğer 3. Mod açıksa 1. moda at
+            if self.genre_view.winfo_ismapped():
+                self.show_search_view()
+            
+        def new_key():
+            key = simpledialog.askstring("API Key", "Yeni API Key Girin:", parent=win)
+            if key:
+                self.lastfm_api_key = key.strip()
+                enc = encrypt_text(self.lastfm_api_key)
+                self.save_config({"lastfm_api_key": enc}) # Save encrypted
+                lbl_status.config(text="DURUM: Güncellendi ✅", fg="green")
+                messagebox.showinfo("Bilgi", "API Anahtarı güncellendi.")
+                win.destroy()
+
+        tk.Button(btn_frame, text="Yeni Gir", command=new_key, bg="#4CAF50", fg="white").pack(side=tk.LEFT, padx=5)
+        tk.Button(btn_frame, text="Anahtarı Sil", command=delete_key, bg="#F44336", fg="white").pack(side=tk.LEFT, padx=5)
+
+    # startup_check remove/deprecated
+
+
+
+
     def show_chart_view(self):
         self.set_active_mode_button("chart")
         self.search_view.pack_forget()
@@ -151,6 +260,18 @@ class App:
         self.update_status("Mod: Ülke Listeleri - Ülke seçimi yaparak en popüler sanatçıları görün.")
 
     def show_genre_view(self):
+        # Mod 3'e girerken API Key Kontrolü
+        if not self.lastfm_api_key:
+            key = simpledialog.askstring("Zorunlu Kurulum", "Playlister Mod 3 Özellikleri için\nLütfen Last.fm API Anahtarınızı Giriniz:", parent=self.root)
+            if key:
+                self.lastfm_api_key = key.strip()
+                enc = encrypt_text(self.lastfm_api_key)
+                self.save_config({"lastfm_api_key": enc})
+                messagebox.showinfo("Başarılı", "Anahtar şifrelenerek kaydedildi.")
+            else:
+                # Anahtar girilmezse moda geçiş yapma
+                return
+
         self.set_active_mode_button("genre")
         self.search_view.pack_forget()
         self.chart_view.pack_forget()
@@ -448,7 +569,8 @@ class App:
         # Sistem dilini/ülkesini otomatik algıla
         local_name = "Türkiye" # Varsayılan
         try:
-            sys_lang = locale.getdefaultlocale()[0]
+            locale.setlocale(locale.LC_ALL, '')
+            sys_lang = locale.getlocale()[0]
             if sys_lang:
                 local_code = sys_lang.split('_')[-1].upper()
                 # Sözlükten ismini bul
@@ -671,29 +793,37 @@ class App:
         self.combo_genre_country = ttk.Combobox(ctrl_frame, values=display_values, state="readonly", width=15)
         self.combo_genre_country.current(0) # Türkiye
         self.combo_genre_country.pack(side=tk.LEFT, padx=5)
+
+        # Limit Seçimi
+        tk.Label(ctrl_frame, text="Limit:").pack(side=tk.LEFT, padx=(10, 2))
+        self.entry_genre_limit = tk.Entry(ctrl_frame, width=5)
+        self.entry_genre_limit.insert(0, "50") # Varsayılan 50
+        self.entry_genre_limit.pack(side=tk.LEFT, padx=2)
+        self.entry_genre_limit.bind("<Return>", lambda e: self.start_genre_load())
         
         # Buton
-        self.btn_genre_load = tk.Button(ctrl_frame, text="Sanatçıları Listele", 
+        self.btn_genre_load = tk.Button(ctrl_frame, text="Sanatçıları Listele (Last.fm)", 
                                         command=self.start_genre_load, 
-                                        bg="#9C27B0", fg="white", width=20)
-        self.btn_genre_load.pack(side=tk.LEFT, padx=20)
+                                        bg="#b90000", fg="white", width=25)
+        self.btn_genre_load.pack(side=tk.LEFT, padx=10)
         
         self.lbl_genre_progress = tk.Label(ctrl_frame, text="", fg="gray")
         self.lbl_genre_progress.pack(side=tk.LEFT)
+
         
         # Liste
-        cols = ("Rank", "Sanatçı", "Tür", "Durum", "Ara")
+        cols = ("Rank", "Sanatçı", "Tür", "Toplam Dinlenme", "Ara")
         self.tree_genre = ttk.Treeview(self.genre_view, columns=cols, show='headings')
         self.tree_genre.heading("Rank", text="Sıra")
         self.tree_genre.heading("Sanatçı", text="Sanatçı")
         self.tree_genre.heading("Tür", text="Kategori")
-        self.tree_genre.heading("Durum", text="Durum")
+        self.tree_genre.heading("Toplam Dinlenme", text="Toplam Dinlenme")
         self.tree_genre.heading("Ara", text="İşlem")
         
         self.tree_genre.column("Rank", width=50, anchor=tk.CENTER)
         self.tree_genre.column("Sanatçı", width=200)
         self.tree_genre.column("Tür", width=100)
-        self.tree_genre.column("Durum", width=100)
+        self.tree_genre.column("Toplam Dinlenme", width=150)
         self.tree_genre.column("Ara", width=60, anchor=tk.CENTER)
         
         sb = ttk.Scrollbar(self.genre_view, orient=tk.VERTICAL, command=self.tree_genre.yview)
@@ -744,17 +874,55 @@ class App:
             self.entry_artist.insert(0, artist_name)
             self.start_search()
 
+    def set_lastfm_key(self):
+        self.open_settings()
+        
+    def load_config(self):
+        if os.path.exists(self.config_file):
+            try:
+                with open(self.config_file, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except:
+                pass
+        return {}
+
+    def save_config(self, data):
+        try:
+            # Mevcut configi koru, üzerine yaz
+            current = self.load_config()
+            current.update(data)
+            with open(self.config_file, "w", encoding="utf-8") as f:
+                json.dump(current, f, indent=4)
+        except Exception as e:
+            print(f"Config save error: {e}")
+
+
     def start_genre_load(self):
         genre = self.combo_genre.get()
         country_name = self.combo_genre_country.get()
+
+        try:
+            limit = int(self.entry_genre_limit.get())
+            if limit < 10:
+                limit = 10
+                self.entry_genre_limit.delete(0, tk.END)
+                self.entry_genre_limit.insert(0, "10")
+            elif limit > 200:
+                limit = 200
+                self.entry_genre_limit.delete(0, tk.END)
+                self.entry_genre_limit.insert(0, "200")
+        except:
+            limit = 50
+            self.entry_genre_limit.delete(0, tk.END)
+            self.entry_genre_limit.insert(0, "50")
         
         self.btn_genre_load.config(state=tk.DISABLED, text="Taranıyor...")
-        self.update_status(f"{country_name} için {genre} listeleri taranıyor...", "purple")
+        self.update_status(f"{country_name} için {genre} listeleri taranıyor... (Limit: {limit})", "purple")
         
         for item in self.tree_genre.get_children():
             self.tree_genre.delete(item)
             
-        threading.Thread(target=self.load_genre_thread, args=(genre, country_name), daemon=True).start()
+        threading.Thread(target=self.load_genre_thread, args=(genre, country_name, limit), daemon=True).start()
 
     def update_genre_progress(self, text, insert_item=None):
         def _update():
@@ -764,119 +932,118 @@ class App:
                 tag_zebra = 'odd' if (count + 1) % 2 == 1 else 'even'
                 self.tree_genre.insert("", "end", values=(
                     insert_item['rank'], insert_item['artist'], insert_item['genre'], 
-                    "Popüler", "🔍"
+                    insert_item['views_text'], "🔍"
                 ), tags=(tag_zebra,))
         self.root.after(0, _update)
 
-    def load_genre_thread(self, genre, country_name):
+    def load_genre_thread(self, genre, country_name, limit):
         try:
-            # 1. Arama Sorgusu Oluştur
-            # Türkiye için özel sorgular, diğerleri için genel
-            query = ""
+            # 1. API Anahtarı Kontrolü
+            if not getattr(self, 'lastfm_api_key', None):
+                self.update_status("Hata: API Anahtarı eksik! Ayarlar'dan ekleyin.", "red")
+                return
+
+
+            # Tag Belirleme
+            tag_query = genre.lower()
             if country_name == "Türkiye":
-                base_queries = [
-                    f"Türkçe {genre} Top Hits",
-                    f"En İyi Türkçe {genre} Şarkılar",
-                    f"Popüler {genre} Türkiye"
-                ]
-                if genre == "Pop": base_queries = ["Türkçe Pop Top Hits", "Kral Pop En İyiler", "Power Türk Pop"]
-                elif genre == "Rock": base_queries = ["Türkçe Rock Top 50", "Anadolu Rock Efsaneleri", "Türk Rock Hits"]
-                elif genre == "Rap": base_queries = ["Türkçe Rap Top 50", "Hiphop Türkiye", "Türkçe Rap Hits"]
-                elif genre == "Arabesk": base_queries = ["Damar Arabesk Top List", "Arabesk Klasikleri", "Kral FM Arabesk"]
-                elif genre == "Halk Müziği": base_queries = ["Türk Halk Müziği Seçmeler", "Türkülerimiz", "Anadolu Türküleri"]
-            else:
-                # Global veya Yabancı
-                c_term = "" if country_name == "Global" else country_name
-                base_queries = [
-                    f"Top {genre} Hits {c_term}",
-                    f"Best {genre} Songs {c_term}",
-                    f"{c_term} {genre} Charts"
-                ]
-
-            self.update_status(f"Birden fazla kaynaktan {genre} listeleri taranıyor...", "purple")
+                # Özel Mappings
+                mapping = {
+                    "Pop": "turkish pop",
+                    "Rock": "turkish rock",
+                    "Rap": "turkish rap",
+                    "Arabesk": "arabesk",
+                    "Elektronik": "turkish electronic",
+                    "Indie": "turkish indie",
+                    "Metal": "turkish metal",
+                    "Jazz": "turkish jazz",
+                    "Hip Hop": "turkish hip hop",
+                    "Halk Müziği": "turkish folk",
+                    "Klasik": "turkish classical"
+                }
+                tag_query = mapping.get(genre, "turkish " + genre.lower())
             
-            seen_artists = set()
-            unique_artists_list = []
+            self.update_status(f"Last.fm üzerinden '{tag_query}' etiketi taranıyor...", "purple")
             
-            # 3 Farklı Sorgu ile Arayıp Birleştirelim (Çeşitlilik Artar)
-            # Her sorgudan en iyi 1 playlisti alacağız
-            playlists_to_scan = []
+            # API İsteği
+            # API Key buraya girilmeli
+            API_KEY = getattr(self, 'lastfm_api_key', '') 
             
-            for q in base_queries[:2]: # İlk 2 sorguyu kullan (Fazla vakit kaybetmemek için)
-                s_results = self.yt.search(q, filter="playlists")
-                if s_results:
-                    playlists_to_scan.append(s_results[0]) # En iyi eşleşen
-            
-            if not playlists_to_scan:
-                self.update_status("Uygun playlist bulunamadı.", "red")
+            if not API_KEY:
+                # Varsayılan deneme (Eğer kullanıcı kod içine yazdıysa)
+                # self.lastfm_api_key = "YOUR_API_KEY"
+                # Eğer hala yoksa:
+                self.update_status("Hata: Last.fm API Key girilmedi. Ayarlardan tanımlayın.", "red")
                 return
 
-            total_playlists = len(playlists_to_scan)
+            url = "http://ws.audioscrobbler.com/2.0/"
+            params = {
+                'method': 'tag.gettopartists',
+                'tag': tag_query,
+                'api_key': API_KEY,
+                'format': 'json',
+                'limit': limit
+            }
             
-            for idx, pl in enumerate(playlists_to_scan):
-                pl_id = pl['browseId']
-                pl_title = pl['title']
-                self.update_status(f"Kaynak {idx+1}/{total_playlists}: {pl_title} inceleniyor...", "purple")
+            response = requests.get(url, params=params, timeout=10)
+            data = response.json()
+            
+            if 'error' in data:
+                self.update_status(f"Last.fm Hatası: {data.get('message')}", "red")
+                return
                 
-                try:
-                    # Playlistten 50 şarkı çek
-                    pl_data = self.yt.get_playlist(pl_id, limit=50)
-                    tracks = pl_data.get('tracks', [])
-                    
-                    for track in tracks:
-                        if len(unique_artists_list) >= 60: break # Toplam limit
-                        
-                        artists = track.get('artists', [])
-                        if not artists: continue
-                        
-                        # Kanal isimlerini elemek için kontrol:
-                        # Gerçek sanatçıların genellikle 'id'si olur ve 'id'si 24 karakterli channel ID olmaz (Genelde)
-                        # Ancak en garantisi: Birden fazla şarkıda geçiyorsa o sanatçıdır (Bu karmaşık).
-                        # Basit yöntem: 'id' alanı varsa sanatçı profilidir.
-                        
-                        main_artist_obj = artists[0]
-                        art_name = main_artist_obj.get('name')
-                        art_id = main_artist_obj.get('id')
-                        
-                        # Filtreleme Kuralları:
-                        # 1. İsmi boş olmasın
-                        # 2. Daha önce eklenmemiş olsun
-                        # 3. ID'si olsun (Bu genellikle resmi sanatçı olduğunu gösterir, kanal değil)
-                        if art_name and (art_name not in seen_artists) and art_id:
-                            # Bazı "Various Artists" veya "Çeşitli Sanatçılar" gibi jenerik isimleri de eleyelim
-                            if "Various" in art_name or "Çeşitli" in art_name:
-                                continue
-                                
-                            seen_artists.add(art_name)
-                            unique_artists_list.append({
-                                'name': art_name, 
-                                'id': art_id # İlerde profil linki için kullanılabilir
-                            })
-                except:
-                    continue
+            artists = data.get('topartists', {}).get('artist', [])
             
-            # Listeleme
-            if not unique_artists_list:
-                self.update_status("Sanatçı bulunamadı.", "red")
+            if not artists:
+                self.update_status("Bu türde sanatçı bulunamadı.", "red")
                 return
 
-            # Sonuçları listeye bas
-            for i, art_data in enumerate(unique_artists_list):
+            self.update_status(f"{len(artists)} sanatçı bulundu. Listeleniyor...", "orange")
+            
+            for i, art in enumerate(artists):
+                name = art.get('name')
+                if not name: continue
+
+                # YouTube Music'ten Analiz
+                views_text = "..."
+                try:
+                    # 1. İsmi Ara (YT Music Artist ID bulmak için)
+                    search_res = self.yt.search(name, filter="artists", limit=1)
+                    if search_res:
+                        b_id = search_res[0]['browseId']
+                        # 2. Detay Çek
+                        details = self.yt.get_artist(b_id)
+                        v_val = details.get('views')
+                        
+                        if not v_val or str(v_val).lower() == 'none':
+                             views_text = 'Veri Yok'
+                        else:
+                             views_text = v_val
+                    else:
+                        views_text = "Bulunamadı"
+                except Exception as e:
+                    views_text = "Hata"
+
                 item = {
                     "rank": str(i+1),
-                    "artist": art_data['name'],
-                    "genre": genre
+                    "artist": name,
+                    "genre": genre,
+                    "views_text": views_text
                 }
-                self.update_genre_progress(f"Bulundu: {art_data['name']}", insert_item=item)
-                time.sleep(0.01)
                 
-            self.update_status(f"Tamamlandı. {len(unique_artists_list)} sanatçı, {total_playlists} farklı listeden derlendi.", "green")
-            
+                self.update_genre_progress(f"Eklendi ({i+1}/{len(artists)}): {name}", insert_item=item)
+                # API limitine takılmamak ve UI donmasını engellemek için biraz bekle
+                # Her sorgu 2 request yaptığı için biraz yavaş olabilir.
+                pass
+                
+            self.update_status(f"Tamamlandı. {len(artists)} sanatçı başarıyla çekildi.", "green")
+
         except Exception as e:
             self.update_status(f"Hata: {e}", "red")
         finally:
             self.root.after(0, lambda: self.btn_genre_load.config(state=tk.NORMAL, text="Sanatçıları Listele"))
             self.root.after(0, lambda: self.lbl_genre_progress.config(text=""))
+            
 
     def reset_chart_ui(self):
         def _reset():
