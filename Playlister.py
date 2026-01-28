@@ -124,7 +124,9 @@ class App(UiShared, ViewSearch, ViewCharts, ViewGenre, ViewFav, ViewPlayer, View
         
         if vlc:
             try:
-                self.vlc_instance = vlc.Instance()
+                # --no-video: Video penceresini engeller (Audio-only)
+                # --quiet: Konsol hatalarını azaltır
+                self.vlc_instance = vlc.Instance('--no-video', '--quiet')
                 self.player = self.vlc_instance.media_player_new()
             except Exception as e:
                 print(f"VLC Init Error: {e}")

@@ -86,6 +86,7 @@ class ViewPlayer:
                 'ignoreerrors': True,
                 'no_warnings': True,
                 'cachedir': False,
+                'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
             }
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(video_id, download=False)
@@ -111,9 +112,12 @@ class ViewPlayer:
         self.player.stop()
         media = self.vlc_instance.media_new(url)
         
-        # Youtube 403 hatasını önlemek için User-Agent ekle
-        if http_headers and 'User-Agent' in http_headers:
-            media.add_option(f":http-user-agent={http_headers['User-Agent']}")
+        # Youtube 403 hatasını önlemek için User-Agent ve Referer ekle
+        if http_headers:
+            if 'User-Agent' in http_headers:
+                media.add_option(f":http-user-agent={http_headers['User-Agent']}")
+            if 'Referer' in http_headers:
+                media.add_option(f":http-referrer={http_headers['Referer']}")
             
         self.player.set_media(media)
         self.player.play()
