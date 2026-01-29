@@ -86,7 +86,7 @@ class ViewPlayer:
                 'ignoreerrors': True,
                 'no_warnings': True,
                 'cachedir': False,
-                'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
+                'extractor_args': {'youtube': {'player_client': ['ios', 'android', 'web']}},
             }
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(video_id, download=False)
