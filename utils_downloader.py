@@ -117,7 +117,7 @@ class Downloader:
         
         # Tarayıcı Deneme Sırası: Edge -> Chrome -> Firefox -> None (Cookie'siz)
         opts = {
-            'format': 'bestaudio/best',
+            'format': 'bestaudio[ext=opus]/bestaudio/best',
             'outtmpl': os.path.join(DOWNLOAD_DIR, fname),
             'download_archive': ARCHIVE_FILE,
             'noplaylist': True,
@@ -130,6 +130,11 @@ class Downloader:
                     'player_client': ['ios', 'android', 'web'],
                 }
             },
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'opus',
+                'preferredquality': '192',
+            }],
             'http_headers': {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
