@@ -29,6 +29,7 @@ class Downloader:
         # Helper clean (tekrar tanımlandı, sınıf içinde ortaklaştırılabilir ama pratik olsun)
         def clean(s):
             if not s: return ""
+            s = str(s)
             return "".join([c for c in s if c.isalnum() or c in " -_()."]).strip()
 
         # 1. Yeni Format Kontrolü: "Artist - Title.mp3 / .webm / .m4a"
@@ -109,6 +110,8 @@ class Downloader:
         # Dosya ismi formatı: Artist - Title.ext (ID YOK)
         # Karakter temizliği
         def clean(s):
+            if not s: return ""
+            s = str(s)
             return "".join([c for c in s if c.isalnum() or c in " -_()."]).strip()
         
         # Video ID artık isme eklenmiyor
