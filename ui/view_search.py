@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import threading
+from difflib import SequenceMatcher
 from utils import parse_views
 from utils_downloader import Downloader
 
@@ -251,11 +252,11 @@ class ViewSearch:
                 self.update_status("Şarkı bulunamadı.", "red")
                 return
             
-            all_songs = []
+            candidates = []
             processed_count = 0
             observed_video_ids = set()
-            observed_titles = set()
             
+            # --- Phase 1: Collect Candidates ---
             for song in combined_results:
                 if self.stop_listing:
                     self.update_status("Arama kullanıcı tarafından durduruldu.", "red")
@@ -265,33 +266,19 @@ class ViewSearch:
                 if not artists: continue 
                 
                 # --- Sanatçı Doğrulama (Akıllı ve Katı Mod) ---
-                # Sorun: "UZI" aratınca "Lil Uzi Vert" çıkmamalı (Substring hatası)
-                # Sorun: "Motive & Pango" aratınca "Motive x Pango" formatındakiler de bulunmalı
-                # Sorun: "Ajdar Anık" (harf duyarlılığı) çözülmeli
-                
-                # 1. Şarkının sanatçı listesini al ve parçala (örn: "Motive x Pango" -> ["motive", "pango"])
                 raw_artists = [a['name'] for a in artists]
                 expanded_song_artists = set()
                 
-                # YouTube bazen sanatçıları "A x B" veya "A & B" diye tek string olarak döner. Bunları ayıralım.
                 separators = [" ft ", " ft.", " feat ", " feat.", " featuring ", " & ", " x ", " ve ", ",", " and ", "/", " + "]
                 
                 for r_art in raw_artists:
-                    # Case-insensitive işlem için lowercase/casefold
                     temp_art = r_art.lower() if hasattr(r_art, 'lower') else str(r_art).lower()
-                    
-                    # Tüm ayraçları tek bir ayraça (|) çevir
                     for sep in separators:
                         temp_art = temp_art.replace(sep, "|")
-                    
-                    # Parçala ve temizle
                     tokens = [t.strip() for t in temp_art.split("|") if t.strip()]
                     expanded_song_artists.update(tokens)
 
-                # 2. Aranacak kelimeleri hazırla
                 search_targets = set()
-                
-                # Girilen metni parçala (Motive & Pango -> Motive, Pango)
                 user_query_parts = artist_name.lower().replace(" & ", "&").replace(" ve ", "&").replace(",", "&").split("&")
                 for q in user_query_parts:
                     clean_q = q.strip()
@@ -300,8 +287,6 @@ class ViewSearch:
                 if artist_true_name:
                     search_targets.add(artist_true_name.lower().strip())
                 
-                # 3. Eşleştirme (Tam Eşleşme)
-                # target "uzi" ise, artist listesinde tam olarak "uzi" olmalı. "lil uzi vert" olamaz.
                 match_found = False
                 for target in search_targets:
                     if target in expanded_song_artists:
@@ -318,16 +303,10 @@ class ViewSearch:
                 vid_id = song.get('videoId', '')
                 title = song.get('title', 'Bilinmiyor')
                 
-                # Deduplication Check (Video ID)
+                # Deduplication Check (Video ID) - Ön eleme
                 if vid_id in observed_video_ids:
                     continue
-                
-                norm_title = title.lower().strip()
-                if norm_title in observed_titles:
-                   continue
-                
                 observed_video_ids.add(vid_id)
-                observed_titles.add(norm_title)
 
                 data = {
                     "title": title,
@@ -337,7 +316,39 @@ class ViewSearch:
                     "duration": song.get('duration', ''),
                     "video_id": vid_id
                 }
-                all_songs.append(data)
+                candidates.append(data)
+            
+            # --- Phase 2: Prioritize Albums & Fuzzy Deduplication ---
+            # Albüm şarkılarını (Single olmayanları) öne al. 
+            # Böylece "Aynı Şarkı" hem Albüm hem Single ise, Albüm versiyonu listeye girer.
+            candidates.sort(key=lambda x: 1 if x['album'] == 'Single' else 0)
+            
+            all_songs = []
+            observed_norm_titles = set()
+            
+            for song in candidates:
+                norm_title = song['title'].lower().strip()
+                
+                # 1. Tam İsim Eşleşmesi (Exact Match)
+                if norm_title in observed_norm_titles:
+                    continue
+                
+                # 2. Benzer İsim Eşleşmesi (Sadece Single ise kontrol et)
+                # Eğer bu şarkı 'Single' ise ve listemizde buna çok benzeyen (Albüm versiyonu) bir şarkı varsa ekleme.
+                if song['album'] == 'Single':
+                    is_fuzzy_duplicate = False
+                    for existing in all_songs:
+                        existing_title = existing['title'].lower().strip()
+                        # SequenceMatcher ratio > 0.90 (Yüksek benzerlik)
+                        if SequenceMatcher(None, norm_title, existing_title).ratio() > 0.9:
+                            is_fuzzy_duplicate = True
+                            break
+                    
+                    if is_fuzzy_duplicate:
+                        continue
+                
+                observed_norm_titles.add(norm_title)
+                all_songs.append(song)
                 
             total_found = len(all_songs)
             self.update_status(f"{total_found} aday şarkı bulundu. Listeler oluşturuluyor...", "orange")
