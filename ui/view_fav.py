@@ -17,7 +17,7 @@ class ViewFav:
         tk.Label(top_frame, text="Favorilerim", font=("Helvetica", 12, "bold")).pack(side=tk.LEFT, padx=10)
         
         self.btn_refresh_fav = tk.Button(top_frame, text="Yenile", command=self.load_fav_ui, bg="#2196F3", fg="white")
-        self.btn_refresh_fav.pack(side=tk.RIGHT, padx=5)
+        self.btn_refresh_fav.pack(side=tk.RIGHT, padx=(5, 20))
 
         self.btn_download_all = tk.Button(top_frame, text="Tümünü İndir", command=self.download_all_favs, bg="#FF9800", fg="white")
         self.btn_download_all.pack(side=tk.RIGHT, padx=5)
