@@ -356,11 +356,18 @@ class UiShared:
             
         tree.last_tooltip_item = None
         tree.last_tooltip_col = None
+        tree.tooltip_timer = None
+
+        def cancel_tooltip_timer():
+            if tree.tooltip_timer:
+                tree.after_cancel(tree.tooltip_timer)
+                tree.tooltip_timer = None
 
         def on_motion(event):
             # Sadece hücre üzerindeyse
             region = tree.identify_region(event.x, event.y)
             if region != "cell":
+                cancel_tooltip_timer()
                 tree.tooltip_obj.hidetip()
                 tree.last_tooltip_item = None
                 return
@@ -369,43 +376,48 @@ class UiShared:
             col = tree.identify_column(event.x)
             
             if not item:
+                cancel_tooltip_timer()
                 tree.tooltip_obj.hidetip()
                 tree.last_tooltip_item = None
                 return
 
             # Eğer farklı bir hücreye geçildiyse güncelle
             if item != tree.last_tooltip_item or col != tree.last_tooltip_col:
-                # Kolon index kontrolü
-                try:
-                    col_idx = int(col.replace("#", "")) - 1
-                    if col_idx in excluded_columns:
-                        tree.tooltip_obj.hidetip()
-                        tree.last_tooltip_item = None
-                        # excluded kolona gelince hover'ı sıfırla ki tekrar allowed kolona geçince tetiklensin
-                        # ama tooltip gösterme
-                        return
-                except:
-                    pass
-
+                cancel_tooltip_timer()
                 tree.tooltip_obj.hidetip()
                 tree.last_tooltip_item = item
                 tree.last_tooltip_col = col
                 
-                # İçeriği al
+                # Kolon index kontrolü (Excluded Check)
                 try:
                     col_idx = int(col.replace("#", "")) - 1
-                    
+                    if col_idx in excluded_columns:
+                        return # Excluded, timer başlatma
+                except:
+                    return
+
+                # İçeriği al ve timer başlat
+                try:
+                    col_idx = int(col.replace("#", "")) - 1
                     values = tree.item(item, 'values')
                     
                     if 0 <= col_idx < len(values):
                         text = str(values[col_idx])
                         if text:
-                            # Tooltip göster
-                            tree.tooltip_obj.showtip(text, event.x_root, event.y_root)
+                            # 700ms Gecikmeli Gösterim
+                            tree.tooltip_timer = tree.after(700, lambda t=text: show_tip_delayed(t))
                 except:
                     pass
+
+        def show_tip_delayed(text):
+            # Mouse pozisyonunu al
+            x = tree.winfo_pointerx()
+            y = tree.winfo_pointery()
+            tree.tooltip_obj.showtip(text, x, y)
+            tree.tooltip_timer = None # Timer bitti
         
         def on_leave(event):
+            cancel_tooltip_timer()
             tree.tooltip_obj.hidetip()
             tree.last_tooltip_item = None
             tree.last_tooltip_col = None
@@ -417,8 +429,6 @@ class UiShared:
 class ToolTip:
     """
     Basit ToolTip sınıfı.
-    Normalde hover delay ile çalışır ama burada mouse hareketini 
-    takip eden dinamik bir yapı kurduk.
     """
     def __init__(self, widget):
         self.widget = widget
@@ -428,6 +438,7 @@ class ToolTip:
 
     def showtip(self, text, x, y):
         "Display text in tooltip window"
+        # Halihazırda açıksa veya text yoksa çık
         if self.tipwindow or not text:
             return
         
@@ -435,8 +446,8 @@ class ToolTip:
         # Pencere kenarlıklarını kaldır (Sadece text kutusu gibi görünsün)
         tw.wm_overrideredirect(True)
         
-        # Mouse'un biraz sağına ve altına konumlandır
-        tw.wm_geometry(f"+{x+15}+{y+10}")
+        # Mouse'un biraz sağına ve altına konumlandır (Offset)
+        tw.wm_geometry(f"+{x+10}+{y+20}")
         
         label = tk.Label(tw, text=text, justify=tk.LEFT,
                       background="#ffffe0", relief=tk.SOLID, borderwidth=1,
