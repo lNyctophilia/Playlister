@@ -50,9 +50,6 @@ class ViewGenre:
                                         command=self.start_genre_load, 
                                         bg="#b90000", fg="white", width=25)
         self.btn_genre_load.pack(side=tk.LEFT, padx=10)
-
-        self.btn_genre_stop = tk.Button(ctrl_frame, text="Durdur", command=self.stop_current_listing, bg="#F44336", fg="white", width=10, state=tk.DISABLED)
-        self.btn_genre_stop.pack(side=tk.LEFT, padx=5)
         
         self.lbl_genre_progress = tk.Label(ctrl_frame, text="", fg="gray")
         self.lbl_genre_progress.pack(side=tk.LEFT)
@@ -178,6 +175,10 @@ class ViewGenre:
         self.open_settings()
         
     def start_genre_load(self):
+        if self.btn_genre_load['text'] == "Durdur":
+            self.stop_current_listing()
+            return
+
         genre = self.combo_genre.get()
         country_name = self.combo_genre_country.get()
 
@@ -196,7 +197,7 @@ class ViewGenre:
             self.entry_genre_limit.delete(0, tk.END)
             self.entry_genre_limit.insert(0, "50")
         
-        self.btn_genre_load.config(state=tk.DISABLED, text="Taranıyor...")
+        self.btn_genre_load.config(text="Durdur", bg="#F44336")
         self.combo_genre.config(state=tk.DISABLED)
         self.combo_genre_country.config(state=tk.DISABLED)
         self.entry_genre_limit.config(state=tk.DISABLED)
@@ -206,7 +207,6 @@ class ViewGenre:
             self.tree_genre.delete(item)
             
         self.stop_listing = False
-        self.btn_genre_stop.config(state=tk.NORMAL)
         threading.Thread(target=self.load_genre_thread, args=(genre, country_name, limit), daemon=True).start()
 
     def update_genre_progress(self, text, insert_item=None):
@@ -320,8 +320,7 @@ class ViewGenre:
         except Exception as e:
             self.update_status(f"Hata: {e}", "red")
         finally:
-            self.root.after(0, lambda: self.btn_genre_load.config(state=tk.NORMAL, text="Sanatçıları Listele"))
-            self.root.after(0, lambda: self.btn_genre_stop.config(state=tk.DISABLED))
+            self.root.after(0, lambda: self.btn_genre_load.config(text="Sanatçıları Listele (Last.fm)", bg="#b90000"))
             self.root.after(0, lambda: self.lbl_genre_progress.config(text=""))
             self.root.after(0, lambda: self.combo_genre.config(state="readonly"))
             self.root.after(0, lambda: self.combo_genre_country.config(state="readonly"))

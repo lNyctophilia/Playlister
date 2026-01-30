@@ -65,9 +65,6 @@ class ViewCharts:
         self.btn_chart_load = tk.Button(ctrl_frame, text="Listele", command=self.start_chart_load, bg="#FF9800", fg="white", width=25)
         self.btn_chart_load.pack(side=tk.LEFT, padx=20)
         
-        self.btn_chart_stop = tk.Button(ctrl_frame, text="Durdur", command=self.stop_current_listing, bg="#F44336", fg="white", width=10, state=tk.DISABLED)
-        self.btn_chart_stop.pack(side=tk.LEFT, padx=5)
-        
         self.lbl_chart_progress = tk.Label(ctrl_frame, text="", fg="gray")
         self.lbl_chart_progress.pack(side=tk.LEFT)
         
@@ -112,6 +109,10 @@ class ViewCharts:
         self.start_search()
 
     def start_chart_load(self):
+        if self.btn_chart_load['text'] == "Durdur":
+            self.stop_current_listing()
+            return
+            
         country_name = self.combo_country.get()
         
         if "---" in country_name:
@@ -132,7 +133,7 @@ class ViewCharts:
             self.entry_chart_limit.delete(0, tk.END)
             self.entry_chart_limit.insert(0, "40")
 
-        self.btn_chart_load.config(state=tk.DISABLED, text="Veriler Çekiliyor...")
+        self.btn_chart_load.config(text="Durdur", bg="#F44336")
         self.combo_country.config(state=tk.DISABLED)
         self.entry_chart_limit.config(state=tk.DISABLED)
         self.update_status(f"{country_name} listeleri ve dinlenme sayıları çekiliyor... (Limit: {limit})", "blue")
@@ -145,7 +146,6 @@ class ViewCharts:
         self.chart_map.clear()
         
         self.stop_listing = False
-        self.btn_chart_stop.config(state=tk.NORMAL)
         threading.Thread(target=self.load_charts_thread, args=(country_code, limit), daemon=True).start()
 
     def update_chart_progress(self, text, insert_item=None):
@@ -163,11 +163,10 @@ class ViewCharts:
 
     def reset_chart_ui(self):
         def _reset():
-            self.btn_chart_load.config(state=tk.NORMAL, text="Listele")
+            self.btn_chart_load.config(text="Listele", bg="#FF9800")
             self.lbl_chart_progress.config(text="")
             self.combo_country.config(state="readonly")
             self.entry_chart_limit.config(state=tk.NORMAL)
-            self.btn_chart_stop.config(state=tk.DISABLED)
         self.root.after(0, _reset)
 
     def load_charts_thread(self, country_code, limit):

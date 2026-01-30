@@ -19,9 +19,6 @@ class ViewSearch:
         
         self.btn_search = tk.Button(top_frame, text="Şarkıları Ara", command=self.start_search, bg="#2196F3", fg="white")
         self.btn_search.pack(side=tk.LEFT, padx=10)
-
-        self.btn_search_stop = tk.Button(top_frame, text="Durdur", command=self.stop_current_listing, bg="#F44336", fg="white", state=tk.DISABLED)
-        self.btn_search_stop.pack(side=tk.LEFT, padx=2)
         
         # Limit Seçimi
         tk.Label(top_frame, text="Limit:").pack(side=tk.LEFT, padx=(10, 2))
@@ -169,6 +166,10 @@ class ViewSearch:
         return frame, tree
 
     def start_search(self):
+        if self.btn_search['text'] == "Durdur":
+            self.stop_current_listing()
+            return
+
         artist_name = self.entry_artist.get()
         if not artist_name:
             messagebox.showwarning("Uyarı", "Lütfen bir sanatçı adı girin.")
@@ -195,11 +196,10 @@ class ViewSearch:
             self.entry_search_limit.delete(0, tk.END)
             self.entry_search_limit.insert(0, "50")
             
-        self.btn_search.config(state=tk.DISABLED)
+        self.btn_search.config(text="Durdur", bg="#F44336", fg="white")
         self.entry_artist.config(state=tk.DISABLED)
         self.entry_search_limit.config(state=tk.DISABLED)
         self.stop_listing = False
-        self.btn_search_stop.config(state=tk.NORMAL)
         self.update_status(f"Hazırlanıyor... (Limit: {limit})", "blue")
         threading.Thread(target=self.search_artist_thread, args=(artist_name, limit), daemon=True).start()
 
@@ -449,7 +449,6 @@ class ViewSearch:
             self.update_status(f"Hata: {e}", "red")
         finally:
             self.root.after(0, lambda: self.lbl_search_progress.config(text=""))
-            self.root.after(0, lambda: self.btn_search.config(state=tk.NORMAL))
-            self.root.after(0, lambda: self.btn_search_stop.config(state=tk.DISABLED))
+            self.root.after(0, lambda: self.btn_search.config(text="Şarkıları Ara", bg="#2196F3", fg="white"))
             self.root.after(0, lambda: self.entry_artist.config(state=tk.NORMAL))
             self.root.after(0, lambda: self.entry_search_limit.config(state=tk.NORMAL))
