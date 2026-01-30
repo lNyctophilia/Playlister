@@ -90,6 +90,10 @@ class ViewGenre:
         self.context_menu_genre.add_command(label="Bu Sanatçıyı Ara", command=lambda: self.switch_to_artist_from_genre())
         
         self.tree_genre.bind("<Button-3>", lambda e: self.show_context_menu(e, self.tree_genre, self.context_menu_genre))
+        
+        # Tooltip
+        # Exclude: Rank(0), Tür(2), Toplam Dinlenme(3), Ara(4)
+        self.setup_treeview_tooltip(self.tree_genre, excluded_columns=[0, 2, 3, 4])
 
     def show_genre_view(self):
         # Mod 3'e girerken API Key Kontrolü

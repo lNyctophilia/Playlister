@@ -100,6 +100,10 @@ class ViewCharts:
         self.context_menu_chart = tk.Menu(self.root, tearoff=0)
         self.context_menu_chart.add_command(label="Bu Sanatçıyı Ara", command=self.switch_to_artist_from_chart)
         self.tree_chart.bind("<Button-3>", lambda e: self.show_context_menu(e, self.tree_chart, self.context_menu_chart))
+        
+        # Tooltip
+        # Exclude: Rank(0), Toplam Dinlenme(2), Trend(3), Ara(4)
+        self.setup_treeview_tooltip(self.tree_chart, excluded_columns=[0, 2, 3, 4])
 
     def direct_search_artist(self, artist_name):
         self.show_search_view()

@@ -162,6 +162,10 @@ class ViewSearch:
         tree.tag_configure('odd', background='#f9f9f9')
         tree.tag_configure('even', background='white')
 
+        # Tooltip Özelliğini Aktif Et (UiShared'dan gelir)
+        # Exclude: Sıra(0), Dinlenme(4), Süre(5), İşlemler(6)
+        self.setup_treeview_tooltip(tree, excluded_columns=[0, 4, 5, 6])
+
         return frame, tree
 
     def start_search(self):

@@ -340,3 +340,111 @@ class UiShared:
             if Downloader.delete_content(video_id, artist, title):
                  self.root.after(0, lambda: self.update_row_dl_icon(tree, item, "⬇"))
                  self.update_status("Silindi.", "orange")
+
+    def setup_treeview_tooltip(self, tree, excluded_columns=None):
+        """
+        Treeview hücreleri üzerine gelindiğinde içeriklerini tooltip 
+        olarak gösteren mekanizmayı kurar.
+        excluded_columns: Tooltip gösterilmemesi gereken kolon indeksleri (0-based) listesi.
+        """
+        if excluded_columns is None:
+            excluded_columns = []
+
+        # ToolTip instance'ını tree üzerinde saklayalım
+        if not hasattr(tree, 'tooltip_obj'):
+            tree.tooltip_obj = ToolTip(tree)
+            
+        tree.last_tooltip_item = None
+        tree.last_tooltip_col = None
+
+        def on_motion(event):
+            # Sadece hücre üzerindeyse
+            region = tree.identify_region(event.x, event.y)
+            if region != "cell":
+                tree.tooltip_obj.hidetip()
+                tree.last_tooltip_item = None
+                return
+            
+            item = tree.identify_row(event.y)
+            col = tree.identify_column(event.x)
+            
+            if not item:
+                tree.tooltip_obj.hidetip()
+                tree.last_tooltip_item = None
+                return
+
+            # Eğer farklı bir hücreye geçildiyse güncelle
+            if item != tree.last_tooltip_item or col != tree.last_tooltip_col:
+                # Kolon index kontrolü
+                try:
+                    col_idx = int(col.replace("#", "")) - 1
+                    if col_idx in excluded_columns:
+                        tree.tooltip_obj.hidetip()
+                        tree.last_tooltip_item = None
+                        # excluded kolona gelince hover'ı sıfırla ki tekrar allowed kolona geçince tetiklensin
+                        # ama tooltip gösterme
+                        return
+                except:
+                    pass
+
+                tree.tooltip_obj.hidetip()
+                tree.last_tooltip_item = item
+                tree.last_tooltip_col = col
+                
+                # İçeriği al
+                try:
+                    col_idx = int(col.replace("#", "")) - 1
+                    
+                    values = tree.item(item, 'values')
+                    
+                    if 0 <= col_idx < len(values):
+                        text = str(values[col_idx])
+                        if text:
+                            # Tooltip göster
+                            tree.tooltip_obj.showtip(text, event.x_root, event.y_root)
+                except:
+                    pass
+        
+        def on_leave(event):
+            tree.tooltip_obj.hidetip()
+            tree.last_tooltip_item = None
+            tree.last_tooltip_col = None
+
+        tree.bind("<Motion>", on_motion)
+        tree.bind("<Leave>", on_leave)
+
+
+class ToolTip:
+    """
+    Basit ToolTip sınıfı.
+    Normalde hover delay ile çalışır ama burada mouse hareketini 
+    takip eden dinamik bir yapı kurduk.
+    """
+    def __init__(self, widget):
+        self.widget = widget
+        self.tipwindow = None
+        self.id = None
+        self.x = self.y = 0
+
+    def showtip(self, text, x, y):
+        "Display text in tooltip window"
+        if self.tipwindow or not text:
+            return
+        
+        self.tipwindow = tw = tk.Toplevel(self.widget)
+        # Pencere kenarlıklarını kaldır (Sadece text kutusu gibi görünsün)
+        tw.wm_overrideredirect(True)
+        
+        # Mouse'un biraz sağına ve altına konumlandır
+        tw.wm_geometry(f"+{x+15}+{y+10}")
+        
+        label = tk.Label(tw, text=text, justify=tk.LEFT,
+                      background="#ffffe0", relief=tk.SOLID, borderwidth=1,
+                      font=("tahoma", "8", "normal"))
+        label.pack(ipadx=2, ipady=1)
+
+    def hidetip(self):
+        tw = self.tipwindow
+        self.tipwindow = None
+        if tw:
+            tw.destroy()

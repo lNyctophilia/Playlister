@@ -52,6 +52,10 @@ class ViewFav:
         
         self.tree_fav.bind("<Button-3>", lambda e: self.show_context_menu(e, self.tree_fav, self.context_menu_search))
 
+        # Tooltip
+        # Exclude: Sıra(0), Dinlenme(4), Süre(5), İşlemler(6)
+        self.setup_treeview_tooltip(self.tree_fav, excluded_columns=[0, 4, 5, 6])
+
     def show_fav_view(self):
         self.set_active_mode_button("fav")
         self.search_view.pack_forget()
