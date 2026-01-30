@@ -273,10 +273,7 @@ class ViewGenre:
                         details = self.yt.get_artist(b_id)
                         v_val = details.get('views')
                         
-                        if not v_val or str(v_val).lower() == 'none':
-                             views_text = 'Veri Yok'
-                        else:
-                             views_text = v_val
+                        views_text = self.format_view_count(v_val)
                     else:
                         views_text = "Bulunamadı"
                 except Exception as e:

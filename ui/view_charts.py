@@ -209,10 +209,7 @@ class ViewCharts:
                         # Dinlenme sayısı için profil detayı
                         details = self.yt.get_artist(browse_id)
                         v_val = details.get('views')
-                        if not v_val or str(v_val).lower() == 'none':
-                             views_text = 'Veri Yok'
-                        else:
-                             views_text = v_val
+                        views_text = self.format_view_count(v_val)
                     except:
                         views_text = "Hata"
                 

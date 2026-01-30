@@ -425,6 +425,41 @@ class UiShared:
         tree.bind("<Motion>", on_motion)
         tree.bind("<Leave>", on_leave)
 
+    def format_view_count(self, view_text):
+        if not view_text or str(view_text).lower() in ['none', 'veri yok', 'hata', 'bulunamadı']:
+            return "Veri Yok"
+        
+        try:
+            # "1.234.567 views" -> "1.234.567"
+            s = str(view_text).strip().split(' ')[0]
+            s_lower = s.lower()
+            
+            # Halihazırda formatlı ise (1.5M, 100K vb)
+            if any(x in s_lower for x in ['m', 'k', 'b']) and any(c.isdigit() for c in s_lower):
+                return s.upper()
+
+            # Sadece rakamları al
+            clean_str = "".join([c for c in s if c.isdigit()])
+            
+            if not clean_str:
+                return s 
+                
+            num = int(clean_str)
+            
+            if num >= 1_000_000_000:
+                val = num / 1_000_000_000
+                return f"{val:.1f}B".replace(".0B", "B")
+            elif num >= 1_000_000:
+                val = num / 1_000_000
+                return f"{val:.1f}M".replace(".0M", "M")
+            elif num >= 1_000:
+                val = num / 1_000
+                return f"{val:.1f}K".replace(".0K", "K")
+            else:
+                return str(num)
+        except:
+            return str(view_text)
+
 
 class ToolTip:
     """
@@ -459,3 +494,4 @@ class ToolTip:
         self.tipwindow = None
         if tw:
             tw.destroy()
+
