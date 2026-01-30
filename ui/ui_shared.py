@@ -34,6 +34,8 @@ class UiShared:
         self.fav_view.pack_forget()
         self.search_view.pack(fill="both", expand=True)
         self.update_status("Mod: Sanatçı & Şarkı Arama - Sanatçı adı girerek şarkılarını listeleyin.")
+        if hasattr(self, "refresh_search_icons"):
+             self.refresh_search_icons()
 
     def show_chart_view(self):
         self.set_active_mode_button("chart")

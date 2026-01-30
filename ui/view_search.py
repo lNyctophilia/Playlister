@@ -97,6 +97,36 @@ class ViewSearch:
             self.btn_tab_smart.config(bg="#FF5722", fg="white", relief=tk.SUNKEN)
             self.btn_tab_pop.config(bg="#e0e0e0", fg="#333", relief=tk.RAISED)
             self.btn_tab_views.config(bg="#e0e0e0", fg="#333", relief=tk.RAISED)
+            
+        # Geçişte ikonları tazele
+        self.refresh_search_icons()
+
+    def refresh_search_icons(self):
+        """Tüm arama listelerindeki favori ikonlarını güncel durumla senkronize eder."""
+        def _refresh(tree):
+            if tree is None: return
+            for item in tree.get_children():
+                vals = tree.item(item)['values']
+                if not vals or len(vals) < 8: continue
+                
+                video_id = vals[7]
+                is_fav = self.is_favorite(video_id)
+                new_icon = "♥" if is_fav else "♡"
+                
+                old_text = vals[6]
+                parts = old_text.split()
+                dl_icon = parts[-1] if parts else "⬇"
+                if dl_icon not in ["⬇", "🗑"]: dl_icon = "⬇"
+                
+                new_text = f"🔗            ▶            {new_icon}            {dl_icon}"
+                
+                # Sadece değişiklik varsa set et (Performans)
+                if old_text != new_text:
+                    tree.set(item, "İşlemler", new_text)
+
+        _refresh(getattr(self, 'tree_pop', None))
+        _refresh(getattr(self, 'tree_views', None))
+        _refresh(getattr(self, 'tree_smart', None))
 
     def create_song_treeview(self, parent):
         # Frame oluştur (Scrollbar + Treeview için container)
