@@ -5,6 +5,7 @@ import os
 import threading
 from tkinter import messagebox
 from utils_downloader import Downloader, DOWNLOAD_DIR
+from utils import parse_views, parse_duration
 
 FAV_FILE = "favorites.json"
 
@@ -33,7 +34,10 @@ class ViewFav:
         self.tree_fav = ttk.Treeview(self.fav_view, columns=cols, show='headings')
         
         for col in cols:
-            self.tree_fav.heading(col, text=col)
+            if col == "İşlemler" or col == "Sıra":
+                self.tree_fav.heading(col, text=col)
+            else:
+                self.tree_fav.heading(col, text=col, command=lambda c=col: self.sort_fav_column(c, False))
             
         self.tree_fav.column("Sıra", width=40, anchor=tk.CENTER)
         self.tree_fav.column("Şarkı", width=200)
@@ -210,7 +214,34 @@ class ViewFav:
                     self.handle_download_click(item_id, song_data)
                         
         except Exception as e:
+
             print(f"Fav Click Error: {e}")
+
+    def sort_fav_column(self, col, reverse):
+        """Favori listesini kolona göre sıralar ve Sıra no günceller"""
+        l = [(self.tree_fav.set(k, col), k) for k in self.tree_fav.get_children('')]
+        
+        # Sıralama Mantığı
+        if col == "Dinlenme":
+             l.sort(key=lambda x: parse_views(x[0]), reverse=reverse)
+        elif col == "Süre":
+             l.sort(key=lambda x: parse_duration(x[0]), reverse=reverse)
+        else:
+             # String sıralama (Şarkı, Sanatçı, Albüm)
+             l.sort(key=lambda x: x[0].lower(), reverse=reverse)
+             
+        for index, (val, k) in enumerate(l):
+            self.tree_fav.move(k, '', index)
+            # Sıra numarasını güncelle (index 0)
+            current_values = list(self.tree_fav.item(k, 'values'))
+            current_values[0] = str(index + 1)
+            
+            # Zebra çizgilerini güncelle
+            tag = 'odd' if (index + 1) % 2 == 1 else 'even'
+            self.tree_fav.item(k, values=current_values, tags=(tag,))
+            
+        # Sonraki tıklama için yönü tersine çevir
+        self.tree_fav.heading(col, command=lambda: self.sort_fav_column(col, not reverse))
 
     def load_favorites(self):
         if os.path.exists(FAV_FILE):

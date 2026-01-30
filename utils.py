@@ -59,3 +59,24 @@ def decrypt_text(text):
         return "".join(chars)
     except:
         return ""
+
+def parse_duration(time_str):
+    """
+    "03:45", "1:20:30" gibi süreleri saniyeye çevirir.
+    Sıralama işlemleri için kullanılır.
+    """
+    if not time_str: return 0
+    
+    # "3:45" -> 225
+    parts = str(time_str).split(':')
+    try:
+        parts = [int(p) for p in parts]
+        if len(parts) == 1:
+            return parts[0]
+        elif len(parts) == 2:
+            return parts[0] * 60 + parts[1]
+        elif len(parts) == 3:
+            return parts[0] * 3600 + parts[1] * 60 + parts[2]
+    except ValueError:
+        return 0
+    return 0

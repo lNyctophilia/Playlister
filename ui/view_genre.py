@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
 import threading
 import requests
-from utils import encrypt_text
+from utils import encrypt_text, parse_views
 
 class ViewGenre:
     def setup_genre_view(self):
@@ -61,9 +61,9 @@ class ViewGenre:
         cols = ("Rank", "Sanatçı", "Tür", "Toplam Dinlenme", "Ara")
         self.tree_genre = ttk.Treeview(self.genre_view, columns=cols, show='headings')
         self.tree_genre.heading("Rank", text="Sıra")
-        self.tree_genre.heading("Sanatçı", text="Sanatçı")
+        self.tree_genre.heading("Sanatçı", text="Sanatçı", command=lambda: self.sort_genre_column("Sanatçı", False))
         self.tree_genre.heading("Tür", text="Kategori")
-        self.tree_genre.heading("Toplam Dinlenme", text="Toplam Dinlenme")
+        self.tree_genre.heading("Toplam Dinlenme", text="Toplam Dinlenme", command=lambda: self.sort_genre_column("Toplam Dinlenme", False))
         self.tree_genre.heading("Ara", text="İşlem")
         
         self.tree_genre.column("Rank", width=50, anchor=tk.CENTER)
@@ -145,7 +145,34 @@ class ViewGenre:
             self.show_search_view()
             self.entry_artist.delete(0, tk.END)
             self.entry_artist.insert(0, artist_name)
+            self.entry_artist.insert(0, artist_name)
             self.start_search()
+
+    def sort_genre_column(self, col, reverse):
+        """Genre listesini belirtilen kolona göre sıralar ve Sıra no günceller"""
+        l = [(self.tree_genre.set(k, col), k) for k in self.tree_genre.get_children('')]
+        
+        # Sıralama mantığı
+        if col == "Toplam Dinlenme":
+            # parse_views fonksiyonu ile sayıya çevir
+            l.sort(key=lambda x: parse_views(x[0]), reverse=reverse)
+        else:
+            # Alfabetik sıralama
+            l.sort(key=lambda x: x[0].lower(), reverse=reverse)
+            
+        for index, (val, k) in enumerate(l):
+            self.tree_genre.move(k, '', index)
+            # Sıra numarasını (Rank) güncelle (index+1)
+            # Rank sütunu index 0'da
+            current_values = list(self.tree_genre.item(k, 'values'))
+            current_values[0] = str(index + 1)
+            
+            # Zebra çizgilerini güncelle
+            tag = 'odd' if (index + 1) % 2 == 1 else 'even'
+            self.tree_genre.item(k, values=current_values, tags=(tag,))
+            
+        # Sonraki tıklama için yönü tersine çevir
+        self.tree_genre.heading(col, command=lambda: self.sort_genre_column(col, not reverse))
 
     def set_lastfm_key(self):
         self.open_settings()
