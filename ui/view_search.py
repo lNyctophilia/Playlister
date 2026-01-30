@@ -355,7 +355,7 @@ class ViewSearch:
                             "(official music)", "(official video)", "(official audio)", 
                             "(music video)", "(video)", "(audio)", "(lyric video)", "(lyrics)",
                             " official music", " official video", " official audio", "!", "(Canlı)",
-                            "Canlı", "(Canlı Senfonik)", "canlı senfonik"
+                            "Canlı", "(Canlı Senfonik)", "canlı senfonik", "(Live)", "Live"
                         ]
                         for noise in noise_words:
                             t = t.replace(noise, "")
