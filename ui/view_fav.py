@@ -74,7 +74,7 @@ class ViewFav:
             self.tree_fav.delete(item)
         self.fav_map.clear()
         
-        # Verileri al ve sırala
+        # Verileri al
         self.favorites = self.load_favorites()
         favs = self.favorites
         
@@ -84,12 +84,14 @@ class ViewFav:
             self.update_status("Favori listeniz boş.", "blue")
             return
             
+        self.update_status(f"Favoriler yükleniyor... ({len(favs)} şarkı)", "blue")
+
+        # Veri Hazırlığı (Thread bloğu oluşturmamak için batch hazırlayalım)
         # Sanatçı ismiyle sırala
         sorted_favs = sorted(favs, key=lambda x: x.get('artist', '').lower())
-
-        # OPTIMIZASYON: Dosya listesini tek seferde al (Cache)
         dl_cache = Downloader.get_downloads_cache()
         
+        items_to_insert = []
         for i, song in enumerate(sorted_favs):
              tag = 'odd' if (i + 1) % 2 == 1 else 'even'
              
@@ -97,14 +99,13 @@ class ViewFav:
              artist = song.get('artist', '')
              video_id = song.get('video_id', '')
              
-             # Cache kullanarak kontrol et (Disk I/O yok)
+             # Cache kullanarak kontrol et
              is_downloaded = Downloader.is_downloaded_cached(dl_cache, video_id, artist, title)
              dl_icon = "🗑" if is_downloaded else "⬇"
              
-             # Action text: Link | Play | Fav | Download
              full_action_text = f"🔗            ▶            ♥            {dl_icon}"
              
-             iid = self.tree_fav.insert("", "end", values=(
+             values = (
                  str(i + 1), 
                  song.get('title', ''), 
                  song.get('artist', ''), 
@@ -112,10 +113,26 @@ class ViewFav:
                  song.get('views_text', ''), 
                  song.get('duration', ''), 
                  full_action_text
-             ), tags=(tag,))
-             self.fav_map[iid] = song 
+             )
+             items_to_insert.append((values, tag, song))
 
-        self.update_status(f"Favoriler listelendi: {len(favs)} şarkı.", "green")
+        # Chunklı Ekleme Başlat
+        self._insert_fav_chunk(items_to_insert, 0)
+
+    def _insert_fav_chunk(self, items, start_index):
+        CHUNK_SIZE = 50
+        end_index = min(start_index + CHUNK_SIZE, len(items))
+        
+        for i in range(start_index, end_index):
+            values, tag, song = items[i]
+            iid = self.tree_fav.insert("", "end", values=values, tags=(tag,))
+            self.fav_map[iid] = song
+            
+        if end_index < len(items):
+            # UI'ın nefes alması için 10ms bekle ve devam et
+            self.root.after(10, lambda: self._insert_fav_chunk(items, end_index))
+        else:
+            self.update_status(f"Favoriler listelendi: {len(items)} şarkı.", "green")
 
     def refresh_action_buttons_state(self):
         """
