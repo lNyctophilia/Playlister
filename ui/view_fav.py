@@ -83,6 +83,9 @@ class ViewFav:
             
         # Sanatçı ismiyle sırala
         sorted_favs = sorted(favs, key=lambda x: x.get('artist', '').lower())
+
+        # OPTIMIZASYON: Dosya listesini tek seferde al (Cache)
+        dl_cache = Downloader.get_downloads_cache()
         
         for i, song in enumerate(sorted_favs):
              tag = 'odd' if (i + 1) % 2 == 1 else 'even'
@@ -91,7 +94,8 @@ class ViewFav:
              artist = song.get('artist', '')
              video_id = song.get('video_id', '')
              
-             is_downloaded = Downloader.is_downloaded(video_id, artist, title)
+             # Cache kullanarak kontrol et (Disk I/O yok)
+             is_downloaded = Downloader.is_downloaded_cached(dl_cache, video_id, artist, title)
              dl_icon = "🗑" if is_downloaded else "⬇"
              
              # Action text: Link | Play | Fav | Download
@@ -122,8 +126,12 @@ class ViewFav:
 
         total = len(self.favorites)
         downloaded = 0
+        
+        # Optimize edilmiş kontrol
+        dl_cache = Downloader.get_downloads_cache()
+        
         for s in self.favorites:
-            if Downloader.is_downloaded(s.get('video_id'), s.get('artist'), s.get('title')):
+            if Downloader.is_downloaded_cached(dl_cache, s.get('video_id'), s.get('artist'), s.get('title')):
                 downloaded += 1
         
         # Tümü indirilmişse -> İndir butonu pasif
@@ -268,8 +276,10 @@ class ViewFav:
             return
 
         to_download = []
+        dl_cache = Downloader.get_downloads_cache()
+        
         for s in favs:
-            if not Downloader.is_downloaded(s['video_id'], s.get('artist'), s.get('title')):
+            if not Downloader.is_downloaded_cached(dl_cache, s['video_id'], s.get('artist'), s.get('title')):
                 to_download.append(s)
         
         if not to_download:

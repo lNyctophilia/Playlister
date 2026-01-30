@@ -205,6 +205,9 @@ class ViewSearch:
 
     def populate_tabs(self, pop_list, views_list, smart_list):
         def _job():
+            # Cache'i bir kere al
+            dl_cache = Downloader.get_downloads_cache()
+            
             def insert_to_tree(tree, data_list):
                  for i, song in enumerate(data_list):
                     tag = 'odd' if (i + 1) % 2 == 1 else 'even'
@@ -212,7 +215,8 @@ class ViewSearch:
                     is_fav = self.is_favorite(song['video_id'])
                     fav_icon = "♥" if is_fav else "♡"
                     
-                    is_down = Downloader.is_downloaded(song['video_id'], song.get('artist'), song.get('title'))
+                    # Cache ile kontrol
+                    is_down = Downloader.is_downloaded_cached(dl_cache, song['video_id'], song.get('artist'), song.get('title'))
                     dl_icon = "🗑" if is_down else "⬇"
                     
                     action_text = f"🔗            ▶            {fav_icon}            {dl_icon}"

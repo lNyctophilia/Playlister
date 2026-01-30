@@ -11,6 +11,13 @@ ARCHIVE_FILE = os.path.join(DOWNLOAD_DIR, "archive.txt")
 
 class Downloader:
     @staticmethod
+    def clean_filename(s):
+        """Dosya isimleri için güvenli karakter temizliği."""
+        if not s: return ""
+        s = str(s)
+        return "".join([c for c in s if c.isalnum() or c in " -_()."]).strip()
+
+    @staticmethod
     def ensure_dir():
         if not os.path.exists(DOWNLOAD_DIR):
             os.makedirs(DOWNLOAD_DIR)
@@ -26,11 +33,8 @@ class Downloader:
         """
         Downloader.ensure_dir()
         
-        # Helper clean (tekrar tanımlandı, sınıf içinde ortaklaştırılabilir ama pratik olsun)
-        def clean(s):
-            if not s: return ""
-            s = str(s)
-            return "".join([c for c in s if c.isalnum() or c in " -_()."]).strip()
+        # Helper clean -> Artık statik metod: Downloader.clean_filename
+        clean = Downloader.clean_filename
 
         # 1. Yeni Format Kontrolü: "Artist - Title.mp3 / .webm / .m4a"
         if artist and title:
@@ -57,6 +61,46 @@ class Downloader:
     @staticmethod
     def is_downloaded(video_id=None, artist=None, title=None):
         return Downloader.get_file_path(video_id, artist, title) is not None
+
+    @staticmethod
+    def get_downloads_cache():
+        """
+        Klasördeki dosyaları tek seferde okuyup hafızaya alır.
+        Dönüş: (set_of_basenames, list_of_all_filenames)
+        """
+        Downloader.ensure_dir()
+        try:
+            all_files = os.listdir(DOWNLOAD_DIR)
+            # Uzantısız isim seti (Hızlı erişim için)
+            basenames = {os.path.splitext(f)[0] for f in all_files}
+            return basenames, all_files
+        except:
+            return set(), []
+
+    @staticmethod
+    def is_downloaded_cached(cache_data, video_id=None, artist=None, title=None):
+        """
+        Disk I/O yapmadan verilen cache üzerinden kontrol sağlar.
+        """
+        if not cache_data:
+            return False
+            
+        basenames, all_files = cache_data
+        
+        # 1. İsim ile kontrol (Hızlı - O(1))
+        if artist and title:
+            base_name = f"{Downloader.clean_filename(artist)} - {Downloader.clean_filename(title)}"
+            if base_name in basenames:
+                return True
+                
+        # 2. ID ile kontrol (Fallback - Cache üzerinde döngü)
+        if video_id:
+             id_tag = f"[{video_id}]"
+             for f in all_files:
+                 if id_tag in f:
+                     return True
+        
+        return False
 
     @staticmethod
     def delete_content(video_id=None, artist=None, title=None):
@@ -109,10 +153,7 @@ class Downloader:
 
         # Dosya ismi formatı: Artist - Title.ext (ID YOK)
         # Karakter temizliği
-        def clean(s):
-            if not s: return ""
-            s = str(s)
-            return "".join([c for c in s if c.isalnum() or c in " -_()."]).strip()
+        clean = Downloader.clean_filename
         
         # Video ID artık isme eklenmiyor
         fname = f"{clean(artist)} - {clean(title)}.%(ext)s"
