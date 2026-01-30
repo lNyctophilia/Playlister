@@ -4,7 +4,7 @@ import json
 import os
 import threading
 from tkinter import messagebox
-from utils_downloader import Downloader
+from utils_downloader import Downloader, DOWNLOAD_DIR
 
 FAV_FILE = "favorites.json"
 
@@ -24,6 +24,9 @@ class ViewFav:
 
         self.btn_delete_all_dl = tk.Button(top_frame, text="Tüm İndirilenleri Sil", command=self.delete_all_downloads_ui, bg="red", fg="white")
         self.btn_delete_all_dl.pack(side=tk.RIGHT, padx=5)
+
+        self.btn_open_downloads = tk.Button(top_frame, text="📂 Klasörü Aç", command=self.open_downloads_folder, bg="#607D8B", fg="white")
+        self.btn_open_downloads.pack(side=tk.RIGHT, padx=5)
 
         # Liste
         cols = ("Sıra", "Şarkı", "Sanatçı", "Albüm", "Dinlenme", "Süre", "İşlemler")
@@ -356,3 +359,11 @@ class ViewFav:
                 self.update_status("Tüm indirilenler temizlendi.", "red")
             else:
                 messagebox.showerror("Hata", "Silme işlemi başarısız.")
+
+    def open_downloads_folder(self):
+        Downloader.ensure_dir()
+        path = os.path.abspath(DOWNLOAD_DIR)
+        try:
+            os.startfile(path)
+        except Exception as e:
+            messagebox.showerror("Hata", f"Klasör açılamadı: {e}")
