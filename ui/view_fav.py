@@ -34,7 +34,7 @@ class ViewFav:
         self.tree_fav = ttk.Treeview(self.fav_view, columns=cols, show='headings')
         
         for col in cols:
-            if col == "İşlemler" or col == "Sıra":
+            if col == "Sıra":
                 self.tree_fav.heading(col, text=col)
             else:
                 self.tree_fav.heading(col, text=col, command=lambda c=col: self.sort_fav_column(c, False))
@@ -226,6 +226,9 @@ class ViewFav:
              l.sort(key=lambda x: parse_views(x[0]), reverse=reverse)
         elif col == "Süre":
              l.sort(key=lambda x: parse_duration(x[0]), reverse=reverse)
+        elif col == "İşlemler":
+             # İçinde Çöp Kutusu (🗑) varsa indirilmiştir -> 1, yoksa -> 0
+             l.sort(key=lambda x: 1 if "🗑" in x[0] else 0, reverse=reverse)
         else:
              # String sıralama (Şarkı, Sanatçı, Albüm)
              l.sort(key=lambda x: x[0].lower(), reverse=reverse)
