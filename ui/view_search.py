@@ -337,12 +337,57 @@ class ViewSearch:
                 # Eğer bu şarkı 'Single' ise ve listemizde buna çok benzeyen (Albüm versiyonu) bir şarkı varsa ekleme.
                 if song['album'] == 'Single':
                     is_fuzzy_duplicate = False
+                    
+                    # Temizlik Yardımcısı
+                    def clean_title(t):
+                        # Küçük harf
+                        t = t.lower()
+                        # Parantez içindeki yaygın 'noise'ları temizle
+                        noise_words = [
+                            "(official music)", "(official video)", "(official audio)", 
+                            "(music video)", "(video)", "(audio)", "(lyric video)", "(lyrics)",
+                            " official music", " official video", " official audio"
+                        ]
+                        for noise in noise_words:
+                            t = t.replace(noise, "")
+                        
+                        # Sanatçı ismini baştan sil (Örn: "BLOK3 - Şarkı" -> "Şarkı")
+                        # artist_true_name veya artist_name globalde var aslında ama
+                        # combined_results içindeyiz.
+                        if artist_name.lower() in t:
+                             t = t.replace(artist_name.lower(), "").strip()
+                             # Başta kalan " - " veya "- " leri temizle
+                             if t.startswith("-"): t = t.lstrip("- ")
+                        
+                        return t.strip()
+
+                    cleaned_current = clean_title(norm_title)
+
                     for existing in all_songs:
+                        # Eğer karşılaştırdığımız şarkı da Single ise, ve biz zaten Single isek, 
+                        # çok katı elemeyelim (belki remix vs dir).
+                        # Amaç: Albüm versiyonu varken Single'ı elemek.
+                        if existing['album'] == 'Single': 
+                            continue
+
                         existing_title = existing['title'].lower().strip()
-                        # SequenceMatcher ratio > 0.90 (Yüksek benzerlik)
-                        if SequenceMatcher(None, norm_title, existing_title).ratio() > 0.9:
+                        cleaned_existing = clean_title(existing_title)
+                       
+                        # Check A: Yüksek Benzerlik (Ratio)
+                        if SequenceMatcher(None, cleaned_current, cleaned_existing).ratio() > 0.85:
                             is_fuzzy_duplicate = True
                             break
+                        
+                        # Check B: Containment (Kapsama) 
+                        # Kullanıcı Sorunu: "napıyosun mesela ?" (Album) vs "BLOK3 - NAPIYOSUN MESELA ? (Official Music)" (Single/Video)
+                        # Cleaned Album: "napiyosun mesela ?"
+                        # Cleaned Single: "napiyosun mesela ?"
+                        # Eğer kısa/temiz albüm ismi, uzun/kirli single isminin içinde geçiyorsa -> DUPLICATE
+                        if cleaned_existing and cleaned_existing in cleaned_current:
+                             # Çok kısa kelimelerde hatalı eşleşmeyi önle (Örn: "Aşk" vs "Aşkın Olayım")
+                             if len(cleaned_existing) > 4: 
+                                 is_fuzzy_duplicate = True
+                                 break
                     
                     if is_fuzzy_duplicate:
                         continue
