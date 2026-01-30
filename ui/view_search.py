@@ -414,35 +414,22 @@ class ViewSearch:
             sorted_by_views = sorted(all_songs, key=lambda x: x['_views_num'], reverse=True)
             views_list = sorted_by_views[:target_count]
             
-            # 3. Karma Liste (Smart Logic - Fermuar Yöntemi)
+            # 3. Karma Liste (Smart Logic)
             views_ids = set(s['video_id'] for s in views_list)
-            # Kesişim: Hem popüler hem çok izlenenler (Tartışmasız En İyiler)
+            # Kesişim (Popülerlik sırasına göre)
             intersection = [s for s in pop_list if s['video_id'] in views_ids]
-            intersection_ids = set(s['video_id'] for s in intersection)
             
-            # Ortak olmayanlar (Ayrık Kümeler)
+            needed = target_count - len(intersection)
+            if needed < 0: needed = 0
+            
+            intersection_ids = set(s['video_id'] for s in intersection)
             unique_pop = [s for s in pop_list if s['video_id'] not in intersection_ids]
             unique_views = [s for s in views_list if s['video_id'] not in intersection_ids]
             
-            smart_list = list(intersection)
+            count_pop = (needed + 1) // 2
+            count_views = needed - count_pop
             
-            # Fermuar döngüsü: Bir Popüler, Bir Çok İzlenen şeklinde ekle
-            idx = 0
-            while len(smart_list) < target_count:
-                added = False
-                # -- Popülerden al --
-                if idx < len(unique_pop):
-                    smart_list.append(unique_pop[idx])
-                    added = True
-                    if len(smart_list) >= target_count: break
-                
-                # -- Çok İzlenenden al --
-                if idx < len(unique_views):
-                    smart_list.append(unique_views[idx])
-                    added = True
-                
-                idx += 1
-                if not added: break
+            smart_list = intersection + unique_pop[:count_pop] + unique_views[:count_views]
             
             # Eksik varsa tamamla
             if len(smart_list) < target_count:
