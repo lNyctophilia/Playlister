@@ -169,16 +169,24 @@ class Downloader:
             'no_warnings': True,
             'ignoreerrors': True,
             'nocheckcertificate': True,
+            'writethumbnail': True,
             'extractor_args': {
                 'youtube': {
                     'player_client': ['ios', 'android', 'web'],
                 }
             },
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'opus',
-                'preferredquality': '192',
-            }],
+            'postprocessors': [
+                {
+                    'key': 'FFmpegExtractAudio',
+                    'preferredcodec': 'opus',
+                    'preferredquality': '192',
+                },
+                {
+                    'key': 'FFmpegMetadata',
+                    'add_metadata': True,
+                },
+                # EmbedThumbnail YOK - Manuel yapacağız
+            ],
             'http_headers': {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -187,8 +195,87 @@ class Downloader:
         }
         
         try:
+            # 1. İndirme İşlemi
             with yt_dlp.YoutubeDL(opts) as ydl:
                 ydl.download([f"https://music.youtube.com/watch?v={video_id}"])
+            
+            # --- Manuel Kapak İşlemi (Pillow + Mutagen) ---
+            try:
+                from PIL import Image
+                import mutagen
+                from mutagen.oggopus import OggOpus
+                from mutagen.flac import Picture
+                
+                # Temel dosya adı (uzantısız)
+                base_name_full = os.path.join(DOWNLOAD_DIR, f"{clean(artist)} - {clean(title)}")
+                
+                # Dosyaları bul (.opus ve resim)
+                audio_path = None
+                image_path = None
+                
+                # Ses dosyasını bul
+                possible_files = glob.glob(f"{glob.escape(base_name_full)}.*")
+                for p in possible_files:
+                    if p.endswith('.opus'):
+                        audio_path = p
+                    elif p.endswith('.jpg') or p.endswith('.webp') or p.endswith('.png'):
+                        image_path = p
+                
+                if audio_path and image_path:
+                    # A. Resmi Kare Kırp (Pillow)
+                    img = Image.open(image_path).convert("RGB")
+                    w, h = img.size
+                    min_dim = min(w, h)
+                    
+                    # Merkezden kırp
+                    left = (w - min_dim) / 2
+                    top = (h - min_dim) / 2
+                    right = (w + min_dim) / 2
+                    bottom = (h + min_dim) / 2
+                    
+                    img_cropped = img.crop((left, top, right, bottom))
+                    # İsteğe bağlı resize (örn: 500x500) - Şimdilik orijinal boyutta bırakalım, kalite düşmesin.
+                    
+                    # Geçici olarak kaydet
+                    temp_thumb = audio_path.replace(".opus", "_cover.jpg")
+                    img_cropped.save(temp_thumb, "JPEG", quality=90)
+                    
+                    # B. Metadata Göm (Mutagen OggOpus)
+                    audio = OggOpus(audio_path)
+                    
+                    with open(temp_thumb, "rb") as f:
+                        image_data = f.read()
+                    
+                    picture = Picture()
+                    picture.data = image_data
+                    picture.type = 3 # 3 = Cover (front)
+                    picture.mime = u"image/jpeg"
+                    picture.desc = u"Album Art"
+                    picture.width = img_cropped.width
+                    picture.height = img_cropped.height
+                    picture.depth = 24
+                    
+                    # OggOpus resmi 'metadata_block_picture' tagi olarak base64 formatında tutar
+                    import base64
+                    picture_data = picture.write()
+                    base64_picture = base64.b64encode(picture_data).decode('ascii')
+                    
+                    if audio.tags is None:
+                        audio.add_tags()
+                    
+                    # Eski resimleri silip yenisini ekle
+                    audio.tags['metadata_block_picture'] = [base64_picture]
+                    audio.save()
+                    
+                    # Temizlik
+                    try:
+                        os.remove(image_path) # İndirilen ham resim
+                        os.remove(temp_thumb) # Kırpılmış resim
+                    except: pass
+                    
+            except Exception as e:
+                print(f"Kapak işleme hatası (PIL/Mutagen): {e}")
+
             if callback: callback(True, "İndirme Tamamlandı")
         except Exception as e:
             if callback: callback(False, str(e))
