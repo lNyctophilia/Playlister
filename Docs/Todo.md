@@ -28,6 +28,5 @@ Bazı albümü single olanları galiba detaylarını alamıyoruz albüm kapağı
 
 --------------------
 
-Gitignore yapmamız gereken electron dosyası varsa ekle ve ben bi kez commit yapmıştım commitlerden sil ignore yaptıklarını
 
 Electron projesinde sekmeler arası geçiş yok basıyom ama hala aynı sekme açık oluyo

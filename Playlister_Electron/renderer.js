@@ -17,7 +17,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const viewName = link.getAttribute('data-view');
             console.log(`Switched to view: ${viewName}`);
-            // TODO: Implement actual view switching logic
+
+            // Hide all views
+            document.querySelectorAll('.view').forEach(view => {
+                view.classList.remove('active');
+            });
+
+            // Show selected view
+            const targetView = document.getElementById(`view-${viewName}`);
+            if (targetView) {
+                targetView.classList.add('active');
+            } else {
+                console.error(`View not found: view-${viewName}`);
+            }
         });
     });
 

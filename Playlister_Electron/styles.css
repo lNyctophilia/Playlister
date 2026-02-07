@@ -2,7 +2,8 @@
     --bg-dark: #121212;
     --bg-panel: #181818;
     --bg-hover: #282828;
-    --primary: #1DB954; /* Spotify Green-ish */
+    --primary: #1DB954;
+    /* Spotify Green-ish */
     --text-main: #FFFFFF;
     --text-sub: #B3B3B3;
     --border: #333333;
@@ -70,7 +71,8 @@ body {
 
 /* Main Content */
 .main-content {
-    background-color: var(--bg-dark); /* Gradient could go here */
+    background-color: var(--bg-dark);
+    /* Gradient could go here */
     grid-column: 2 / 3;
     grid-row: 1 / 2;
     overflow-y: auto;
@@ -103,6 +105,28 @@ body {
     color: var(--text-sub);
     font-style: italic;
     margin-top: 20px;
+}
+
+/* View Switching */
+.view {
+    display: none;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.view.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Player Bar */
