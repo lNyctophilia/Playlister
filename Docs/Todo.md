@@ -28,7 +28,4 @@ Bazı albümü single olanları galiba detaylarını alamıyoruz albüm kapağı
 
 --------------------
 
-
-Electron projesinde 1.moddaki arama kısmında çıkan şarkı listesi bozuk gözükmüyo elemanları düzgün şekilde ince uzun gibi gözüküyo saçma şekilde albüm kapağı 4 5 kez yinelenmiş ve favori gibi iconlar hiç gözükmüyo galiba işlemler
-
-Electron projesinde modlarda herhangi bişi yok yakında eklencek tarzı şeyler yazıyo sıra sıra tüm modların gidişatını planla ve python kodlarını inceleyerek uygulayıp test et
+Electron projesinde 1.modda arama yapınca çıkan şarkı listesinde elemanlarda şey olsun mesela sanatçı ismi var ya bu arada bazen undefiened yazıyo ben zaten sanatçıyı arattığım için öyle bi durum olamaz düzeltelim ayrıca şarkıcının isminin yanında albümüde yazsın

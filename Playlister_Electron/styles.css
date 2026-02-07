@@ -195,6 +195,34 @@ body {
     opacity: 1;
 }
 
+.placeholder-text {
+    color: var(--text-sub);
+    font-style: italic;
+    margin-top: 20px;
+}
+
+/* View Switching */
+.view {
+    display: none;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.view.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* Player Bar */
 .player-bar {
     grid-column: 1 / 3;
