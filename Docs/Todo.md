@@ -19,3 +19,5 @@ Ayrıca api key içinde api key al ekranında işlem sırası olcak hesap aç, a
 Downloads klasörü bence windowsun kendi müzik klasörü içinde playlister diye bi klasör açıp oraya indirsin şarkıları eğer playlister diye klasör yoksa oluştursun ve içine bizim şuanki downloads klasörüne indirir gibi indirsin harmonoid diye medya player indirdim ordan bu klasörü seçerim ve proje klasörünüde taşırken daha hızlı rahat olur dimi
 
 3.modda Türe göre öneride sağ tık sanatçıyı ara yaptım no.1 adlı sanatçıyı ve 1.modda aratırken ismi 2 kez yazdırıyo
+
+Bu uygulamayı dışarıdan başka bi uygulama indirmeden sadece bunu exe olarak veya direkt klasör olarak zipli şekilde indirip çalıştırabilmek için bu uygulamayı en baştan hangi programlama dili ve hangi programlama araçlarıyla geliştirmeliyiz ve neler kullanmalıyız kod değişikliği yapma fikir üretelim
