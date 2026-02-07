@@ -112,7 +112,23 @@ document.addEventListener('DOMContentLoaded', () => {
             card.className = 'track-card';
 
             let title = item.name;
-            let artist = item.artist ? item.artist.name : (item.author || "Unknown");
+            let artistName = "Unknown Artist";
+
+            if (item.artist) {
+                if (Array.isArray(item.artist)) {
+                    artistName = item.artist.map(a => a.name).join(", ");
+                } else {
+                    artistName = item.artist.name;
+                }
+            } else if (item.author) {
+                artistName = item.author; // Fallback for some result types
+            }
+
+            let albumName = "";
+            if (item.album) {
+                albumName = ` - ${item.album.name}`;
+            }
+
             let thumb = "https://via.placeholder.com/150";
 
             if (item.thumbnails && item.thumbnails.length > 0) {
@@ -125,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="card-info">
                     <div class="card-title">${title}</div>
-                    <div class="card-artist">${artist}</div>
+                    <div class="card-artist">${artistName}${albumName}</div>
                 </div>
                 <div class="card-actions">
                     <button class="btn-icon favorite">❤</button>
@@ -147,7 +163,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Update UI immediately (Optimistic UI)
         document.querySelector('.track-title').textContent = track.name;
-        document.querySelector('.track-artist').textContent = track.artist ? track.artist.name : (track.author || "Unknown");
+
+        let artistName = "Unknown Artist";
+        if (track.artist) {
+            if (Array.isArray(track.artist)) {
+                artistName = track.artist.map(a => a.name).join(", ");
+            } else {
+                artistName = track.artist.name;
+            }
+        } else if (track.author) {
+            artistName = track.author;
+        }
+        document.querySelector('.track-artist').textContent = artistName;
 
         let thumb = "https://via.placeholder.com/150";
         if (track.thumbnails && track.thumbnails.length > 0) {
