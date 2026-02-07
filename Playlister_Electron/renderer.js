@@ -126,14 +126,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let albumName = "";
 
-            if (item.album && item.album.name) {
-                if (artistName.toLowerCase() === item.album.name.toLowerCase()) {
+            // Check if album exists AND has a valid ID (not an artist channel starting with UC)
+            if (item.album && item.album.name && item.album.browseId && !item.album.browseId.startsWith('UC')) {
+                if (item.name.toLowerCase() === item.album.name.toLowerCase()) {
                     albumName = " - Single";
+                } else if (item.name.toLowerCase() === item.artist.name.toLowerCase()) { // Song name == Artist name check (e.g. Beyonce - Beyonce)
+                    // If song name is same as artist, and album is same as artist, it's likely a self-titled album, NOT a single usually, 
+                    // BUT if API returns artist channel as album, we already filtered it.
+                    // If it's a real album named same as artist, we display it.
+                    albumName = ` - ${item.album.name}`;
                 } else {
                     albumName = ` - ${item.album.name}`;
                 }
             } else {
-                albumName = " - Single";
+                // If no valid album, check if it might be a single based on other cues or just leave empty
+                // heuristic: if we don't have album info, don't show "Single" unless we are sure.
+                // But user wants to be sure it's NOT an album.
+                albumName = "";
             }
 
             let thumb = "https://via.placeholder.com/150";
@@ -183,17 +192,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         let albumDisplay = "";
-        let albumNameRaw = "";
 
-        if (track.album && track.album.name) {
-            albumNameRaw = track.album.name;
-            if (artistName.toLowerCase() === albumNameRaw.toLowerCase()) {
+        // Same logic for player display
+        if (track.album && track.album.name && track.album.browseId && !track.album.browseId.startsWith('UC')) {
+            if (track.name.toLowerCase() === track.album.name.toLowerCase()) {
                 albumDisplay = " - Single";
             } else {
-                albumDisplay = ` - ${albumNameRaw}`;
+                albumDisplay = ` - ${track.album.name}`;
             }
         } else {
-            albumDisplay = " - Single";
+            albumDisplay = "";
         }
 
         document.querySelector('.track-artist').textContent = artistName + albumDisplay;

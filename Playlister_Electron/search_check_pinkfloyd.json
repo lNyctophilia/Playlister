@@ -1,0 +1,32 @@
+{
+  "Pink Floyd - Time": [
+    {
+      "type": "song",
+      "videoId": "80LhtHY_fHw",
+      "playlistId": [],
+      "name": "Time",
+      "artist": {
+        "name": "Pink Floyd",
+        "browseId": "UCO6LS_5W7vqG9mALDNzSFug"
+      },
+      "album": {
+        "name": "Pink Floyd",
+        "browseId": "UCO6LS_5W7vqG9mALDNzSFug"
+      },
+      "duration": 414000,
+      "thumbnails": [
+        {
+          "url": "https://lh3.googleusercontent.com/lfiVQfNhs8F77ZOE_OyAftPDGXNY8WfkIVg67gNVxaJHLef7QIXsm7CAcaT4o3AyyLTaQeqWguKel0g=w60-h60-l90-rj",
+          "width": 60,
+          "height": 60
+        },
+        {
+          "url": "https://lh3.googleusercontent.com/lfiVQfNhs8F77ZOE_OyAftPDGXNY8WfkIVg67gNVxaJHLef7QIXsm7CAcaT4o3AyyLTaQeqWguKel0g=w120-h120-l90-rj",
+          "width": 120,
+          "height": 120
+        }
+      ],
+      "params": []
+    }
+  ]
+}
