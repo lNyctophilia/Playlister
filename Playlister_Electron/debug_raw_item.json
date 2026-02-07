@@ -1,0 +1,34 @@
+{
+  "type": "song",
+  "videoId": "YiJAxtSdeTw",
+  "playlistId": [],
+  "name": "Şarkılar Sokaklara Ait",
+  "artist": [
+    {
+      "name": "UZI",
+      "browseId": "UC2tJgRViTA66CnPtCxDfKaQ"
+    },
+    {
+      "name": "Motive",
+      "browseId": "UCkQ6jNdLeiwqUdMIY7QiXUg"
+    }
+  ],
+  "album": {
+    "name": "UZI",
+    "browseId": "UC2tJgRViTA66CnPtCxDfKaQ"
+  },
+  "duration": 176000,
+  "thumbnails": [
+    {
+      "url": "https://lh3.googleusercontent.com/6TWFJF0lb90dlhCm62jzFYYvEfnYWM8BlqfZeeUm7Md1obNBxTGl2qwdNc6LDWYo-Cq8x9eh7A4l06Xv=w60-h60-l90-rj",
+      "width": 60,
+      "height": 60
+    },
+    {
+      "url": "https://lh3.googleusercontent.com/6TWFJF0lb90dlhCm62jzFYYvEfnYWM8BlqfZeeUm7Md1obNBxTGl2qwdNc6LDWYo-Cq8x9eh7A4l06Xv=w120-h120-l90-rj",
+      "width": 120,
+      "height": 120
+    }
+  ],
+  "params": []
+}

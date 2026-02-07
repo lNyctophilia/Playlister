@@ -139,10 +139,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     albumName = ` - ${item.album.name}`;
                 }
             } else {
-                // If no valid album, check if it might be a single based on other cues or just leave empty
-                // heuristic: if we don't have album info, don't show "Single" unless we are sure.
-                // But user wants to be sure it's NOT an album.
-                albumName = "";
+                // If no valid album ID (likely artist channel), user prefers "Single" text over nothing.
+                // This might mislabel some album tracks as singles if metadata is poor, 
+                // but it satisfies the "Blok3 - Single" requirement.
+                albumName = " - Single";
             }
 
             let thumb = "https://via.placeholder.com/150";
@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 albumDisplay = ` - ${track.album.name}`;
             }
         } else {
-            albumDisplay = "";
+            albumDisplay = " - Single";
         }
 
         document.querySelector('.track-artist').textContent = artistName + albumDisplay;

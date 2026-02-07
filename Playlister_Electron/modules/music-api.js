@@ -23,6 +23,9 @@ class MusicApi {
         await this.init();
         try {
             const result = await this.api.search(query, "song");
+            if (result.content && result.content.length > 0) {
+                require('fs').writeFileSync('debug_raw_item.json', JSON.stringify(result.content[0], null, 2));
+            }
             return result.content;
         } catch (error) {
             console.error("Search failed:", error);
