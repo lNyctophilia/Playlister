@@ -23,3 +23,11 @@ Downloads klasörü bence windowsun kendi müzik klasörü içinde playlister di
 Bu uygulamayı dışarıdan başka bi uygulama indirmeden sadece bunu exe olarak veya direkt klasör olarak zipli şekilde indirip çalıştırabilmek için bu uygulamayı en baştan hangi programlama dili ve hangi programlama araçlarıyla geliştirmeliyiz ve neler kullanmalıyız kod değişikliği yapma fikir üretelim
 
 Bazı albümü single olanları galiba detaylarını alamıyoruz albüm kapağı gibi gibi yılı sanatçı ismi gibi onların nedeni nedir kod değişikliği yapma fikir üretelim
+
+
+
+--------------------
+
+Gitignore yapmamız gereken electron dosyası varsa ekle ve ben bi kez commit yapmıştım commitlerden sil ignore yaptıklarını
+
+Electron projesinde sekmeler arası geçiş yok basıyom ama hala aynı sekme açık oluyo
