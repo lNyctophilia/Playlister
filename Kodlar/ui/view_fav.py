@@ -7,7 +7,7 @@ from tkinter import messagebox
 from utils_downloader import Downloader, DOWNLOAD_DIR
 from utils import parse_views, parse_duration
 
-FAV_FILE = "favorites.json"
+FAV_FILE = "Config/favorites.json"
 
 class ViewFav:
     def setup_fav_view(self):

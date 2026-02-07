@@ -25,7 +25,7 @@ from ui.view_fav import ViewFav
 from ui.view_player import ViewPlayer
 from ui.view_settings import ViewSettings
 
-FAV_FILE = "favorites.json"
+FAV_FILE = "Config/favorites.json"
 
 class App(UiShared, ViewSearch, ViewCharts, ViewGenre, ViewFav, ViewPlayer, ViewSettings):
     def __init__(self, root):
@@ -149,7 +149,7 @@ class App(UiShared, ViewSearch, ViewCharts, ViewGenre, ViewFav, ViewPlayer, View
         self.favorites = self.load_favorites()
         
         # Last.fm API Init
-        self.config_file = "config.json"
+        self.config_file = "Config/config.json"
         
         conf = self.load_config()
         encrypted_key = conf.get("lastfm_api_key", "")

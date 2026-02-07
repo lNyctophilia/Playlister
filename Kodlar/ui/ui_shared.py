@@ -5,7 +5,7 @@ import json
 import os
 from utils_downloader import Downloader
 
-FAV_FILE = "favorites.json"
+FAV_FILE = "Config/favorites.json"
 
 class UiShared:
     def update_status(self, text, color="black"):
