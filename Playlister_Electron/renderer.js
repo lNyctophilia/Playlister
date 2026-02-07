@@ -125,8 +125,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             let albumName = "";
-            if (item.album) {
-                albumName = ` - ${item.album.name}`;
+
+            if (item.album && item.album.name) {
+                if (artistName.toLowerCase() === item.album.name.toLowerCase()) {
+                    albumName = " - Single";
+                } else {
+                    albumName = ` - ${item.album.name}`;
+                }
+            } else {
+                albumName = " - Single";
             }
 
             let thumb = "https://via.placeholder.com/150";
@@ -174,7 +181,22 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (track.author) {
             artistName = track.author;
         }
-        document.querySelector('.track-artist').textContent = artistName;
+
+        let albumDisplay = "";
+        let albumNameRaw = "";
+
+        if (track.album && track.album.name) {
+            albumNameRaw = track.album.name;
+            if (artistName.toLowerCase() === albumNameRaw.toLowerCase()) {
+                albumDisplay = " - Single";
+            } else {
+                albumDisplay = ` - ${albumNameRaw}`;
+            }
+        } else {
+            albumDisplay = " - Single";
+        }
+
+        document.querySelector('.track-artist').textContent = artistName + albumDisplay;
 
         let thumb = "https://via.placeholder.com/150";
         if (track.thumbnails && track.thumbnails.length > 0) {
