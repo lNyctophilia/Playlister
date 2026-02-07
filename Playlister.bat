@@ -1,1 +1,1 @@
-python Kodlar/Playlister.py
+python Code/Playlister.py
