@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playlister</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Google Fonts for Premium Feel -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="logo">Playlister</div>
+            <ul class="nav-links">
+                <li class="active" data-view="search">🔍 Search</li>
+                <li data-view="charts">🌍 Charts</li>
+                <li data-view="genres">🎸 Genres</li>
+                <li data-view="favorites">❤ Favorites</li>
+                <li data-view="settings">⚙ Settings</li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="search-bar-container">
+                    <input type="text" id="global-search" placeholder="Search for artists, songs...">
+                </div>
+            </header>
+            
+            <div id="view-container">
+                <!-- Views will be injected here dynamically -->
+                <div class="view active" id="view-search">
+                    <h2>Search Results</h2>
+                    <div class="results-grid" id="search-results">
+                        <!-- Dynamic Content -->
+                        <div class="placeholder-text">Type in the search bar to start listening...</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Player Bar -->
+        <footer class="player-bar">
+            <div class="track-info">
+                <div class="track-art"></div>
+                <div class="track-details">
+                    <div class="track-title">No Track Playing</div>
+                    <div class="track-artist">-</div>
+                </div>
+            </div>
+            
+            <div class="player-controls">
+                <div class="control-buttons">
+                    <button class="btn-control" id="btn-prev">⏮</button>
+                    <button class="btn-control play-pause" id="btn-play">▶</button>
+                    <button class="btn-control" id="btn-next">⏭</button>
+                </div>
+                <div class="progress-container">
+                    <span class="time current">0:00</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <span class="time total">0:00</span>
+                </div>
+            </div>
+
+            <div class="volume-controls">
+                <span>🔊</span>
+                <input type="range" min="0" max="100" value="80" class="volume-slider">
+            </div>
+        </footer>
+    </div>
+    <script src="renderer.js"></script>
+</body>
+</html>

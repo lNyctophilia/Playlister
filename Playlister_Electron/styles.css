@@ -1,0 +1,237 @@
+:root {
+    --bg-dark: #121212;
+    --bg-panel: #181818;
+    --bg-hover: #282828;
+    --primary: #1DB954; /* Spotify Green-ish */
+    --text-main: #FFFFFF;
+    --text-sub: #B3B3B3;
+    --border: #333333;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    height: 100vh;
+    overflow: hidden;
+}
+
+.app-container {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    grid-template-rows: 1fr 90px;
+    height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    background-color: black;
+    padding: 24px;
+    grid-row: 1 / 2;
+    display: flex;
+    flex-direction: column;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 32px;
+    color: var(--text-main);
+}
+
+.nav-links {
+    list-style: none;
+}
+
+.nav-links li {
+    padding: 10px 16px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    color: var(--text-sub);
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.nav-links li:hover {
+    color: var(--text-main);
+}
+
+.nav-links li.active {
+    background-color: var(--bg-hover);
+    color: var(--text-main);
+}
+
+/* Main Content */
+.main-content {
+    background-color: var(--bg-dark); /* Gradient could go here */
+    grid-column: 2 / 3;
+    grid-row: 1 / 2;
+    overflow-y: auto;
+    padding: 24px;
+    background: linear-gradient(180deg, #202020 0%, #121212 100%);
+}
+
+.top-bar {
+    margin-bottom: 24px;
+}
+
+.search-bar-container input {
+    width: 300px;
+    padding: 12px 20px;
+    border-radius: 500px;
+    border: none;
+    background-color: white;
+    font-size: 14px;
+    color: black;
+    outline: none;
+}
+
+.results-grid {
+    display: grid;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.placeholder-text {
+    color: var(--text-sub);
+    font-style: italic;
+    margin-top: 20px;
+}
+
+/* Player Bar */
+.player-bar {
+    grid-column: 1 / 3;
+    grid-row: 2 / 3;
+    background-color: var(--bg-panel);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    z-index: 100;
+}
+
+.track-info {
+    width: 30%;
+    display: flex;
+    align-items: center;
+}
+
+.track-art {
+    width: 56px;
+    height: 56px;
+    background-color: #333;
+    margin-right: 14px;
+    border-radius: 4px;
+}
+
+.track-title {
+    font-size: 14px;
+    color: var(--text-main);
+    margin-bottom: 4px;
+}
+
+.track-artist {
+    font-size: 12px;
+    color: var(--text-sub);
+}
+
+.player-controls {
+    width: 40%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.control-buttons {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 8px;
+}
+
+.btn-control {
+    background: none;
+    border: none;
+    color: var(--text-sub);
+    font-size: 20px;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.btn-control:hover {
+    color: var(--text-main);
+}
+
+.play-pause {
+    width: 32px;
+    height: 32px;
+    background-color: var(--text-main);
+    color: black;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.play-pause:hover {
+    transform: scale(1.05);
+    background-color: white;
+    color: black;
+}
+
+/* Progress Bar */
+.progress-container {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.time {
+    font-size: 11px;
+    color: var(--text-sub);
+    min-width: 35px;
+    text-align: center;
+}
+
+.progress-bar {
+    flex-grow: 1;
+    height: 4px;
+    background-color: #535353;
+    border-radius: 2px;
+    position: relative;
+    cursor: pointer;
+}
+
+.progress-fill {
+    width: 0%;
+    height: 100%;
+    background-color: var(--text-main);
+    border-radius: 2px;
+}
+
+.progress-bar:hover .progress-fill {
+    background-color: var(--primary);
+}
+
+.volume-controls {
+    width: 30%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.volume-slider {
+    width: 100px;
+    margin-left: 10px;
+    accent-color: var(--text-main);
+}
