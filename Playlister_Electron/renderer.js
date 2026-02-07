@@ -127,6 +127,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="card-title">${title}</div>
                     <div class="card-artist">${artist}</div>
                 </div>
+                <div class="card-actions">
+                    <button class="btn-icon favorite">❤</button>
+                    <span class="time">${item.duration ? item.duration : ''}</span>
+                </div>
             `;
 
             // Interaction for playing would go here

@@ -95,38 +95,104 @@ body {
     outline: none;
 }
 
+/* Search Results List */
 .results-grid {
-    display: grid;
-    gap: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
     margin-top: 20px;
 }
 
-.placeholder-text {
+.track-card {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 4px;
+    background-color: transparent;
+    transition: background-color 0.2s;
+    cursor: pointer;
+}
+
+.track-card:hover {
+    background-color: var(--bg-hover);
+}
+
+.card-image {
+    width: 48px;
+    height: 48px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 4px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.play-overlay {
+    background-color: rgba(0, 0, 0, 0.5);
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+    color: white;
+    font-size: 14px;
+    border-radius: 4px;
+}
+
+.track-card:hover .play-overlay {
+    opacity: 1;
+}
+
+.card-info {
+    flex-grow: 1;
+    margin-left: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.card-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-main);
+    margin-bottom: 4px;
+}
+
+.card-artist {
+    font-size: 12px;
     color: var(--text-sub);
-    font-style: italic;
-    margin-top: 20px;
 }
 
-/* View Switching */
-.view {
-    display: none;
-    animation: fadeIn 0.3s ease-in-out;
+.card-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
-.view.active {
-    display: block;
+.btn-icon {
+    background: none;
+    border: none;
+    color: var(--text-sub);
+    font-size: 16px;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s;
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
+.track-card:hover .btn-icon {
+    opacity: 1;
+}
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.btn-icon:hover {
+    color: var(--text-main);
+    transform: scale(1.1);
+}
+
+.btn-icon.favorite.active {
+    color: var(--primary);
+    opacity: 1;
 }
 
 /* Player Bar */
