@@ -60,10 +60,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (isPlaying) {
             player.pause();
-            playBtn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M8 5V19L19 12L8 5Z" /></svg>`; // Play Icon
+            playBtn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5V19L19 12L8 5Z" /></svg>`; // Play Icon
         } else {
             player.play();
-            playBtn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>`; // Pause Icon
+            playBtn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>`; // Pause Icon
         }
         isPlaying = !isPlaying;
     });
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
             player.play();
         } else {
             isPlaying = false;
-            playBtn.textContent = '▶';
+            playBtn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5V19L19 12L8 5Z" /></svg>`;
         }
     });
 
@@ -221,14 +221,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             card.innerHTML = `
                 <div class="card-image" style="background-image: url('${thumb}')">
-                    <div class="play-overlay">▶</div>
+                    <div class="play-overlay">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5V19L19 12L8 5Z" /></svg>
+                    </div>
                 </div>
                 <div class="card-info">
                     <div class="card-title">${title}</div>
                     <div class="card-artist">${artistName}${albumName}</div>
                 </div>
                 <div class="card-actions">
-                    <button class="btn-icon favorite">❤</button>
+                    <button class="btn-icon favorite">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                    </button>
                     <span class="time">${item.duration ? item.duration : ''}</span>
                 </div>
             `;
@@ -285,7 +289,8 @@ document.addEventListener('DOMContentLoaded', () => {
             player.src = streamData.url;
             player.play();
             isPlaying = true;
-            document.getElementById('btn-play').textContent = '⏸';
+            isPlaying = true;
+            document.getElementById('btn-play').innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>`;
         } catch (error) {
             console.error("Failed to play track:", error);
             // alert("Failed to play track. See console.");

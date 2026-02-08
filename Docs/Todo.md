@@ -28,6 +28,6 @@ LrcGet ile indirilen şarkının varsa .lrc dosyası indirilsin
 
 --------------------
 
-Electron projesinde 1.modda arama yapınca çıkan şarkı listesinde elemanlarda şey olsun mesela sanatçı ismi var ya bu arada bazen undefiened yazıyo ben zaten sanatçıyı arattığım için öyle bi durum olamaz düzeltelim ayrıca şarkıcının isminin yanında albümüde yazsın
+Electron projesinde 1.modda arama yapınca çıkan şarkı listesinde elemanlarda albüm ismi yerinde sanatçının kesmi ismi veya işte producer gibi isimler bulunuyo sen bana örnek olarak bi şarkının bilgilerini ver ben sana hangisinin albüm ismi olduğunu söylicem örnek olarka "UZI - Ou" şarkısını test olarak bana bilgilerini söyle
 
 Electron projesindeki tüm iconları, basit svg'ler ile değiştir

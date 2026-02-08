@@ -58,6 +58,16 @@ body {
     cursor: pointer;
     font-weight: 600;
     transition: all 0.2s;
+    display: flex;
+    align-items: center;
+}
+
+.nav-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 12px;
+    fill: currentColor;
+    flex-shrink: 0;
 }
 
 .nav-links li:hover {
