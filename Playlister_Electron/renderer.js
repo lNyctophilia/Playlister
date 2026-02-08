@@ -283,7 +283,10 @@ document.addEventListener('DOMContentLoaded', () => {
             thumb = track.thumbnails[track.thumbnails.length - 1].url;
         }
         document.querySelector('.track-art').style.backgroundImage = `url('${thumb}')`;
-        document.querySelector('.track-art').style.backgroundSize = "cover";
+        const trackArt = document.querySelector('.track-art');
+        trackArt.style.backgroundImage = `url('${thumb}')`;
+        trackArt.style.backgroundSize = "cover";
+        // removed backgroundPosition: center
 
         try {
             const streamData = await window.api.getStream(track.videoId);

@@ -43,5 +43,3 @@ Electron projesinde şarkıya tıklanınca albüm kapakları ortalanmış değil
 Arama inputfield sadece 1.modda olucak diğer modlara tıklanınca sadece o moda ait ekran çıkıcak
 
 Electron projesinde ilk başta yazan yazılarda ekranın tam ortasına alalım sol üstte durmasınlar
-
-Electron projesinde Loading iconu tam ortada değil onu tam ortala
