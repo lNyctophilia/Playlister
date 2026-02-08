@@ -144,27 +144,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Search Input Logic
     const searchInput = document.getElementById('global-search');
+    const searchBtn = document.getElementById('search-btn');
     const resultsGrid = document.getElementById('search-results');
+
+    async function performSearch() {
+        const query = searchInput.value.trim();
+        if (!query) return;
+
+        console.log(`Searching for: ${query}`);
+        resultsGrid.innerHTML = `
+            <div class="loading-container">
+                <div class="loading-spinner"></div>
+            </div>`;
+
+        try {
+            const results = await window.api.search(query);
+            displayResults(results);
+        } catch (error) {
+            console.error("Search error:", error);
+            resultsGrid.innerHTML = '<div class="placeholder-text">Error occurred while searching.</div>';
+        }
+    }
 
     searchInput.addEventListener('keypress', async (e) => {
         if (e.key === 'Enter') {
-            const query = searchInput.value;
-            if (!query) return;
-
-            console.log(`Searching for: ${query}`);
-            resultsGrid.innerHTML = `
-                <div class="loading-container">
-                    <div class="loading-spinner"></div>
-                </div>`;
-
-            try {
-                const results = await window.api.search(query);
-                displayResults(results);
-            } catch (error) {
-                console.error("Search error:", error);
-                resultsGrid.innerHTML = '<div class="placeholder-text">Error occurred while searching.</div>';
-            }
+            await performSearch();
         }
+    });
+
+    searchBtn.addEventListener('click', async () => {
+        await performSearch();
     });
 
     function displayResults(results) {

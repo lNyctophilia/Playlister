@@ -94,6 +94,12 @@ body {
     margin-bottom: 24px;
 }
 
+.search-bar-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
 .search-bar-container input {
     width: 300px;
     padding: 12px 20px;
@@ -103,6 +109,25 @@ body {
     font-size: 14px;
     color: black;
     outline: none;
+}
+
+.btn-search {
+    background: none;
+    border: none;
+    color: var(--text-sub);
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 50%;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-search:hover {
+    color: var(--text-main);
+    background-color: var(--bg-hover);
+    transform: scale(1.1);
 }
 
 /* Search Results List */

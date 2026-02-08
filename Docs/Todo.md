@@ -43,3 +43,5 @@ Electron projesinde şarkıya tıklanınca albüm kapakları ortalanmış değil
 Electron projesinde ilk başta yazan yazılarda ekranın tam ortasına alalım sol üstte durmasınlar
 
 Electron projesinde arama inputfield yanında buton olsun büyüteç ikonlu yine basit sade svg olsun buton normalde enter basınca arama yapıyodu ya o yine olsun bunu butona basıncada yapabilelim
+
+Electron projesinde arada bi donma problemi yaşanıyo ekranın yarısı donuyo yarısı hareket ediyo gibi bi süre sonra geçiyo o problemin kaynağı nedir kod değişikliği yapma fikir üretelim
