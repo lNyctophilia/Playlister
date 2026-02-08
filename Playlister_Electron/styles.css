@@ -453,6 +453,8 @@ body {
     display: flex;
     align-items: center;
     justify-content: flex-end;
+    padding-right: 20px;
+    /* Move slider left by adding padding */
 }
 
 .volume-slider {

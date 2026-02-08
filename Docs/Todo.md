@@ -38,8 +38,6 @@ Electron projesinde 1.modda sanatçı arttığımızda çıkan sonuçlarda bazı
 
 Electron projesinde şarkıya tıklanınca albüm kapakları ortalanmış değilde sol kısmı gibi ortaya hizalı olsun
 
-Electron projesinde ilk başta yazan açıklama gibi şeyler ekranın ortasında olsun ana başlık gibi olanlar yine sol üstte eski yerinde olsun charts, genres gibi başlıklar ve yanlışlıkla arama butonu aşağı kaymış inpufieldin sağında olcak o her zaman
-
 Electron projesinde ses azaltıp arttırma şeyi azıcık daha sola doğru kaysın 10px falan tam bilmiyom ölçüleri
 
 Electron projesinde arada bi donma problemi yaşanıyo ekranın yarısı donuyo yarısı hareket ediyo gibi bi süre sonra geçiyo o problemin kaynağı nedir kod değişikliği yapma fikir üretelim

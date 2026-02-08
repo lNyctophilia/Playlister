@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Toggle Search Bar Visibility
             if (viewName === 'search') {
-                searchBarContainer.style.display = 'block'; // Or 'flex' if defined in CSS, but block usually works for div
+                searchBarContainer.style.display = 'flex'; // Use flex to maintain layout
             } else {
                 searchBarContainer.style.display = 'none';
             }
@@ -316,25 +316,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Update Title
                 if (streamData.metadata.title) {
-                    document.querySelector('.track-title').textContent = streamData.metadata.title;
+                    // document.querySelector('.track-title').textContent = streamData.metadata.title;
+                    console.log("Skipping title update from yt-dlp to keep UI clean");
                 }
 
                 // Update Artist & Album
                 let newArtist = artistName; // fallback to existing
                 if (streamData.metadata.artist) {
-                    newArtist = streamData.metadata.artist;
+                    // newArtist = streamData.metadata.artist;
+                    console.log("Skipping artist update from yt-dlp to keep UI clean");
                 }
 
                 let newAlbumDisplay = "";
                 if (streamData.metadata.album) {
-                    if (streamData.metadata.album !== (streamData.metadata.title || track.name)) {
-                        newAlbumDisplay = ` • ${streamData.metadata.album}`;
-                    } else {
-                        newAlbumDisplay = ` • Single`;
-                    }
+                    // if (streamData.metadata.album !== (streamData.metadata.title || track.name)) {
+                    //     newAlbumDisplay = ` • ${streamData.metadata.album}`;
+                    // } else {
+                    //     newAlbumDisplay = ` • Single`;
+                    // }
+                    console.log("Skipping album update from yt-dlp to keep UI clean");
                 }
 
-                document.querySelector('.track-artist').textContent = newArtist + newAlbumDisplay;
+                // document.querySelector('.track-artist').textContent = newArtist + newAlbumDisplay;
 
                 // Update Thumbnail if higher quality available
                 if (streamData.metadata.thumbnail) {
