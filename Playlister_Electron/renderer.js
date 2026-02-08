@@ -38,13 +38,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Play & Repeat Button Interaction
     const playBtn = document.getElementById('btn-play');
     const repeatBtn = document.getElementById('btn-repeat');
+    const iconRepeat = repeatBtn.querySelector('.icon-repeat');
+    const iconRepeatOne = repeatBtn.querySelector('.icon-repeat-one');
 
     repeatBtn.addEventListener('click', () => {
         isLooping = !isLooping;
         if (isLooping) {
             repeatBtn.classList.add('active');
+            iconRepeat.style.display = 'none';
+            iconRepeatOne.style.display = 'block';
         } else {
             repeatBtn.classList.remove('active');
+            iconRepeat.style.display = 'block';
+            iconRepeatOne.style.display = 'none';
         }
     });
 
@@ -54,10 +60,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (isPlaying) {
             player.pause();
-            playBtn.textContent = '▶';
+            playBtn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M8 5V19L19 12L8 5Z" /></svg>`; // Play Icon
         } else {
             player.play();
-            playBtn.textContent = '⏸';
+            playBtn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>`; // Pause Icon
         }
         isPlaying = !isPlaying;
     });

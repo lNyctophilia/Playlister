@@ -279,13 +279,22 @@ body {
     background: none;
     border: none;
     color: var(--text-sub);
-    font-size: 20px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
     transition: color 0.2s;
+    padding: 0;
 }
 
 .btn-control:hover {
     color: var(--text-main);
+}
+
+.btn-control.active {
+    color: var(--primary);
 }
 
 .play-pause {
