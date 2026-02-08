@@ -143,7 +143,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!query) return;
 
             console.log(`Searching for: ${query}`);
-            resultsGrid.innerHTML = '<div class="placeholder-text">Searching...</div>';
+            resultsGrid.innerHTML = `
+                <div class="loading-container">
+                    <div class="loading-spinner"></div>
+                </div>`;
 
             try {
                 const results = await window.api.search(query);

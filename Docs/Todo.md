@@ -32,4 +32,16 @@ Electron projesinde 1.modda arama yapınca çıkan şarkı listesinde elemanlard
 
 Electron projesi başlatıldığında yt-dlp güncel değilse güncellensin
 
-Projedeji gereksiz olan kodları ve dosyaları sil debug test falan filan şuan ana projede kullanılmayan
+Electron projesinde gereksiz olan kodları ve dosyaları sil debug test falan filan şuan ana projede kullanılmayan
+
+Electron projesinde 1.modda sanatçı arttığımızda çıkan sonuçlarda bazı single'ların albümü var  eğer albümü varsa albüm ismi yazsın single en son bulunamazsa yazsın ilk single bulduğunda değilde
+
+Electron projesinde 1.modda arama yaparken kastı sanmayalım diye loading dönen yuvarlak şeyden yapabilir miyiz ekranın ortasında dönen
+
+Electron projesinde şarkıya tıklanınca albüm kapakları ortalanmış değilde sol kısmı gibi ortaya hizalı olsun
+
+Arama inputfield sadece 1.modda olucak diğer modlara tıklanınca sadece o moda ait ekran çıkıcak
+
+Electron projesinde ilk başta yazan yazılarda ekranın tam ortasına alalım sol üstte durmasınlar
+
+Electron projesinde Loading iconu tam ortada değil onu tam ortala
