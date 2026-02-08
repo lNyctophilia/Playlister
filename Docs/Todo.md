@@ -28,6 +28,8 @@ LrcGet ile indirilen şarkının varsa .lrc dosyası indirilsin
 
 --------------------
 
-Electron projesinde 1.modda arama yapınca çıkan şarkı listesinde elemanlarda albüm ismi yerinde sanatçının kesmi ismi veya işte producer gibi isimler bulunuyo sen bana örnek olarak bi şarkının bilgilerini ver ben sana hangisinin albüm ismi olduğunu söylicem örnek olarka "UZI - Ou" şarkısını test olarak bana bilgilerini söyle
+Electron projesinde 1.modda arama yapınca çıkan şarkı listesinde elemanlarda albüm ismi yerinde sanatçının kesmi ismi veya işte producer gibi isimler bulunuyo sen bana örnek olarak bi şarkının bilgilerini ver ben sana hangisinin albüm ismi olduğunu söylicem örnek olarka "UZI - Ou" şarkısını test olarak bana bilgilerini söyle test için kod yazabilirsin işin bitince test kod dosyasını sil
 
-Electron projesindeki tüm iconları, basit svg'ler ile değiştir
+Electron projesi başlatıldığında yt-dlp güncel değilse güncellensin
+
+Projedeji gereksiz olan kodları ve dosyaları sil debug test falan filan şuan ana projede kullanılmayan

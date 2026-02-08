@@ -131,10 +131,11 @@ body {
     width: 48px;
     height: 48px;
     background-size: cover;
-    background-position: center;
+    background-position: center center;
     border-radius: 4px;
     position: relative;
     flex-shrink: 0;
+    /* Ensure image elements inside also behave if we used img tags, but here we use background-image */
 }
 
 .play-overlay {

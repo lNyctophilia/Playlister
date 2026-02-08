@@ -1,0 +1,39 @@
+Found 5 results.
+
+[Result 1]
+Video ID: FzoxTZ8shWY
+Title: Ou
+Artist: UZI, Motive
+Album: Mortal Kombat
+Duration: 193s
+---
+[Result 2]
+Video ID: YiJAxtSdeTw
+Title: Şarkılar Sokaklara Ait
+Artist: UZI, Motive
+Album: Şarkılar Sokaklara Ait
+Duration: 175s
+---
+[Result 3]
+Video ID: _2-bzgB_LSw
+Title: 1 YIL
+Artist: UZI, UZI, Utku Cihan Yalçınkaya, Utku Cihan Yalçınkaya
+Album: NEON
+Duration: 172s
+---
+[Result 4]
+Video ID: 0m4fbqTMdEs
+Title: Fam
+Artist: UZI, Motive, Muti
+Album: Mortal Kombat
+Duration: 281s
+---
+[Result 5]
+Video ID: vAS5ZLnne0A
+Title: Rodman Dennis
+Artist: UZI, Motive, Jeyjey, Glam
+Album: Mortal Kombat
+Duration: 173s
+---
+
+✅ SUCCESS: Album correctly identified as 'Mortal Kombat'

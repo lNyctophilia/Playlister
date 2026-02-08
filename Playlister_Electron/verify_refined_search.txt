@@ -1,0 +1,124 @@
+Found 20 results (Expected ~20).
+
+[Result 1]
+Title: Ou
+Artist: UZI, Motive
+Album: Mortal Kombat
+Duration: 193
+---
+[Result 2]
+Title: Şarkılar Sokaklara Ait
+Artist: UZI, Motive
+Album: Şarkılar Sokaklara Ait
+Duration: 175
+---
+[Result 3]
+Title: 1 YIL
+Artist: UZI
+Album: NEON
+Duration: 172
+---
+[Result 4]
+Title: Fam
+Artist: UZI, Motive, Muti
+Album: Mortal Kombat
+Duration: 281
+---
+[Result 5]
+Title: Rodman Dennis (feat. Jeyjey & Glam)
+Artist: UZI, Motive
+Album: Mortal Kombat
+Duration: 173
+---
+[Result 6]
+Title: Cennet
+Artist: UZI, Motive
+Album: Mortal Kombat
+Duration: 156
+---
+[Result 7]
+Title: Babaflow
+Artist: UZI, Motive
+Album: Mortal Kombat
+Duration: 178
+---
+[Result 8]
+Title: Mortal Kombat (feat. Jeyjey)
+Artist: UZI, Motive
+Album: Mortal Kombat
+Duration: 156
+---
+[Result 9]
+Title: ABKB
+Artist: UZI, Modd
+Album: ABKB
+Duration: 173
+---
+[Result 10]
+Title: Trap House
+Artist: UZI, Motive
+Album: Mortal Kombat
+Duration: 187
+---
+[Result 11]
+Title: 6.4 MM
+Artist: UZI, Da Poet
+Album: 6.4 MM
+Duration: 204
+---
+[Result 12]
+Title: Nedenini Sorma
+Artist: UZI
+Album: Kan
+Duration: 243
+---
+[Result 13]
+Title: ŞUT
+Artist: UZI
+Album: NEON
+Duration: 184
+---
+[Result 14]
+Title: Ou Ou Ouuu (feat. Uzi Ou)
+Artist: Alley Gang Trap
+Album: Thugga 2x
+Duration: 178
+---
+[Result 15]
+Title: Ismarla
+Artist: UZI, Motive
+Album: Ismarla
+Duration: 183
+---
+[Result 16]
+Title: Serseriler (feat. Motive) (feat. Motive)
+Artist: UZI
+Album: Favela
+Duration: 182
+---
+[Result 17]
+Title: MA CHÉRIE
+Artist: UZI, Aksan
+Album: 9
+Duration: 156
+---
+[Result 18]
+Title: WAG1
+Artist: UZI, Modd
+Album: WAG1
+Duration: 126
+---
+[Result 19]
+Title: ARASAN DA
+Artist: UZI
+Album: EL CHAVO
+Duration: 192
+---
+[Result 20]
+Title: 366
+Artist: UZI
+Album: NEON
+Duration: 137
+---
+
+✅ SUCCESS: Found 'Mortal Kombat' album and 'UZI' artist.

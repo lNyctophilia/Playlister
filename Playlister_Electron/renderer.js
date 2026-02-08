@@ -286,9 +286,40 @@ document.addEventListener('DOMContentLoaded', () => {
             const streamData = await window.api.getStream(track.videoId);
             console.log("Stream URL received:", streamData.url);
 
+            // Update metadata from yt-dlp if available (more headers/accurate)
+            if (streamData.metadata) {
+                console.log("Received metadata from yt-dlp:", streamData.metadata);
+
+                // Update Title
+                if (streamData.metadata.title) {
+                    document.querySelector('.track-title').textContent = streamData.metadata.title;
+                }
+
+                // Update Artist & Album
+                let newArtist = artistName; // fallback to existing
+                if (streamData.metadata.artist) {
+                    newArtist = streamData.metadata.artist;
+                }
+
+                let newAlbumDisplay = "";
+                if (streamData.metadata.album) {
+                    if (streamData.metadata.album !== (streamData.metadata.title || track.name)) {
+                        newAlbumDisplay = ` • ${streamData.metadata.album}`;
+                    } else {
+                        newAlbumDisplay = ` • Single`;
+                    }
+                }
+
+                document.querySelector('.track-artist').textContent = newArtist + newAlbumDisplay;
+
+                // Update Thumbnail if higher quality available
+                if (streamData.metadata.thumbnail) {
+                    document.querySelector('.track-art').style.backgroundImage = `url('${streamData.metadata.thumbnail}')`;
+                }
+            }
+
             player.src = streamData.url;
             player.play();
-            isPlaying = true;
             isPlaying = true;
             document.getElementById('btn-play').innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>`;
         } catch (error) {

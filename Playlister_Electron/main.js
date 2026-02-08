@@ -23,6 +23,8 @@ function createWindow() {
 }
 
 // IPC Handlers
+const ytDlpWrapper = require('./modules/yt-dlp-wrapper');
+
 ipcMain.handle('search', async (event, query) => {
     return await musicApi.search(query);
 });
