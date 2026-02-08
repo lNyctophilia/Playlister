@@ -321,24 +321,40 @@ body {
     text-align: center;
 }
 
-.progress-bar {
+.progress-slider {
     flex-grow: 1;
     height: 4px;
-    background-color: #535353;
+    -webkit-appearance: none;
+    appearance: none;
+    background: #535353;
     border-radius: 2px;
-    position: relative;
     cursor: pointer;
+    accent-color: var(--text-main);
+    transition: background 0.2s;
 }
 
-.progress-fill {
-    width: 0%;
-    height: 100%;
-    background-color: var(--text-main);
-    border-radius: 2px;
+.progress-slider:hover {
+    accent-color: var(--primary);
 }
 
-.progress-bar:hover .progress-fill {
-    background-color: var(--primary);
+.progress-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 12px;
+    width: 12px;
+    border-radius: 50%;
+    background: var(--text-main);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.progress-container:hover .progress-slider::-webkit-slider-thumb {
+    opacity: 1;
+}
+
+.btn-control.active {
+    color: var(--primary);
+    opacity: 1;
 }
 
 .volume-controls {

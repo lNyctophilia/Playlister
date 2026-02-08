@@ -1,16 +1,14 @@
-const ytdl = require('ytdl-core');
+const YtDlp = require('./yt-dlp-wrapper');
 
 class StreamExtractor {
     async getAudioStream(videoId) {
         try {
-            const info = await ytdl.getInfo(videoId);
-            const format = ytdl.chooseFormat(info.formats, { quality: 'highestaudio' });
+            const url = await YtDlp.getStream(videoId);
             return {
-                url: format.url,
-                title: info.videoDetails.title,
-                author: info.videoDetails.author.name,
-                duration: info.videoDetails.lengthSeconds,
-                thumbnail: info.videoDetails.thumbnails[0].url
+                url: url
+                // Metadata is already handled by search result usually, 
+                // but if we needed fresh meta, we'd have to call yt-dlp --dump-json again.
+                // For now, renderer relies on search result for metadata display.
             };
         } catch (error) {
             console.error("Error fetching stream:", error);

@@ -27,7 +27,7 @@
     "electron-builder": "^26.7.0"
   },
   "dependencies": {
-    "youtube-music-api": "^1.0.6",
-    "ytdl-core": "^4.11.5"
+    "@distube/ytdl-core": "^4.16.12",
+    "youtube-music-api": "^1.0.6"
   }
 }

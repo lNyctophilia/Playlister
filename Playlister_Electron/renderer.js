@@ -2,6 +2,8 @@
 const player = new Audio(); // Simple HTML5 Player
 let currentTrack = null;
 let isPlaying = false;
+let isLooping = false;
+let isDraggingProgress = false;
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Playlister UI Loaded');
@@ -33,8 +35,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Play Button Interaction
+    // Play & Repeat Button Interaction
     const playBtn = document.getElementById('btn-play');
+    const repeatBtn = document.getElementById('btn-repeat');
+
+    repeatBtn.addEventListener('click', () => {
+        isLooping = !isLooping;
+        if (isLooping) {
+            repeatBtn.classList.add('active');
+        } else {
+            repeatBtn.classList.remove('active');
+        }
+    });
 
     playBtn.addEventListener('click', () => {
         // If no track is loaded, do nothing
@@ -51,18 +63,56 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Player Events
+    const progressSlider = document.querySelector('.progress-slider');
+
     player.addEventListener('timeupdate', () => {
-        if (!player.duration) return;
-        const progress = (player.currentTime / player.duration) * 100;
-        document.querySelector('.progress-fill').style.width = `${progress}%`;
-        document.querySelector('.time.current').textContent = formatTime(player.currentTime);
-        document.querySelector('.time.total').textContent = formatTime(player.duration || 0);
+        if (!player.duration || isDraggingProgress) return;
+
+        const currentTime = player.currentTime;
+        const duration = player.duration;
+        const progress = (currentTime / duration) * 100;
+
+        progressSlider.value = progress;
+
+        document.querySelector('.time.current').textContent = formatTime(currentTime);
+        document.querySelector('.time.total').textContent = formatTime(duration);
+
+        // Update slider background gradient for visual effect
+        updateSliderBackground(progressSlider, progress);
     });
 
     player.addEventListener('ended', () => {
-        isPlaying = false;
-        playBtn.textContent = '▶';
+        if (isLooping) {
+            player.currentTime = 0;
+            player.play();
+        } else {
+            isPlaying = false;
+            playBtn.textContent = '▶';
+        }
     });
+
+    // Progress Bar Interactions
+    progressSlider.addEventListener('input', (e) => {
+        isDraggingProgress = true;
+        const val = e.target.value;
+        const duration = player.duration || 1;
+        const currentTime = (val / 100) * duration;
+
+        document.querySelector('.time.current').textContent = formatTime(currentTime);
+        updateSliderBackground(progressSlider, val);
+    });
+
+    progressSlider.addEventListener('change', (e) => {
+        const val = e.target.value;
+        const duration = player.duration || 1; // Avoid division by zero
+        player.currentTime = (val / 100) * duration;
+        isDraggingProgress = false;
+    });
+
+    function updateSliderBackground(slider, value) {
+        const percentage = value; // Value is already 0-100
+        slider.style.background = `linear-gradient(to right, var(--text-main) ${percentage}%, #535353 ${percentage}%)`;
+    }
 
     function formatTime(seconds) {
         if (isNaN(seconds)) return "0:00";
@@ -126,24 +176,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let albumName = "";
 
-            // Check if album exists AND has a valid ID (not an artist channel starting with UC)
-            if (item.album && item.album.name && item.album.browseId && !item.album.browseId.startsWith('UC')) {
-                if (item.name.toLowerCase() === item.album.name.toLowerCase()) {
-                    albumName = " - Single";
-                } else if (item.name.toLowerCase() === item.artist.name.toLowerCase()) { // Song name == Artist name check (e.g. Beyonce - Beyonce)
-                    // If song name is same as artist, and album is same as artist, it's likely a self-titled album, NOT a single usually, 
-                    // BUT if API returns artist channel as album, we already filtered it.
-                    // If it's a real album named same as artist, we display it.
-                    albumName = ` - ${item.album.name}`;
+            // Show album if it exists
+            if (item.album && item.album.name) {
+                // If album name is same as song title, it's likely a Single or self-titled track.
+                // User wants to know if it's an album. 
+                // Let's show it unless it's strictly "Single" AND user doesn't want "Single" label everywhere?
+                // User said: "single olduğuda yazmıyo" -> implies they WANT to know if it's single.
+                // But also: "her albüm verisi çekemediğin şeye single etiketi yapıştırma" -> Don't label Unknown as Single.
+
+                // If the API explicitly returns an album name, we should show it.
+                // If album name == title, it's a single usually, but we can verify against type if possible.
+                // For now, let's just show what the API gives us, format " • AlbumName"
+
+                if (item.album.name !== item.name) {
+                    albumName = ` • ${item.album.name}`;
                 } else {
-                    albumName = ` - ${item.album.name}`;
+                    // It's a Single or Title Track. Let's label as Single if it's a Single.
+                    // Or just show nothing if it's redundant?
+                    // "Block3 - KUSURA BAKMA • KUSURA BAKMA" looks weird.
+                    // "Block3 - KUSURA BAKMA • Single" is better if we are sure.
+                    // Since specific logic is hard without 'type', let's just NOT duplicate the title.
+                    // But if it's NOT the title, show it.
+                    // If it IS the title, maybe show nothing (cleaner) or show "Single"?
+                    // Let's try adding "Single" if title == album.name
+                    albumName = ` • Single`;
                 }
-            } else {
-                // If no valid album ID (likely artist channel), user prefers "Single" text over nothing.
-                // This might mislabel some album tracks as singles if metadata is poor, 
-                // but it satisfies the "Blok3 - Single" requirement.
-                albumName = " - Single";
             }
+
+            // If album name matches artist name (Self-titled album), we SHOULD show it. 
+            // e.g. "Metallica - Enter Sandman • Metallica" is valid info (it's from the album Metallica).
+            // So we keep it.
 
             let thumb = "https://via.placeholder.com/150";
 
@@ -193,15 +255,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let albumDisplay = "";
 
-        // Same logic for player display
-        if (track.album && track.album.name && track.album.browseId && !track.album.browseId.startsWith('UC')) {
-            if (track.name.toLowerCase() === track.album.name.toLowerCase()) {
-                albumDisplay = " - Single";
+        if (track.album && track.album.name) {
+            if (track.album.name !== track.name) {
+                albumDisplay = ` • ${track.album.name}`;
             } else {
-                albumDisplay = ` - ${track.album.name}`;
+                albumDisplay = ` • Single`;
             }
-        } else {
-            albumDisplay = " - Single";
         }
 
         document.querySelector('.track-artist').textContent = artistName + albumDisplay;
