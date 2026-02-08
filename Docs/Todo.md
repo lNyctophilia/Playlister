@@ -40,6 +40,6 @@ Electron projesinde 1.modda arama yaparken kastı sanmayalım diye loading döne
 
 Electron projesinde şarkıya tıklanınca albüm kapakları ortalanmış değilde sol kısmı gibi ortaya hizalı olsun
 
-Arama inputfield sadece 1.modda olucak diğer modlara tıklanınca sadece o moda ait ekran çıkıcak
-
 Electron projesinde ilk başta yazan yazılarda ekranın tam ortasına alalım sol üstte durmasınlar
+
+Electron projesinde arama inputfield yanında buton olsun büyüteç ikonlu yine basit sade svg olsun buton normalde enter basınca arama yapıyodu ya o yine olsun bunu butona basıncada yapabilelim

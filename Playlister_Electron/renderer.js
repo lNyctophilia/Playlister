@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Navigation Logic
     const navLinks = document.querySelectorAll('.nav-links li');
+    const searchBarContainer = document.querySelector('.search-bar-container');
+
     navLinks.forEach(link => {
         link.addEventListener('click', () => {
             // Remove active class from all
@@ -19,6 +21,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const viewName = link.getAttribute('data-view');
             console.log(`Switched to view: ${viewName}`);
+
+            // Toggle Search Bar Visibility
+            if (viewName === 'search') {
+                searchBarContainer.style.display = 'block'; // Or 'flex' if defined in CSS, but block usually works for div
+            } else {
+                searchBarContainer.style.display = 'none';
+            }
 
             // Hide all views
             document.querySelectorAll('.view').forEach(view => {
