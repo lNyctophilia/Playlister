@@ -36,12 +36,12 @@ Electron projesinde gereksiz olan kodları ve dosyaları sil debug test falan fi
 
 Electron projesinde 1.modda sanatçı arttığımızda çıkan sonuçlarda bazı single'ların albümü var  eğer albümü varsa albüm ismi yazsın single en son bulunamazsa yazsın ilk single bulduğunda değilde
 
-Electron projesinde 1.modda arama yaparken kastı sanmayalım diye loading dönen yuvarlak şeyden yapabilir miyiz ekranın ortasında dönen
-
 Electron projesinde şarkıya tıklanınca albüm kapakları ortalanmış değilde sol kısmı gibi ortaya hizalı olsun
 
-Electron projesinde ilk başta yazan yazılarda ekranın tam ortasına alalım sol üstte durmasınlar
+Electron projesinde ilk başta yazan açıklama gibi şeyler ekranın ortasında olsun ana başlık gibi olanlar yine sol üstte eski yerinde olsun charts, genres gibi başlıklar ve yanlışlıkla arama butonu aşağı kaymış inpufieldin sağında olcak o her zaman
 
-Electron projesinde arama inputfield yanında buton olsun büyüteç ikonlu yine basit sade svg olsun buton normalde enter basınca arama yapıyodu ya o yine olsun bunu butona basıncada yapabilelim
+Electron projesinde ses azaltıp arttırma şeyi azıcık daha sola doğru kaysın 10px falan tam bilmiyom ölçüleri
 
 Electron projesinde arada bi donma problemi yaşanıyo ekranın yarısı donuyo yarısı hareket ediyo gibi bi süre sonra geçiyo o problemin kaynağı nedir kod değişikliği yapma fikir üretelim
+
+Electron projesinde şarkıya tıklanınca normalde arama kısmında sanatçı ismi yerinde sadece blok3 yazıyo sonra şarkıya basınca alttaki medya oynatıcısında Adamın mahlası yani benim arattığım, Adamın kendi ismi, başka isimler falan filan ekstra saçma sapan bi sürü isim yazıyo sadece aradığımızda listedeki isimler yazsın medya oynatıcısındada
