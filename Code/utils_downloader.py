@@ -279,3 +279,139 @@ class Downloader:
             if callback: callback(True, "İndirme Tamamlandı")
         except Exception as e:
             if callback: callback(False, str(e))
+
+    @staticmethod
+    def _get_session():
+        import requests
+        from requests.adapters import HTTPAdapter
+        from urllib3.util.retry import Retry
+        
+        session = requests.Session()
+        retries = Retry(total=3, backoff_factor=1, status_forcelist=[500, 502, 503, 504])
+        adapter = HTTPAdapter(max_retries=retries)
+        session.mount('https://', adapter)
+        session.mount('http://', adapter)
+        return session
+
+    @staticmethod
+    def download_lyrics(title, artist, album, duration, callback=None):
+        """LRCLIB API üzerinden şarkı sözlerini indirir (.lrc)"""
+        try:
+            import urllib3
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            
+            clean = Downloader.clean_filename
+            base_name = f"{clean(artist)} - {clean(title)}"
+            lrc_filename = f"{base_name}.lrc"
+            lrc_path = os.path.join(DOWNLOAD_DIR, lrc_filename)
+            
+            if os.path.exists(lrc_path):
+                print(f"[LRC] Zaten mevcut: {base_name}")
+                if callback: callback(True, "Zaten mevcut")
+                return
+
+            session = Downloader._get_session()
+            url_get = "https://lrclib.net/api/get"
+            url_search = "https://lrclib.net/api/search"
+            
+            # Stratejiler
+            strategies = []
+            
+            # 1. Tam Eşleşme
+            strategies.append({
+                "name": "Tam Eşleşme",
+                "url": url_get,
+                "params": {"artist_name": artist, "track_name": title, "album_name": album, "duration": duration}
+            })
+            
+            # 2. Albümsüz
+            strategies.append({
+                 "name": "Albümsüz Deneme",
+                 "url": url_get,
+                 "params": {"artist_name": artist, "track_name": title, "duration": duration}
+            })
+            
+            # 3. İlk Sanatçı (Eğer birden fazlaysa)
+            # "Lvbel C5, AKDO, ALIZADE" -> "Lvbel C5"
+            primary_artist = artist.split(',')[0].split('&')[0].split(' ft.')[0].split(' feat.')[0].strip()
+            if primary_artist != artist:
+                strategies.append({
+                    "name": f"İlk Sanatçı ({primary_artist})",
+                    "url": url_get,
+                    "params": {"artist_name": primary_artist, "track_name": title, "duration": duration}
+                })
+
+            found_lyrics = None
+            
+            for strat in strategies:
+                try:
+                    # SSL Verify False + Session
+                    resp = session.get(strat["url"], params=strat["params"], timeout=15, verify=False)
+                    
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        # /api/get tek obje döner, /api/search liste döner (ama biz get kullanıyoruz şu an)
+                        synced = data.get("syncedLyrics", "")
+                        if synced:
+                            found_lyrics = synced
+                            print(f"[LRC] Bulundu ({strat['name']}): {base_name}")
+                            break
+                    elif resp.status_code == 404:
+                        continue # Diğer stratejiye geç
+                        
+                except Exception as e:
+                    print(f"[LRC] Hata ({strat['name']}): {e}")
+                    continue
+
+            # Eğer hala bulunamadıysa Search API deneyelim (Daha geniş arama)
+            if not found_lyrics:
+                try:
+                    search_params = {"q": f"{artist} {title}"}
+                    resp = session.get(url_search, params=search_params, timeout=15, verify=False)
+                    if resp.status_code == 200:
+                        results = resp.json() # Liste döner
+                        # Süreye en yakın olanı seç (+- 3 sn)
+                        for res in results:
+                            res_dur = res.get("duration", 0)
+                            if abs(res_dur - duration) <= 3 and res.get("syncedLyrics"):
+                                found_lyrics = res.get("syncedLyrics")
+                                print(f"[LRC] Bulundu (Geniş Arama): {base_name}")
+                                break
+                except Exception as ex:
+                    print(f"[LRC] Geniş Arama Hatası: {ex}")
+
+            if found_lyrics:
+                Downloader.ensure_dir()
+                with open(lrc_path, "w", encoding="utf-8") as f:
+                    f.write(found_lyrics)
+                if callback: callback(True, "İndirildi")
+            else:
+                print(f"[LRC] Bulunamadı (Tüm Yöntemler): {base_name}")
+                if callback: callback(False, "Sözler bulunamadı")
+                
+        except Exception as e:
+            print(f"[LRC] Genel Hata: {e}")
+            if callback: callback(False, str(e))
+
+    @staticmethod
+    def delete_lyrics(artist, title):
+        """Şarkının .lrc dosyasını siler"""
+        try:
+            clean = Downloader.clean_filename
+            base_name = f"{clean(artist)} - {clean(title)}"
+            lrc_path = os.path.join(DOWNLOAD_DIR, f"{base_name}.lrc")
+            
+            if os.path.exists(lrc_path):
+                os.remove(lrc_path)
+                return True
+            return False
+        except Exception as e:
+            print(f"LRC Silme Hatası: {e}")
+            return False
+
+    @staticmethod
+    def is_lrc_downloaded(artist, title):
+        clean = Downloader.clean_filename
+        base_name = f"{clean(artist)} - {clean(title)}"
+        lrc_path = os.path.join(DOWNLOAD_DIR, f"{base_name}.lrc")
+        return os.path.exists(lrc_path)

@@ -24,7 +24,7 @@ Bu uygulamayı dışarıdan başka bi uygulama indirmeden sadece bunu exe olarak
 
 Bazı albümü single olanları galiba detaylarını alamıyoruz albüm kapağı gibi gibi yılı sanatçı ismi gibi onların nedeni nedir kod değişikliği yapma fikir üretelim
 
-LrcGet ile indirilen şarkının varsa .lrc dosyası indirilsin
+Bazen metadatalar çok kalabalık oluyo neden bilmiyorum "mor ve ötesi cambaz" şarkısını test edebilirsin şuan o öyle onu düzeltelim
 
 --------------------
 
