@@ -6,7 +6,7 @@ try:
 except ImportError:
     yt_dlp = None
 
-DOWNLOAD_DIR = "Downloads"
+DOWNLOAD_DIR = os.path.join(os.path.expanduser("~"), "Music", "Playlister")
 ARCHIVE_FILE = os.path.join(DOWNLOAD_DIR, "archive.txt")
 
 class Downloader:

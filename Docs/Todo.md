@@ -16,11 +16,9 @@ Ayrıca api key içinde api key al ekranında işlem sırası olcak hesap aç, a
 
 4.moda spotifyde playlist yap butonu ekle, ayarlarda yine spotify api key girme yeri yap last.fm gibi aynı last.fm api key mantığını koruyarak spotify api key için yapalım yani bizden o butona basınca spotify api key istesin girili değilse ayrıca giriliyse yine encrypted şekilde kaydetsin gibi gibi sonra spotifyda playlist yapsın işte
 
-Downloads klasörü bence windowsun kendi müzik klasörü içinde playlister diye bi klasör açıp oraya indirsin şarkıları eğer playlister diye klasör yoksa oluştursun ve içine bizim şuanki downloads klasörüne indirir gibi indirsin harmonoid diye medya player indirdim ordan bu klasörü seçerim ve proje klasörünüde taşırken daha hızlı rahat olur dimi
-
 3.modda Türe göre öneride sağ tık sanatçıyı ara yaptım no.1 adlı sanatçıyı ve 1.modda aratırken ismi 2 kez yazdırıyo
 
-Bu uygulamayı dışarıdan başka bi uygulama indirmeden sadece bunu exe olarak veya direkt klasör olarak zipli şekilde indirip çalıştırabilmek için bu uygulamayı en baştan hangi programlama dili ve hangi programlama araçlarıyla geliştirmeliyiz ve neler kullanmalıyız kod değişikliği yapma fikir üretelim
+Bu uygulamayı frontend electron backend python şeklinde hibrit yapıcaz ve setup dosyası hazırlıcaz
 
 Bazı albümü single olanları galiba detaylarını alamıyoruz albüm kapağı gibi gibi yılı sanatçı ismi gibi onların nedeni nedir kod değişikliği yapma fikir üretelim
 
