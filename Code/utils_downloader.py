@@ -167,7 +167,7 @@ class Downloader:
             'noplaylist': True,
             'quiet': True,
             'no_warnings': True,
-            'ignoreerrors': True,
+            'ignoreerrors': False,
             'nocheckcertificate': True,
             'writethumbnail': True,
             'extractor_args': {
@@ -198,6 +198,14 @@ class Downloader:
             # 1. İndirme İşlemi
             with yt_dlp.YoutubeDL(opts) as ydl:
                 ydl.download([f"https://music.youtube.com/watch?v={video_id}"])
+
+            # İndirme sonrası dosya kontrolü
+            base_name_full = os.path.join(DOWNLOAD_DIR, f"{clean(artist)} - {clean(title)}")
+            possible_files = glob.glob(f"{glob.escape(base_name_full)}.*")
+            audio_found = any(p.endswith('.opus') for p in possible_files)
+
+            if not audio_found:
+                 raise Exception("İndirme işlemi tamamlandı görünüyor ancak dosya oluşmadı.")
             
             # --- Manuel Kapak İşlemi (Pillow + Mutagen) ---
             try:
