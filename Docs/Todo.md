@@ -18,26 +18,8 @@ Ayrıca api key içinde api key al ekranında işlem sırası olcak hesap aç, a
 
 3.modda Türe göre öneride sağ tık sanatçıyı ara yaptım no.1 adlı sanatçıyı ve 1.modda aratırken ismi 2 kez yazdırıyo
 
-Bu uygulamayı frontend electron backend python şeklinde hibrit yapıcaz ve setup dosyası hazırlıcaz
-
 Bazı albümü single olanları galiba detaylarını alamıyoruz albüm kapağı gibi gibi yılı sanatçı ismi gibi onların nedeni nedir kod değişikliği yapma fikir üretelim
 
 Bazen metadatalar çok kalabalık oluyo neden bilmiyorum "mor ve ötesi cambaz" şarkısını test edebilirsin şuan o öyle onu düzeltelim
 
---------------------
-
-Electron projesinde 1.modda arama yapınca çıkan şarkı listesinde elemanlarda albüm ismi yerinde sanatçının kesmi ismi veya işte producer gibi isimler bulunuyo sen bana örnek olarak bi şarkının bilgilerini ver ben sana hangisinin albüm ismi olduğunu söylicem örnek olarka "UZI - Ou" şarkısını test olarak bana bilgilerini söyle test için kod yazabilirsin işin bitince test kod dosyasını sil
-
-Electron projesi başlatıldığında yt-dlp güncel değilse güncellensin
-
-Electron projesinde gereksiz olan kodları ve dosyaları sil debug test falan filan şuan ana projede kullanılmayan
-
-Electron projesinde 1.modda sanatçı arttığımızda çıkan sonuçlarda bazı single'ların albümü var  eğer albümü varsa albüm ismi yazsın single en son bulunamazsa yazsın ilk single bulduğunda değilde
-
-Electron projesinde şarkıya tıklanınca albüm kapakları ortalanmış değilde sol kısmı gibi ortaya hizalı olsun
-
-Electron projesinde ses azaltıp arttırma şeyi azıcık daha sola doğru kaysın 10px falan tam bilmiyom ölçüleri
-
-Electron projesinde arada bi donma problemi yaşanıyo ekranın yarısı donuyo yarısı hareket ediyo gibi bi süre sonra geçiyo o problemin kaynağı nedir kod değişikliği yapma fikir üretelim
-
-Electron projesinde şarkıya tıklanınca normalde arama kısmında sanatçı ismi yerinde sadece blok3 yazıyo sonra şarkıya basınca alttaki medya oynatıcısında Adamın mahlası yani benim arattığım, Adamın kendi ismi, başka isimler falan filan ekstra saçma sapan bi sürü isim yazıyo sadece aradığımızda listedeki isimler yazsın medya oynatıcısındada
+README.md ekle ve içine requirements kısmı ekleyip vlc, last.fm api (bunu belki kaldırabiliriz düşünelim benim uygulamayı yayınlamam yetiyo mu projeyi githubda public yapsam sıkıntı olur mu diye), ffmpeg, yt-dlp ve daha bi sürü kullandığımız python kütüphanelerinide yazalım ama normal yüklemesi gerekenler ile falan ayırıp installation kısmı ayarlayalım
