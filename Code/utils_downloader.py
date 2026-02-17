@@ -21,6 +21,12 @@ class Downloader:
     def ensure_dir():
         if not os.path.exists(DOWNLOAD_DIR):
             os.makedirs(DOWNLOAD_DIR)
+            
+    # Import Helper
+    @staticmethod
+    def _clean_meta(text, remove_artists=None):
+        from utils import clean_metadata_text
+        return clean_metadata_text(text, remove_artists)
 
     @staticmethod
     def get_file_path(video_id=None, artist=None, title=None):
@@ -275,7 +281,21 @@ class Downloader:
                        final_album.strip().lower() in ["unknown album", "single"]:
                         final_album = title
                     
-                    audio.tags['album'] = [final_album]
+                    # --- METADATA CLEANING ---
+                    # 1. Clean Title
+                    # Remove "Official Video" etc. AND remove Artist Name if it's in the title
+                    clean_title = Downloader._clean_meta(title, remove_artists=[artist])
+                    
+                    # 2. Clean Artist
+                    clean_artist = Downloader._clean_meta(artist)
+                    
+                    # 3. Clean Album
+                    clean_album = Downloader._clean_meta(final_album)
+
+                    # Update Tags (Force Overwrite)
+                    audio.tags['title'] = [clean_title]
+                    audio.tags['artist'] = [clean_artist]
+                    audio.tags['album'] = [clean_album]
 
                     # 2. Kapak Resmi Varsa İşle
                     if image_path:

@@ -60,6 +60,57 @@ def decrypt_text(text):
     except:
         return ""
 
+def clean_metadata_text(text, remove_artists=None):
+    """
+    Şarkı isimlerindeki fazlalıkları temizler (Official Video, Lyrics vb.)
+    Ayrıca eğer başlık sanatçı adı ile başlıyorsa onu da siler.
+    """
+    if not text: return ""
+    
+    # Common Noise removal (Case Insensitive)
+    noise_list = [
+        "(Official Video)", "(Official Audio)", "(Official Clip)", 
+        "(Lyric Video)", "(Lyrics)", 
+        "[Official Video]", "[Official Audio]",
+        "(Video)", "(Audio)",
+        "Official Video", "Official Audio", 
+        "| Official Video |",
+        "HD", "HQ", "4K", 
+        "(Visualizer)", "(Official Visualizer)",
+        "(Live)", "(Canlı)", "Canlı Performans"
+    ]
+    
+    clean_text = text
+    import re
+    
+    for noise in noise_list:
+        # Case insensitive replace
+        pattern = re.compile(re.escape(noise), re.IGNORECASE)
+        clean_text = pattern.sub("", clean_text)
+    
+    # Remove leading/trailing whitespace/dashes
+    clean_text = clean_text.strip(" -|")
+    
+    # Remove Artist from Title if present
+    # e.g. "Artist - Title" -> "Title"
+    if remove_artists:
+        if isinstance(remove_artists, str):
+            remove_artists = [remove_artists]
+            
+        for artist in remove_artists:
+            if not artist: continue
+            # Check if title starts with artist (case insensitive)
+            if clean_text.lower().startswith(artist.lower()):
+                # Remove it
+                clean_text = clean_text[len(artist):]
+                # Clean leading separator again
+                clean_text = clean_text.lstrip(" -|:")
+    
+    # Parantez içi boş kaldıysa sil () veya []
+    clean_text = clean_text.replace("()", "").replace("[]", "")
+    
+    return clean_text.strip()
+
 def parse_duration(time_str):
     """
     "03:45", "1:20:30" gibi süreleri saniyeye çevirir.
