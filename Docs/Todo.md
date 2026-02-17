@@ -16,10 +16,10 @@ Ayrıca api key içinde api key al ekranında işlem sırası olcak hesap aç, a
 
 4.moda spotifyde playlist yap butonu ekle, ayarlarda yine spotify api key girme yeri yap last.fm gibi aynı last.fm api key mantığını koruyarak spotify api key için yapalım yani bizden o butona basınca spotify api key istesin girili değilse ayrıca giriliyse yine encrypted şekilde kaydetsin gibi gibi sonra spotifyda playlist yapsın işte
 
-3.modda Türe göre öneride sağ tık sanatçıyı ara yaptım no.1 adlı sanatçıyı ve 1.modda aratırken ismi 2 kez yazdırıyo
-
 Bazı albümü single olanları galiba detaylarını alamıyoruz albüm kapağı gibi gibi yılı sanatçı ismi gibi onların nedeni nedir kod değişikliği yapma fikir üretelim
 
 Bazen metadatalar çok kalabalık oluyo neden bilmiyorum "mor ve ötesi cambaz" şarkısını test edebilirsin şuan o öyle onu düzeltelim
 
 README.md ekle ve içine requirements kısmı ekleyip vlc, last.fm api (bunu belki kaldırabiliriz düşünelim benim uygulamayı yayınlamam yetiyo mu projeyi githubda public yapsam sıkıntı olur mu diye), ffmpeg, yt-dlp ve daha bi sürü kullandığımız python kütüphanelerinide yazalım ama normal yüklemesi gerekenler ile falan ayırıp installation kısmı ayarlayalım
+
+Playlister design document güncelle

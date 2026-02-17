@@ -1,17 +1,3 @@
 Config/config.json
 Config/favorites.json
-Downloads
-Docs/Sanatçılar.md
-
-# Electron
-node_modules
-dist
-out
-build
-release
-.npm
-npm-debug.log
-yarn-error.log
-.env
-.DS_Store
-Thumbs.db
+Docs/Artist.md

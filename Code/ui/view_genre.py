@@ -142,7 +142,6 @@ class ViewGenre:
             self.show_search_view()
             self.entry_artist.delete(0, tk.END)
             self.entry_artist.insert(0, artist_name)
-            self.entry_artist.insert(0, artist_name)
             self.start_search()
 
     def sort_genre_column(self, col, reverse):
