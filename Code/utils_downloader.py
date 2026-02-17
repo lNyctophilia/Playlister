@@ -104,29 +104,60 @@ class Downloader:
 
     @staticmethod
     def delete_content(video_id=None, artist=None, title=None):
-        """Dosyayı ve arşiv kaydını siler."""
-        # 1. Dosyayı sil
+        """Dosyayı, .lrc dosyasını, varsa kapak resmini ve arşiv kaydını siler."""
+        
+        # Dosya yolunu bul (Uzantılı)
         path = Downloader.get_file_path(video_id, artist, title)
+        
+        # Base name'i bul (Uzantısız)
+        base_name_full = None
+        if path:
+             base_name_full = os.path.splitext(path)[0]
+        elif artist and title:
+             clean = Downloader.clean_filename
+             base_name_full = os.path.join(DOWNLOAD_DIR, f"{clean(artist)} - {clean(title)}")
+        
+        deleted_any = False
+
+        # 1. Ana Dosyayı (Audio) Sil
         if path and os.path.exists(path):
             try:
                 os.remove(path)
+                deleted_any = True
+                print(f"Silindi: {path}")
             except Exception as e:
-                print(f"Silme hatası: {e}")
-                return False
+                print(f"Ses Dosyası Silme hatası: {e}")
         
-        # 2. Arşivden sil (youtube video_id)
-        if os.path.exists(ARCHIVE_FILE):
-            try:
-                with open(ARCHIVE_FILE, "r") as f:
-                    lines = f.readlines()
-                with open(ARCHIVE_FILE, "w") as f:
-                    for line in lines:
-                        # yt-dlp arşivi genelde "provider id" formatında tutar
-                        if video_id not in line:
-                            f.write(line)
-            except Exception as e:
-                print(f"Arşiv güncelleme hatası: {e}")
-        return True
+        # 2. Yan Dosyaları Sil (.lrc, .jpg, .webp, .png, .json vb)
+        if base_name_full:
+            # Glob ile aynı isimdeki tüm uzantıları bul
+            # escape yapıyoruz ki köşeli parantez varsa glob bozulmasın
+            pattern = f"{glob.escape(base_name_full)}.*"
+            related_files = glob.glob(pattern)
+            
+            for f in related_files:
+                # Ana dosyayı zaten sildik veya yukarıda denedik, diğerlerini silelim
+                # (Path zaten silindiyse exists False döner sorun olmaz)
+                if f != path and os.path.exists(f):
+                    try:
+                        os.remove(f)
+                        print(f"Yan dosya silindi: {f}")
+                    except Exception as e:
+                        print(f"Yan Dosya ({f}) silme hatası: {e}")
+
+        # 3. Arşivden sil (youtube video_id)
+        if video_id and os.path.exists(ARCHIVE_FILE):
+             try:
+                 with open(ARCHIVE_FILE, "r") as f:
+                     lines = f.readlines()
+                 with open(ARCHIVE_FILE, "w") as f:
+                     for line in lines:
+                         if video_id not in line:
+                             f.write(line)
+             except Exception as e:
+                 print(f"Arşiv güncelleme hatası: {e}")
+                 
+        return True # Her zaman True dönüyoruz ki UI güncellensin (Dosya yoksa bile listeden düşsün)
 
     @staticmethod
     def delete_all_downloads():
@@ -144,7 +175,7 @@ class Downloader:
             return False
 
     @staticmethod
-    def download_song(video_id, title, artist, callback=None):
+    def download_song(video_id, title, artist, album=None, callback=None):
         """Tek bir şarkıyı indirir (Thread içinde çağrılmalı)."""
         Downloader.ensure_dir()
         if not yt_dlp:
@@ -207,13 +238,14 @@ class Downloader:
             if not audio_found:
                  raise Exception("İndirme işlemi tamamlandı görünüyor ancak dosya oluşmadı.")
             
-            # --- Manuel Kapak İşlemi (Pillow + Mutagen) ---
+            # --- Manuel Kapak ve Metadata İşlemi (Pillow + Mutagen) ---
             try:
                 from PIL import Image
                 import mutagen
                 from mutagen.oggopus import OggOpus
                 from mutagen.flac import Picture
-                
+                import base64
+
                 # Temel dosya adı (uzantısız)
                 base_name_full = os.path.join(DOWNLOAD_DIR, f"{clean(artist)} - {clean(title)}")
                 
@@ -229,60 +261,95 @@ class Downloader:
                     elif p.endswith('.jpg') or p.endswith('.webp') or p.endswith('.png'):
                         image_path = p
                 
-                if audio_path and image_path:
-                    # A. Resmi Kare Kırp (Pillow)
-                    img = Image.open(image_path).convert("RGB")
-                    w, h = img.size
-                    min_dim = min(w, h)
-                    
-                    # Merkezden kırp
-                    left = (w - min_dim) / 2
-                    top = (h - min_dim) / 2
-                    right = (w + min_dim) / 2
-                    bottom = (h + min_dim) / 2
-                    
-                    img_cropped = img.crop((left, top, right, bottom))
-                    # İsteğe bağlı resize (örn: 500x500) - Şimdilik orijinal boyutta bırakalım, kalite düşmesin.
-                    
-                    # Geçici olarak kaydet
-                    temp_thumb = audio_path.replace(".opus", "_cover.jpg")
-                    img_cropped.save(temp_thumb, "JPEG", quality=90)
-                    
-                    # B. Metadata Göm (Mutagen OggOpus)
+                if audio_path:
                     audio = OggOpus(audio_path)
-                    
-                    with open(temp_thumb, "rb") as f:
-                        image_data = f.read()
-                    
-                    picture = Picture()
-                    picture.data = image_data
-                    picture.type = 3 # 3 = Cover (front)
-                    picture.mime = u"image/jpeg"
-                    picture.desc = u"Album Art"
-                    picture.width = img_cropped.width
-                    picture.height = img_cropped.height
-                    picture.depth = 24
-                    
-                    # OggOpus resmi 'metadata_block_picture' tagi olarak base64 formatında tutar
-                    import base64
-                    picture_data = picture.write()
-                    base64_picture = base64.b64encode(picture_data).decode('ascii')
-                    
                     if audio.tags is None:
                         audio.add_tags()
+
+                    # 1. Albüm Tagini Ayarla
+                    # "Unknown Album" veya boş ise Şarkı Adı (Title) yap (Kullanıcı İsteği)
+                    final_album = album
+                    # Check: None, Empty, "Unknown Album", or "Single" (Case Insensitive)
+                    if not final_album or \
+                       not final_album.strip() or \
+                       final_album.strip().lower() in ["unknown album", "single"]:
+                        final_album = title
                     
-                    # Eski resimleri silip yenisini ekle
-                    audio.tags['metadata_block_picture'] = [base64_picture]
+                    audio.tags['album'] = [final_album]
+
+                    # 2. Kapak Resmi Varsa İşle
+                    if image_path:
+                        # A. Resmi Kare Kırp (Pillow)
+                        img = Image.open(image_path).convert("RGB")
+                        w, h = img.size
+                        min_dim = min(w, h)
+                        
+                        # Merkezden kırp
+                        left = (w - min_dim) / 2
+                        top = (h - min_dim) / 2
+                        right = (w + min_dim) / 2
+                        bottom = (h + min_dim) / 2
+                        
+                        img_cropped = img.crop((left, top, right, bottom))
+                        
+                        # Geçici olarak kaydet
+                        temp_thumb = audio_path.replace(".opus", "_cover.jpg")
+                        img_cropped.save(temp_thumb, "JPEG", quality=90)
+                        
+                        with open(temp_thumb, "rb") as f:
+                            image_data = f.read()
+                        
+                        picture = Picture()
+                        picture.data = image_data
+                        picture.type = 3 # 3 = Cover (front)
+                        picture.mime = u"image/jpeg"
+                        picture.desc = u"Album Art"
+                        picture.width = img_cropped.width
+                        picture.height = img_cropped.height
+                        picture.depth = 24
+                        
+                        # OggOpus resmi 'metadata_block_picture' tagi olarak base64 formatında tutar
+                        picture_data = picture.write()
+                        base64_picture = base64.b64encode(picture_data).decode('ascii')
+                        
+                        # Eski resimleri silip yenisini ekle
+                        audio.tags['metadata_block_picture'] = [base64_picture]
+                        
+                        # Temizlik
+                        try:
+                            # Dosyayı kapatıp siliyoruz (Pillow bazen tutabilir, save yaptık zaten)
+                            img.close()
+                            if os.path.exists(image_path): os.remove(image_path) # İndirilen ham resim
+                            if os.path.exists(temp_thumb): os.remove(temp_thumb) # Kırpılmış resim
+                        except: pass
+
                     audio.save()
                     
-                    # Temizlik
-                    try:
-                        os.remove(image_path) # İndirilen ham resim
-                        os.remove(temp_thumb) # Kırpılmış resim
-                    except: pass
-                    
             except Exception as e:
-                print(f"Kapak işleme hatası (PIL/Mutagen): {e}")
+                print(f"Kapak/Metadata işleme hatası (PIL/Mutagen): {e}")
+
+            except Exception as e:
+                print(f"Kapak/Metadata işleme hatası (PIL/Mutagen): {e}")
+
+            # --- Otomatik Şarkı Sözü İndirme ---
+            try:
+                # Süreyi dosyadan okumaya çalış (en doğrusu budur)
+                duration_sec = 0
+                if audio_path:
+                    try:
+                        audio_info = OggOpus(audio_path)
+                        duration_sec = audio_info.info.length
+                    except: pass
+                
+                # Eğer dosyadan okuyamazsak 0 göndeririz, download_lyrics API'si idare eder.
+                # Arka planda sessizce indirsin, kullanıcıyı bekletmesin veya log kirliliği yapmasın
+                # Ancak 'callback' vermezsek hata durumunda sessiz kalır, bu istenen bir durum.
+                # Şarkı başarılı indiği için callback(True) döneceğiz, sözler ekstra.
+                print(f"[Oto-LRC] Başlatılıyor: {title} - {artist} (Süre: {duration_sec}s)")
+                threading.Thread(target=Downloader.download_lyrics, args=(title, artist, final_album, duration_sec), daemon=True).start()
+                
+            except Exception as e:
+                print(f"Oto-LRC Tetikleme Hatası: {e}")
 
             if callback: callback(True, "İndirme Tamamlandı")
         except Exception as e:

@@ -164,18 +164,19 @@ class UiShared:
                     self.update_row_dl_icon(tree, item_id, "⬇")
                     self.update_status("Silindi.", "orange")
         else:
+            album = vals[3]
             self.update_status(f"İndiriliyor: {title}...", "blue")
             import threading
-            threading.Thread(target=self.shared_download_thread, args=(tree, item_id, video_id, title, artist), daemon=True).start()
+            threading.Thread(target=self.shared_download_thread, args=(tree, item_id, video_id, title, artist, album), daemon=True).start()
 
-    def shared_download_thread(self, tree, item_id, video_id, title, artist):
+    def shared_download_thread(self, tree, item_id, video_id, title, artist, album=None):
         def cb(success, msg):
             if success:
                 self.root.after(0, lambda: self.update_row_dl_icon(tree, item_id, "🗑"))
                 self.update_status(f"İndirildi: {title}", "green")
             else:
                  self.update_status(f"Hata: {msg}", "red")
-        Downloader.download_song(video_id, title, artist, cb)
+        Downloader.download_song(video_id, title, artist, album, cb)
 
     def update_row_dl_icon(self, tree, item_id, icon):
         if not tree.exists(item_id): return
@@ -322,9 +323,19 @@ class UiShared:
             title = title_full
             artist = ""
         
+        # Albüm bilgisini treeview'den çekmeye çalış
+        album = None
+        try:
+             vals = tree.item(item)['values']
+             # Format: (Sıra, Şarkı, Sanatçı, Albüm, ...)
+             if len(vals) > 3:
+                 album = vals[3]
+        except:
+             pass
+
         self.update_status(f"İndiriliyor: {title}...", "blue")
         import threading
-        threading.Thread(target=self.shared_download_thread, args=(tree, item, video_id, title, artist), daemon=True).start()
+        threading.Thread(target=self.shared_download_thread, args=(tree, item, video_id, title, artist, album), daemon=True).start()
 
     def context_delete_file(self, video_id, tree, item, title_full):
         # Parse title/artist from full title string or just use what we have

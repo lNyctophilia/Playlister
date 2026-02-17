@@ -314,10 +314,11 @@ class ViewFav:
                     messagebox.showerror("Hata", "Dosya silinemedi.")
         else:
             # İndirme işlemi
+            album = song_data.get('album')
             self.update_status(f"İndiriliyor: {title}...", "blue")
-            threading.Thread(target=self.download_single_thread, args=(item_id, video_id, title, artist), daemon=True).start()
+            threading.Thread(target=self.download_single_thread, args=(item_id, video_id, title, artist, album), daemon=True).start()
 
-    def download_single_thread(self, item_id, video_id, title, artist):
+    def download_single_thread(self, item_id, video_id, title, artist, album):
         def cb(success, msg):
             if success:
                 self.root.after(0, lambda: self.update_fav_row_icon(item_id, "🗑"))
@@ -325,7 +326,7 @@ class ViewFav:
             else:
                 self.update_status(f"Hata: {msg}", "red")
         
-        Downloader.download_song(video_id, title, artist, cb)
+        Downloader.download_song(video_id, title, artist, album, cb)
 
     def update_fav_row_icon(self, item_id, dl_icon):
         if self.tree_fav.exists(item_id):
@@ -374,7 +375,7 @@ class ViewFav:
             # utils içinde exception logluyoruz.
             # Downloader.download_song senkron olduğu için bitmesini bekler.
             
-            Downloader.download_song(s['video_id'], s['title'], s['artist'])
+            Downloader.download_song(s['video_id'], s['title'], s['artist'], s.get('album'))
             
             # UI güncelle (listedeki ilgili satırı bulup ikonunu güncelle)
             self.root.after(0, lambda vid=s['video_id']: self.update_icon_by_videoid(vid))

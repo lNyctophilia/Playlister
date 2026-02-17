@@ -24,4 +24,4 @@ README.md ekle ve içine requirements kısmı ekleyip vlc, last.fm api (bunu bel
 
 Playlister design document güncelle
 
-- İndirme sessizce başarısız olursa artık hata verecek şekilde kontrol ekleyelim indi gözükmesin (Yapılıyorrrrrrrrr)
+Bi şarkıyı klasörde sil diyince 2 kere silmek gerekiyo çünkü ilk .lrc dosyasını sonra .opus dosyasını siliyo
