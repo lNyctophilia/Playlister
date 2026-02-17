@@ -21,3 +21,5 @@ Bazen metadatalar çok kalabalık oluyo neden bilmiyorum "mor ve ötesi cambaz" 
 README.md ekle ve içine requirements kısmı ekleyip vlc, last.fm api (bunu belki kaldırabiliriz düşünelim benim uygulamayı yayınlamam yetiyo mu projeyi githubda public yapsam sıkıntı olur mu diye), ffmpeg, yt-dlp ve daha bi sürü kullandığımız python kütüphanelerinide yazalım ama normal yüklemesi gerekenler ile falan ayırıp installation kısmı ayarlayalım
 
 Playlister design document güncelle
+
+Kral dosyaları yerelden sildiğimizde archive'de olduğu için bidaha yükleyemiyoz ama silinik gözüküyo galiba uygulamada eğer yerelde yoksa archive'dende çıkaralım
