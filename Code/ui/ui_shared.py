@@ -71,6 +71,8 @@ class UiShared:
             # Mevcut configi koru, üzerine yaz
             current = self.load_config()
             current.update(data)
+            # Ensure directory exists
+            os.makedirs(os.path.dirname(self.config_file), exist_ok=True)
             with open(self.config_file, "w", encoding="utf-8") as f:
                 json.dump(current, f, indent=4)
         except Exception as e:

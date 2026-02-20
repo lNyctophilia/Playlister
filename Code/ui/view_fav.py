@@ -269,6 +269,8 @@ class ViewFav:
 
     def save_favorites(self):
         try:
+            # Ensure directory exists
+            os.makedirs(os.path.dirname(FAV_FILE), exist_ok=True)
             with open(FAV_FILE, "w", encoding="utf-8") as f:
                 json.dump(self.favorites, f, indent=4, ensure_ascii=False)
         except Exception as e:
