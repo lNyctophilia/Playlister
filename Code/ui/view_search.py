@@ -17,8 +17,14 @@ class ViewSearch:
         self.entry_artist.pack(side=tk.LEFT, padx=10)
         self.entry_artist.bind("<Return>", lambda e: self.start_search())
         
-        self.btn_search = tk.Button(top_frame, text="Şarkıları Ara", command=self.start_search, bg="#2196F3", fg="white")
+        self.btn_search = tk.Button(top_frame, text="Ara", command=self.start_search, bg="#2196F3", fg="white")
         self.btn_search.pack(side=tk.LEFT, padx=10)
+        
+        # Arama Modu (Sanatçı / Şarkı)
+        tk.Label(top_frame, text="Mod:").pack(side=tk.LEFT, padx=(10, 2))
+        self.search_mode_var = tk.StringVar(value="Sanatçı")
+        self.combo_search_mode = ttk.Combobox(top_frame, textvariable=self.search_mode_var, values=["Sanatçı", "Şarkı"], state="readonly", width=10)
+        self.combo_search_mode.pack(side=tk.LEFT, padx=2)
         
         # Limit Seçimi
         tk.Label(top_frame, text="Limit:").pack(side=tk.LEFT, padx=(10, 2))
@@ -199,9 +205,16 @@ class ViewSearch:
         self.btn_search.config(text="Durdur", bg="#F44336", fg="white")
         self.entry_artist.config(state=tk.DISABLED)
         self.entry_search_limit.config(state=tk.DISABLED)
+        self.combo_search_mode.config(state=tk.DISABLED)
         self.stop_listing = False
-        self.update_status(f"Hazırlanıyor... (Limit: {limit})", "blue")
-        threading.Thread(target=self.search_artist_thread, args=(artist_name, limit), daemon=True).start()
+        
+        mode = self.search_mode_var.get()
+        if mode == "Sanatçı":
+            self.update_status(f"Sanatçı Hazırlanıyor... (Limit: {limit})", "blue")
+            threading.Thread(target=self.search_artist_thread, args=(artist_name, limit), daemon=True).start()
+        else:
+            self.update_status(f"Şarkı Hazırlanıyor... (Limit: {limit})", "blue")
+            threading.Thread(target=self.search_song_thread, args=(artist_name, limit), daemon=True).start()
 
     def populate_tabs(self, pop_list, views_list, smart_list):
         def _job():
@@ -450,6 +463,57 @@ class ViewSearch:
             self.update_status(f"Hata: {e}", "red")
         finally:
             self.root.after(0, lambda: self.lbl_search_progress.config(text=""))
-            self.root.after(0, lambda: self.btn_search.config(text="Şarkıları Ara", bg="#2196F3", fg="white"))
+            self.root.after(0, lambda: self.btn_search.config(text="Ara", bg="#2196F3", fg="white"))
             self.root.after(0, lambda: self.entry_artist.config(state=tk.NORMAL))
             self.root.after(0, lambda: self.entry_search_limit.config(state=tk.NORMAL))
+            self.root.after(0, lambda: self.combo_search_mode.config(state="readonly"))
+
+    def search_song_thread(self, query, target_count):
+        """Doğrudan şarkı arama modu (Youtube Style)"""
+        try:
+            self.update_status(f"Şarkı aranıyor: {query}...", "blue")
+            
+            # Şarkıları ara
+            results = self.yt.search(query=query, filter="songs", limit=target_count)
+            
+            if not results:
+                self.update_status("Sonuç bulunamadı.", "red")
+                return
+
+            song_list = []
+            
+            for song in results:
+                if self.stop_listing:
+                    break
+                    
+                video_id = song.get('videoId')
+                if not video_id: continue
+                
+                artists = song.get('artists', [])
+                artist_text = ", ".join([a['name'] for a in artists])
+                
+                data = {
+                    "title": song.get('title', 'Bilinmiyor'),
+                    "artist": artist_text,
+                    "album": song.get('album', {}).get('name', 'Single'),
+                    "views_text": "0", # Search results don't always give views for songs
+                    "duration": song.get('duration', ''),
+                    "video_id": video_id
+                }
+                song_list.append(data)
+                
+            # Şarkı Modunda tüm tablar aynı olabilir veya 
+            # sadece Popüler'i doldurup diğerlerini boş bırakabiliriz
+            # Şimdilik hepsine aynısını basıyoruz (Sıralama yok)
+            
+            self.populate_tabs(song_list, song_list, song_list)
+            self.update_status(f"Tamamlandı. {len(song_list)} sonuç bulundu.", "green")
+            
+        except Exception as e:
+            self.update_status(f"Hata: {e}", "red")
+        finally:
+            self.root.after(0, lambda: self.lbl_search_progress.config(text=""))
+            self.root.after(0, lambda: self.btn_search.config(text="Ara", bg="#2196F3", fg="white"))
+            self.root.after(0, lambda: self.entry_artist.config(state=tk.NORMAL))
+            self.root.after(0, lambda: self.entry_search_limit.config(state=tk.NORMAL))
+            self.root.after(0, lambda: self.combo_search_mode.config(state="readonly"))

@@ -6,8 +6,6 @@ Api key içinde api key al ekranında işlem sırası olcak hesap aç, api key e
 
 3. ve 4.moddaki dinlenme verisi yok şeyinin olayı nedir neden yok verileri 1.modda aratınca genel olarak şarkılarının dinlenmesi yazıyo oysaki sakın kod yazma fikir belirt
 
-Şarkı arama moduda ekle (Lin pesto - Haykıracak Nefesim, Pentagram - Uzun İnce, manifest rampapam salla)
-
 4.modda indirmeyi durdurma yok diğer modlardaki durdurma mantığı gibi tümünü indire basınca butonun işlevi durdurmak olcak ve en son indirdiği şarkıyıda indirip yani yarıda kesme son işlemi bitince tümünü indirmeyi kessin
 
 1. ve 4.modda galiba indirme ve çöp kutusu iconları yüzünden muhtemelen asimetri yaratıyo, kaymış gibi gözüküyo sanırım indirme aşağı ok iconu ince olduğundan ve çöp kutusu ikonu kare olduğundan görüntü kayıyo
@@ -21,3 +19,5 @@ README.md ekle ve içine requirements kısmı ekleyip vlc, last.fm api key, ffmp
 Playlister design document güncelle
 
 Kral dosyaları yerelden sildiğimizde archive'de olduğu için bidaha yükleyemiyoz ama silinik gözüküyo galiba uygulamada eğer yerelde yoksa archive'dende çıkaralım
+
+.lrc dosyaları olmayanların belki plain text olarak şarkı sözleri vardır, onları indirsin eşleşmeli söz yoksa
