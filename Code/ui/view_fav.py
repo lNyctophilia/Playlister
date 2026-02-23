@@ -113,7 +113,7 @@ class ViewFav:
              
              # Cache kullanarak kontrol et
              is_downloaded = Downloader.is_downloaded_cached(dl_cache, video_id, artist, title)
-             dl_icon = "🗑" if is_downloaded else "⬇"
+             dl_icon = "🗑" if is_downloaded else "📥"
              
              # LRC Kontrolü (Opsiyonel: ikon eklemek istersek)
              # is_lrc = Downloader.is_lrc_downloaded(artist, title) 
@@ -310,7 +310,7 @@ class ViewFav:
             if messagebox.askyesno("Sil", f"'{title}' dosyası silinsin mi?"):
                 success = Downloader.delete_content(video_id, artist, title)
                 if success:
-                    self.update_fav_row_icon(item_id, "⬇")
+                    self.update_fav_row_icon(item_id, "📥")
                     self.update_status("Dosya silindi.", "orange")
                 else:
                     messagebox.showerror("Hata", "Dosya silinemedi.")

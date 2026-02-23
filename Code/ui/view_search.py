@@ -119,8 +119,8 @@ class ViewSearch:
                 
                 old_text = vals[6]
                 parts = old_text.split()
-                dl_icon = parts[-1] if parts else "⬇"
-                if dl_icon not in ["⬇", "🗑"]: dl_icon = "⬇"
+                dl_icon = parts[-1] if parts else "📥"
+                if dl_icon not in ["📥", "🗑"]: dl_icon = "📥"
                 
                 new_text = f"🔗            ▶            {new_icon}            {dl_icon}"
                 
@@ -234,7 +234,7 @@ class ViewSearch:
                     
                     # Cache ile kontrol
                     is_down = Downloader.is_downloaded_cached(dl_cache, song['video_id'], song.get('artist'), song.get('title'))
-                    dl_icon = "🗑" if is_down else "⬇"
+                    dl_icon = "🗑" if is_down else "📥"
                     
                     action_text = f"🔗            ▶            {fav_icon}            {dl_icon}"
 

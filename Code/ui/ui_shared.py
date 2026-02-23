@@ -136,9 +136,9 @@ class UiShared:
                     new_icon = "♥" if is_added else "♡"
                     
                     # Mevcut download ikonunu koru
-                    old_text = vals[6] # "🔗    ▶    ♥    ⬇"
-                    dl_part = old_text.split()[-1] if old_text else "⬇"
-                    if dl_part not in ["⬇", "🗑"]: dl_part = "⬇" # Fallback
+                    old_text = vals[6] # "🔗    ▶    ♥    📥"
+                    dl_part = old_text.split()[-1] if old_text else "📥"
+                    if dl_part not in ["📥", "🗑"]: dl_part = "📥" # Fallback
                     
                     new_action_text = f"🔗            ▶            {new_icon}            {dl_part}"
                     
@@ -163,7 +163,7 @@ class UiShared:
         if Downloader.is_downloaded(video_id, artist, title):
             if messagebox.askyesno("Sil", f"'{title}' dosyası silinsin mi?"):
                 if Downloader.delete_content(video_id, artist, title):
-                    self.update_row_dl_icon(tree, item_id, "⬇")
+                    self.update_row_dl_icon(tree, item_id, "📥")
                     self.update_status("Silindi.", "orange")
         else:
             album = vals[3]
@@ -256,7 +256,7 @@ class UiShared:
                  if is_down:
                      menu.add_command(label="🗑 Dosyayı Sil", command=lambda v=video_id, tr=tree, it=item, t=song_title: self.context_delete_file(v, tr, it, t))
                  else:
-                     menu.add_command(label="⬇ İndir", command=lambda v=video_id, tr=tree, it=item, t=song_title: self.context_download_file(v, tr, it, t))
+                     menu.add_command(label="📥 İndir", command=lambda v=video_id, tr=tree, it=item, t=song_title: self.context_download_file(v, tr, it, t))
              
              menu.post(event.x_root, event.y_root)
              
@@ -302,8 +302,8 @@ class UiShared:
                 new_icon = "♥" if is_added else "♡"
                 old_text = vals[6]
                 parts = old_text.split()
-                dl_part = parts[-1] if parts else "⬇"
-                if dl_part not in ["⬇", "🗑"]: dl_part = "⬇"
+                dl_part = parts[-1] if parts else "📥"
+                if dl_part not in ["📥", "🗑"]: dl_part = "📥"
                 
                 new_icon = "♥" if is_added else "♡"
                 new_action_text = f"🔗            ▶            {new_icon}            {dl_part}" 
@@ -351,7 +351,7 @@ class UiShared:
 
         if messagebox.askyesno("Sil", "Dosya silinsin mi?"):
             if Downloader.delete_content(video_id, artist, title):
-                 self.root.after(0, lambda: self.update_row_dl_icon(tree, item, "⬇"))
+                 self.root.after(0, lambda: self.update_row_dl_icon(tree, item, "📥"))
                  self.update_status("Silindi.", "orange")
 
     def setup_treeview_tooltip(self, tree, excluded_columns=None):
