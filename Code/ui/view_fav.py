@@ -339,6 +339,11 @@ class ViewFav:
             self.refresh_action_buttons_state()
 
     def download_all_favs(self):
+        if getattr(self, '_is_downloading_all_favs', False):
+            self._cancel_favs_dl = True
+            self.btn_download_all.config(text="Duruyor...", state=tk.DISABLED)
+            return
+
         favs = self.load_favorites()
         if not favs:
             messagebox.showinfo("Bilgi", "Favori listeniz boş.")
@@ -359,13 +364,19 @@ class ViewFav:
         if not messagebox.askyesno("İndir", f"{count} adet şarkı indirilecek. Onaylıyor musunuz?"):
             return
             
-        self.btn_download_all.config(state=tk.DISABLED)
+        self._is_downloading_all_favs = True
+        self._cancel_favs_dl = False
+        self.btn_download_all.config(text="Durdur", bg="#f44336")
+        
         threading.Thread(target=self.download_all_thread, args=(to_download,), daemon=True).start()
 
     def download_all_thread(self, songs):
         total = len(songs)
         for i, s in enumerate(songs):
-            if self.stop_listing: break
+            if self.stop_listing or getattr(self, '_cancel_favs_dl', False):
+                self.update_status("Tümünü indirme işlemi iptal edildi.", "orange")
+                break
+                
             self.update_status(f"İndiriliyor ({i+1}/{total}): {s['title']}...", "blue")
             
             # Senkron indirme (sırayla)
@@ -386,7 +397,7 @@ class ViewFav:
             # - Her şarkı arası 1 sn bekle
             # - Her 3 şarkıda bir 10 sn dinlen (Cooldown)
             
-            if i < total - 1:
+            if i < total - 1 and not getattr(self, '_cancel_favs_dl', False):
                 # 3. şarkıdan sonra uzun dinlenme
                 # i+1 çünkü i 0'dan başlıyor. (i+1) % 3 == 0 ise 3, 6, 9...
                 if (i + 1) % 3 == 0:
@@ -402,13 +413,32 @@ class ViewFav:
                         msg = f"Soğuma (Uzun): {wait:.1f}s..."
                     
                     self.update_status(msg, "orange")
-                    time.sleep(wait)
+                    
+                    slept = 0
+                    while slept < wait:
+                        if self.stop_listing or getattr(self, '_cancel_favs_dl', False):
+                            break
+                        time.sleep(0.5)
+                        slept += 0.5
                 else:
                     # 1-3 sn arası rastgele
-                    time.sleep(random.uniform(1, 3))
+                    wait = random.uniform(1, 3)
+                    slept = 0
+                    while slept < wait:
+                        if self.stop_listing or getattr(self, '_cancel_favs_dl', False):
+                            break
+                        time.sleep(0.5)
+                        slept += 0.5
             
-        self.update_status("Tüm indirmeler tamamlandı!", "green")
-        self.root.after(0, lambda: self.btn_download_all.config(state=tk.NORMAL))
+        if not getattr(self, '_cancel_favs_dl', False):
+            self.update_status("Tüm indirmeler tamamlandı!", "green")
+            
+        self._is_downloading_all_favs = False
+        self._cancel_favs_dl = False
+        
+        self.root.after(0, lambda: self.btn_download_all.config(
+            text="Tümünü İndir", state=tk.NORMAL, bg="#FF9800"
+        ))
         self.root.after(0, self.load_fav_ui) 
 
     def update_icon_by_videoid(self, video_id):
@@ -436,6 +466,11 @@ class ViewFav:
 
     # --- LRC Methods ---
     def download_all_lyrics_ui(self):
+        if getattr(self, '_is_downloading_fav_lyrics', False):
+            self._cancel_fav_lyrics_dl = True
+            self.btn_dl_lyrics.config(text="Duruyor...", state=tk.DISABLED)
+            return
+
         favs = self.load_favorites()
         if not favs:
             messagebox.showinfo("Bilgi", "Favori listeniz boş.")
@@ -444,16 +479,20 @@ class ViewFav:
         if not messagebox.askyesno("Söz İndirme", f"{len(favs)} şarkı için sözler kontrol edilecek ve indirilecek.\nDevam edilsin mi?"):
             return
 
-        self.btn_dl_lyrics.config(state=tk.DISABLED)
+        self._is_downloading_fav_lyrics = True
+        self._cancel_fav_lyrics_dl = False
+        self.btn_dl_lyrics.config(text="Durdur", bg="#f44336")
+
         threading.Thread(target=self.download_lyrics_thread, args=(favs,), daemon=True).start()
 
     def download_lyrics_thread(self, songs):
         import time
         total = len(songs)
-        downloaded_count = 0
         
         for i, s in enumerate(songs):
-            if self.stop_listing: break
+            if self.stop_listing or getattr(self, '_cancel_fav_lyrics_dl', False):
+                self.update_status("Söz indirme işlemi iptal edildi.", "orange")
+                break
             
             title = s.get('title', '')
             artist = s.get('artist', '')
@@ -470,10 +509,16 @@ class ViewFav:
             Downloader.download_lyrics(title, artist, album, duration_sec, cb)
             
             # Rate limit için kısa bekleme
-            time.sleep(0.5)
+            if i < total - 1 and not getattr(self, '_cancel_fav_lyrics_dl', False):
+                time.sleep(0.5)
 
-        self.update_status("Söz indirme işlemi tamamlandı!", "green")
-        self.root.after(0, lambda: self.btn_dl_lyrics.config(state=tk.NORMAL))
+        if not getattr(self, '_cancel_fav_lyrics_dl', False):
+            self.update_status("Söz indirme işlemi tamamlandı!", "green")
+            
+        self._is_downloading_fav_lyrics = False
+        self._cancel_fav_lyrics_dl = False
+        
+        self.root.after(0, lambda: self.btn_dl_lyrics.config(text="Sözleri İndir (.lrc)", state=tk.NORMAL, bg="#9C27B0"))
 
     def delete_all_lyrics_ui(self):
          if messagebox.askyesno("Sözleri Sil", "Favori listesindeki şarkılara ait tüm .lrc dosyaları silinecek.\nOnaylıyor musunuz?"):
