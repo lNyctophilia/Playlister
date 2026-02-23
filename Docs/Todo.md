@@ -2,10 +2,8 @@ README.md ekle ve içine requirements kısmı ekleyip vlc, last.fm api key, ffmp
 
 Playlister design document güncelle
 
-Renkler ve temayı daha modern tercih edebiliriz butonların görünüşü falan tkinter kullanıyoz galiba daha modern bi görünüş aynı kütüphaneyle yapabiliyosak yapalım
+- Renkler ve temayı daha modern tercih edebiliriz butonların görünüşü falan tkinter kullanıyoz galiba daha modern bi görünüş aynı kütüphaneyle yapabiliyosak yapalım
 
 Uygulamadaki butonları azaltmak için daha minimalist bi tasarım düşünebiliriz mesela bi buton olcak işlemler modda ona hover yapınca işte 4 adet şey çıkıcak tümünü indir gibi gibi
 
 ben bu projeyi github'a attığımda biz api keyi encrypt'liyoruz ya ve zaten herkes kendi api keyini kendi alıyo  bu yüzden şey yapmaya gerek var mı şifrelemeye sence veya bunun yerine biz kendimizin api keyini şifreleyip projeye gömsek başkaları api keyden kullanabilse öyle mi yapsak karar veremedim sence hangisi daha mantıklı
-
-- Proje kodlarını klasörle
