@@ -204,3 +204,9 @@ Playlister/
 ├── Playlister.bat              # Hızlı başlatma
 └── README.md
 ```
+
+---
+
+## 📄 Lisans
+
+Bu proje **All Rights Reserved** lisansı altındadır. Kodun kopyalanması, dağıtılması, değiştirilmesi veya ticari amaçlarla kullanılması **yasaktır**. Detaylar için [LICENSE](LICENSE) dosyasına bakınız.

@@ -1,3 +1,1 @@
-- README.md ekle ve içine requirements kısmı ekleyip vlc, last.fm api key, ffmpeg, yt-dlp, node.js (kullanıyoz mu bilmiyom) ve daha bi sürü kullandığımız python kütüphanelerinide yazalım ama normal yüklemesi gerekenler ile falan ayırıp installation kısmı ayarlayalım pythonları terminale direkt terminal kodu gibi yazalım pip'li şekilde falan diğerlerininde linkini verelim gibi tutorial kısmı olsun
-
 Uygulamadaki butonların bazıları işte mavi kırmızı gibi turuncu gibi değişik renklere sahip temalara uygun olsun
