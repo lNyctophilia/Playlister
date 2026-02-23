@@ -1,5 +1,3 @@
-Sanatçı arama kısmında türe görede en popüler olanı en üste yazsın ytde en popüler veya en çok dinlenen hangisiyse en üstte olsun
-
 Api key içinde api key al ekranında işlem sırası olcak hesap aç, api key ekranına git başvur, session kod yapıştır gibi tutorial olcak en altta da zaten sahipsen diyip api keylerini görme linki olcak ve linklerin hepsi tutorial içindeki yazılarda olcak
 
 1.moddaki 3 adet listeyi popülerlik, en çok dinlenme, öneri listesini tek bir dropdowna koyup yine fazlalık butonlardan kurtulabiliriz
@@ -20,4 +18,4 @@ Playlister design document güncelle
 
 Kral dosyaları yerelden sildiğimizde archive'de olduğu için bidaha yükleyemiyoz ama silinik gözüküyo galiba uygulamada eğer yerelde yoksa archive'dende çıkaralım
 
-.lrc dosyaları olmayanların belki plain text olarak şarkı sözleri vardır, onları indirsin eşleşmeli söz yoksa
+4.modda işlemlerde ve sağ tıkta şarkı sözlerini indir yok veya şarkı sözlerini sil yok, şöyle bi sistem istiyorum şuan toplu olarak indiriyo şarkı sözlerini ama biz öyle değilde sadece şarkısı olanların sözlerini indirsin istiyorum. Örneğin tek bi şarkıyı sağ tıkla veya işlemlerden indir yaptım direkt şarkı sözleriyle beraber iniyo evet ama bireysel silme yok şarkı sözlerini yani eğer şarkı inikse ve söz inik değilse indirsin eğer söz inikse söz silme işlemide gelsin veya sağ tıklarında ayrıca hem 1. hem 4.modda olsun

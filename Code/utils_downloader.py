@@ -437,6 +437,7 @@ class Downloader:
                 })
 
             found_lyrics = None
+            found_plain_lyrics = None
             
             for strat in strategies:
                 try:
@@ -447,10 +448,17 @@ class Downloader:
                         data = resp.json()
                         # /api/get tek obje döner, /api/search liste döner (ama biz get kullanıyoruz şu an)
                         synced = data.get("syncedLyrics", "")
+                        plain = data.get("plainLyrics", "")
+
                         if synced:
                             found_lyrics = synced
                             print(f"[LRC] Bulundu ({strat['name']}): {base_name}")
                             break
+                        elif plain and not found_plain_lyrics:
+                             # Synced yoksa ama plain varsa, yedekte tutalım (daha iyi bir eşleşme bulamazsak bunu kullanırız)
+                             found_plain_lyrics = plain
+                             print(f"[LRC] Plain Text Bulundu (Yedek - {strat['name']}): {base_name}")
+
                     elif resp.status_code == 404:
                         continue # Diğer stratejiye geç
                         
@@ -468,10 +476,15 @@ class Downloader:
                         # Süreye en yakın olanı seç (+- 3 sn)
                         for res in results:
                             res_dur = res.get("duration", 0)
-                            if abs(res_dur - duration) <= 3 and res.get("syncedLyrics"):
-                                found_lyrics = res.get("syncedLyrics")
-                                print(f"[LRC] Bulundu (Geniş Arama): {base_name}")
-                                break
+                            if abs(res_dur - duration) <= 3:
+                                if res.get("syncedLyrics"):
+                                    found_lyrics = res.get("syncedLyrics")
+                                    print(f"[LRC] Bulundu (Geniş Arama): {base_name}")
+                                    break
+                                elif res.get("plainLyrics") and not found_plain_lyrics:
+                                    found_plain_lyrics = res.get("plainLyrics")
+                                    print(f"[LRC] Plain Text Bulundu (Geniş Arama Yedek): {base_name}")
+
                 except Exception as ex:
                     print(f"[LRC] Geniş Arama Hatası: {ex}")
 
@@ -480,6 +493,24 @@ class Downloader:
                 with open(lrc_path, "w", encoding="utf-8") as f:
                     f.write(found_lyrics)
                 if callback: callback(True, "İndirildi")
+            elif found_plain_lyrics:
+                try:
+                    from mutagen.oggopus import OggOpus
+                    audio_file = Downloader.get_file_path(artist=artist, title=title)
+                    if audio_file and audio_file.endswith('.opus'):
+                        audio = OggOpus(audio_file)
+                        if audio.tags is None:
+                            audio.add_tags()
+                        audio.tags['lyrics'] = [found_plain_lyrics]
+                        audio.save()
+                        print(f"[LRC] Plain Text Metadata'ya Gömüldü: {base_name}")
+                        if callback: callback(True, "Sözler (Düz Metin) Gömüldü")
+                    else:
+                        print(f"[LRC] Ses dosyası bulunamadı, plain text gömmek için: {base_name}")
+                        if callback: callback(False, "Ses dosyası bulunamadı")
+                except Exception as embed_err:
+                    print(f"[LRC] Plain Text Gömme Hatası: {embed_err}")
+                    if callback: callback(False, str(embed_err))
             else:
                 print(f"[LRC] Bulunamadı (Tüm Yöntemler): {base_name}")
                 if callback: callback(False, "Sözler bulunamadı")
