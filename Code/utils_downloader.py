@@ -152,18 +152,29 @@ class Downloader:
                         print(f"Yan Dosya ({f}) silme hatası: {e}")
 
         # 3. Arşivden sil (youtube video_id)
+        if video_id:
+             Downloader.remove_from_archive(video_id)
+                 
+        return True # Her zaman True dönüyoruz ki UI güncellensin (Dosya yoksa bile listeden düşsün)
+
+    @staticmethod
+    def remove_from_archive(video_id):
+        """Verilen video_id'yi yt-dlp arşividen siler (Kullanıcı manuel sildiyse tekrar indirebilmesi için)."""
         if video_id and os.path.exists(ARCHIVE_FILE):
              try:
                  with open(ARCHIVE_FILE, "r") as f:
                      lines = f.readlines()
+                 
+                 # Eğer satırlarda yoksa hiç yazma işlemi yapıp vakit kaybetme
+                 if not any(video_id in line for line in lines):
+                     return
+
                  with open(ARCHIVE_FILE, "w") as f:
                      for line in lines:
                          if video_id not in line:
                              f.write(line)
              except Exception as e:
                  print(f"Arşiv güncelleme hatası: {e}")
-                 
-        return True # Her zaman True dönüyoruz ki UI güncellensin (Dosya yoksa bile listeden düşsün)
 
     @staticmethod
     def delete_all_downloads():
@@ -187,6 +198,10 @@ class Downloader:
         if not yt_dlp:
             if callback: callback(False, "yt-dlp modülü eksik.")
             return
+
+        # Kullanıcı butona bastıysa tekrar indirmek istiyordur (yerelden silmiş olabilir)
+        # O yüzden yt-dlp'nin "zaten indirildi" dememesi için video_id'yi archive'den çıkar.
+        Downloader.remove_from_archive(video_id)
 
         # Dosya ismi formatı: Artist - Title.ext (ID YOK)
         # Karakter temizliği
