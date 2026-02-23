@@ -247,9 +247,19 @@ class Downloader:
         }
         
         try:
-            # 1. İndirme İşlemi
+            # 1. İndirme İşlemi ve Bilgi Çekimi (Tarih formatı için)
+            song_date = None
             with yt_dlp.YoutubeDL(opts) as ydl:
-                ydl.download([f"https://music.youtube.com/watch?v={video_id}"])
+                info_dict = ydl.extract_info(f"https://music.youtube.com/watch?v={video_id}", download=True)
+                
+                # Tarih objesini al: öncelik release_date, olmazsa upload_date (Gelen format genelde '20260326')
+                raw_date = info_dict.get('release_date') or info_dict.get('upload_date')
+                if raw_date and len(raw_date) == 8 and raw_date.isdigit():
+                    # YYYYMMDD -> YYYY-MM-DD Dönüşümü
+                    song_date = f"{raw_date[:4]}-{raw_date[4:6]}-{raw_date[6:]}"
+                elif raw_date and len(raw_date) == 4 and raw_date.isdigit():
+                    # Sadece YYYY geldiyse
+                    song_date = raw_date
 
             # İndirme sonrası dosya kontrolü
             base_name_full = os.path.join(DOWNLOAD_DIR, f"{clean(artist)} - {clean(title)}")
@@ -311,6 +321,10 @@ class Downloader:
                     audio.tags['title'] = [clean_title]
                     audio.tags['artist'] = [clean_artist]
                     audio.tags['album'] = [clean_album]
+                    
+                    # Tarih etiketi ataması (ISO 8601 -> YYYY-MM-DD)
+                    if song_date:
+                        audio.tags['date'] = [song_date]
 
                     # 2. Kapak Resmi Varsa İşle
                     if image_path:

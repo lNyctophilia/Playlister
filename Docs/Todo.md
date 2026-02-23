@@ -1,14 +1,8 @@
 Api key içinde api key al ekranında eğer kullanıcının api keyi yoksa tutorial olcak; işlem sırası olcak hesap aç, api key ekranına git başvur, session kod yapıştır gibi tutorial olcak ve altındada key girme yeri olcak girildikten sonra veeya api key girme ekranında key varsa key girili sahip olduğun keyi görmek için linke tıkla gibi bi yazı olcak veya keyi sil ve değiştir butonları olucak ayrıca bu tüm işlemlerde tutoriallarda yazılardaki linkler tıklanabilir olcak 
 
-- 1.moddaki 3 adet listeyi popülerlik, en çok dinlenme, öneri listesini tek bir dropdowna koyup fazlalık butonlardan kurtulabiliriz bi nevi filtre mantığı gibi olcak
-
-3. ve 4.moddaki dinlenme verisi yok şeyinin olayı nedir neden yok verileri 1.modda aratınca genel olarak şarkılarının dinlenmesi yazıyo oysaki sakın kod yazma fikir belirt
+3. ve 4.moddaki dinlenme verisi yok şeyinin olayı nedir neden yok verileri 1.modda aratınca genel olarak şarkılarının dinlenmesi yazıyo oysaki sakın kod yazma fikir belirt mesela şarkı arama modundan favorilere eklediğimiz şarkılar toplam dinlenme 0 gösteriyo ve favorilere ekleyince ordada hep 0 gözüküyo
 
 4.modda indirmeyi durdurma yok diğer modlardaki durdurma mantığı gibi tümünü indire basınca butonun işlevi durdurmak olcak ve en son indirdiği şarkıyıda indirip yani yarıda kesme son işlemi bitince tümünü indirmeyi kessin
-
-1. ve 4.modda galiba indirme ve çöp kutusu iconları yüzünden muhtemelen asimetri yaratıyo, kaymış gibi gözüküyo sanırım indirme aşağı ok iconu ince olduğundan ve çöp kutusu ikonu kare olduğundan görüntü kayıyo
-
-4.moda spotifyde playlist yap butonu ekle, ayarlarda yine spotify api key girme yeri yap last.fm gibi aynı last.fm api key mantığını koruyarak spotify api key için yapalım yani bizden o butona basınca spotify api key istesin girili değilse ayrıca giriliyse yine encrypted şekilde kaydetsin gibi gibi sonra spotifyda playlist yapsın işte
 
 README.md ekle ve içine requirements kısmı ekleyip vlc, last.fm api key, ffmpeg, yt-dlp, node.js (kullanıyoz mu bilmiyom) ve daha bi sürü kullandığımız python kütüphanelerinide yazalım ama normal yüklemesi gerekenler ile falan ayırıp installation kısmı ayarlayalım pythonları terminale direkt terminal kodu gibi yazalım pip'li şekilde falan diğerlerininde linkini verelim gibi
 
@@ -20,9 +14,8 @@ Proje kodlarını bölebilirsin mimari yapıya göre şuanki proje yapısına be
 
 Kral şarkı sözleri senkron yoksa normal plaintexti yani şarkı sözlerinin düz halini şarkıya gömüyoduk ya onları nasıl görebilirim test için bakmak istiyorum programsız olur mu 
 
-bi arama yaptırınca sonuç değişkeni 30 şarkı ve sanatçıyı aratıyorum, popülerde 30.sıradakine bakıyorum örnek olarak "x şarkısı" var sonra sonuç değişkenini 40 olarak ayarlayıp popülerde tekrar bakıyorum bu sefer 31.sıraya yerleşmiş biz zaten arama yaparken popüler listesi için popüler filtresiyle aratmıyo muyuz veya en çok  dinlenenler için en çok dinlenenler filtresiyle arama yapmıyoz mu
+- Şarkı detaylarındaki yıl tarihi çıktısı nasıl 2026-03-26 gibi mi yoksa 20260326 gibi mi medya okuyucularda hangisi düzgün gözükür
 
-1.mod filtrelerine en yeniden eskiye doğru bi filtre olsun
 
 
 Tele at "wegh - bu ben olmamak" "venüs - Aşk herşeyi affeder mi"
