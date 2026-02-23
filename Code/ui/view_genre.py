@@ -1,8 +1,8 @@
 import tkinter as tk
-from tkinter import ttk, messagebox, simpledialog
+from tkinter import ttk, messagebox
 import threading
 import requests
-from utils import encrypt_text, parse_views
+from utils import parse_views
 
 class ViewGenre:
     def setup_genre_view(self):
@@ -93,16 +93,9 @@ class ViewGenre:
         self.setup_treeview_tooltip(self.tree_genre, excluded_columns=[0, 2, 3, 4])
 
     def show_genre_view(self):
-        # Mod 3'e girerken API Key Kontrolü
         if not self.lastfm_api_key:
-            key = simpledialog.askstring("Zorunlu Kurulum", "Playlister Mod 3 Özellikleri için\nLütfen Last.fm API Anahtarınızı Giriniz:", parent=self.root)
-            if key:
-                self.lastfm_api_key = key.strip()
-                enc = encrypt_text(self.lastfm_api_key)
-                self.save_config({"lastfm_api_key": enc})
-                messagebox.showinfo("Başarılı", "Anahtar şifrelenerek kaydedildi.")
-            else:
-                return
+            self.open_settings()
+            return
 
         self.set_active_mode_button("genre")
         self.search_view.pack_forget()
