@@ -5,26 +5,46 @@ import json
 import os
 from services.utils_downloader import Downloader
 from core.constants import FAV_FILE
+from ui import theme as T
 
 class UiShared:
-    def update_status(self, text, color="black"):
-        self.root.after(0, lambda: self.status_bar.config(text=text, fg=color))
+    def update_status(self, text, color=None):
+        color_map = {
+            "black": T.FG_PRIMARY,
+            "green": "#2ed573",
+            "red": "#ff4757",
+            "blue": "#74b9ff",
+            "orange": "#ffa502",
+            "purple": "#a29bfe",
+            "gray": T.FG_SECONDARY,
+            None: T.FG_SECONDARY
+        }
+        fg = color_map.get(color, color if color else T.FG_SECONDARY)
+        self.root.after(0, lambda: self.status_bar.config(text=text, fg=fg))
 
     def set_active_mode_button(self, mode):
-        # Reset all
-        self.btn_mode_search.config(bg="#ddd", fg="#333", relief=tk.RAISED)
-        self.btn_mode_chart.config(bg="#ddd", fg="#333", relief=tk.RAISED)
-        self.btn_mode_genre.config(bg="#ddd", fg="#333", relief=tk.RAISED)
-        self.btn_mode_fav.config(bg="#ddd", fg="#333", relief=tk.RAISED)
+        self.btn_mode_search.config(bg=T.NAV_INACTIVE, fg=T.FG_SECONDARY, relief=tk.FLAT)
+        self.btn_mode_chart.config(bg=T.NAV_INACTIVE, fg=T.FG_SECONDARY, relief=tk.FLAT)
+        self.btn_mode_genre.config(bg=T.NAV_INACTIVE, fg=T.FG_SECONDARY, relief=tk.FLAT)
+        self.btn_mode_fav.config(bg=T.NAV_INACTIVE, fg=T.FG_SECONDARY, relief=tk.FLAT)
+        
+        T.apply_hover(self.btn_mode_search, T.NAV_INACTIVE, T.NAV_HOVER, T.FG_SECONDARY, T.FG_PRIMARY)
+        T.apply_hover(self.btn_mode_chart, T.NAV_INACTIVE, T.NAV_HOVER, T.FG_SECONDARY, T.FG_PRIMARY)
+        T.apply_hover(self.btn_mode_genre, T.NAV_INACTIVE, T.NAV_HOVER, T.FG_SECONDARY, T.FG_PRIMARY)
+        T.apply_hover(self.btn_mode_fav, T.NAV_INACTIVE, T.NAV_HOVER, T.FG_SECONDARY, T.FG_PRIMARY)
         
         if mode == "search":
-            self.btn_mode_search.config(bg="#4CAF50", fg="white", relief=tk.SUNKEN)
+            self.btn_mode_search.config(bg=T.NAV_ACTIVE, fg="#ffffff", relief=tk.FLAT)
+            T.apply_hover(self.btn_mode_search, T.NAV_ACTIVE, T.BTN_PRIMARY_HOVER, "#ffffff", "#ffffff")
         elif mode == "chart":
-            self.btn_mode_chart.config(bg="#4CAF50", fg="white", relief=tk.SUNKEN)
+            self.btn_mode_chart.config(bg=T.NAV_ACTIVE, fg="#ffffff", relief=tk.FLAT)
+            T.apply_hover(self.btn_mode_chart, T.NAV_ACTIVE, T.BTN_PRIMARY_HOVER, "#ffffff", "#ffffff")
         elif mode == "genre":
-            self.btn_mode_genre.config(bg="#4CAF50", fg="white", relief=tk.SUNKEN)
+            self.btn_mode_genre.config(bg=T.NAV_ACTIVE, fg="#ffffff", relief=tk.FLAT)
+            T.apply_hover(self.btn_mode_genre, T.NAV_ACTIVE, T.BTN_PRIMARY_HOVER, "#ffffff", "#ffffff")
         elif mode == "fav":
-            self.btn_mode_fav.config(bg="#4CAF50", fg="white", relief=tk.SUNKEN)
+            self.btn_mode_fav.config(bg=T.NAV_ACTIVE, fg="#ffffff", relief=tk.FLAT)
+            T.apply_hover(self.btn_mode_fav, T.NAV_ACTIVE, T.BTN_PRIMARY_HOVER, "#ffffff", "#ffffff")
 
     def show_search_view(self):
         self.set_active_mode_button("search")
@@ -57,48 +77,36 @@ class UiShared:
             webbrowser.open(f"https://music.youtube.com/watch?v={video_id}")
 
     def on_song_list_click(self, event):
-        """Şarkı listesindeki ikonlara tıklamayı algılar"""
         try:
             tree = event.widget
             region = tree.identify_region(event.x, event.y)
             if region != "cell": return
             
-            # Kolon kontrolü (#7 'İşlemler' kolonu mu?)
             col = tree.identify_column(event.x)
             if col == "#7":
                 item_id = tree.identify_row(event.y)
                 if not item_id: return
                 
-                # Koordinat hesapla
                 bbox = tree.bbox(item_id, col)
                 if not bbox: return
                 
-                # bbox -> (x, y, w, h)
                 x, y, w, h = bbox
                 click_relative_x = event.x - x
                 
-                # Hücreyi 4'e böl: Link, Play, Fav, Download
-                # Text formatı: "🔗   ▶   [♥|♡]   [⬇|🗑]"
                 section = w / 4
                 
                 vals = tree.item(item_id)['values']
-                # Make sure we have enough values
                 if len(vals) < 8: return
 
-                video_id = vals[7] # Hidden column
+                video_id = vals[7]
                 if not video_id: return
 
                 if click_relative_x < section:
                     self.copy_link_by_id(video_id)
                 elif click_relative_x < section * 2:
-                    # Play
                     song_title = f"{vals[1]} - {vals[2]}"
                     self.play_music_start(video_id, song_title)
                 elif click_relative_x < section * 3:
-                    # Fav Toggle
-                    # Mevcut veriyi al
-                    # Construct song data based on columns
-                    # ("Sıra", "Şarkı", "Sanatçı", "Albüm", "Dinlenme", "Süre", "İşlemler", "VideoID")
                     song_data = {
                         "video_id": video_id,
                         "title": vals[1],
@@ -110,17 +118,14 @@ class UiShared:
                     
                     is_added = self.toggle_favorite(song_data)
                     
-                    # UI güncelle
                     new_icon = "♥" if is_added else "♡"
                     
-                    # Mevcut download ikonunu koru
-                    old_text = vals[6] # "🔗    ▶    ♥    📥"
+                    old_text = vals[6]
                     dl_part = old_text.split()[-1] if old_text else "📥"
-                    if dl_part not in ["📥", "🗑"]: dl_part = "📥" # Fallback
+                    if dl_part not in ["📥", "🗑"]: dl_part = "📥"
                     
                     new_action_text = f"🔗            ▶            {new_icon}            {dl_part}"
                     
-                    # Update Treeview Cell
                     tree.set(item_id, "İşlemler", new_action_text)
                     
                     if is_added:
@@ -128,7 +133,6 @@ class UiShared:
                     else:
                         self.update_status("Favorilerden çıkarıldı.", "orange")
                 else:
-                    # Download İşlemi
                     self.handle_shared_download_click(tree, item_id, vals)
         except Exception as e:
             print(f"Click Error: {e}")
@@ -161,26 +165,16 @@ class UiShared:
     def update_row_dl_icon(self, tree, item_id, icon):
         if not tree.exists(item_id): return
         current_vals = tree.item(item_id)['values']
-        # current action text -> index 6
         old_text = current_vals[6]
-        # "🔗    ▶    [♥|♡]    OLD"
         parts = old_text.split()
         if len(parts) >= 3:
-            # Reconstruct with new icon
-            # parts[0]=Link, parts[1]=Play, parts[2]=Fav
             new_text = f"{parts[0]}            {parts[1]}            {parts[2]}            {icon}"
             tree.set(item_id, "İşlemler", new_text)
 
     def setup_treeview_tooltip(self, tree, excluded_columns=None):
-        """
-        Treeview hücreleri üzerine gelindiğinde içeriklerini tooltip 
-        olarak gösteren mekanizmayı kurar.
-        excluded_columns: Tooltip gösterilmemesi gereken kolon indeksleri (0-based) listesi.
-        """
         if excluded_columns is None:
             excluded_columns = []
 
-        # ToolTip instance'ını tree üzerinde saklayalım
         if not hasattr(tree, 'tooltip_obj'):
             tree.tooltip_obj = ToolTip(tree)
             
@@ -194,7 +188,6 @@ class UiShared:
                 tree.tooltip_timer = None
 
         def on_motion(event):
-            # Sadece hücre üzerindeyse
             region = tree.identify_region(event.x, event.y)
             if region != "cell":
                 cancel_tooltip_timer()
@@ -211,22 +204,19 @@ class UiShared:
                 tree.last_tooltip_item = None
                 return
 
-            # Eğer farklı bir hücreye geçildiyse güncelle
             if item != tree.last_tooltip_item or col != tree.last_tooltip_col:
                 cancel_tooltip_timer()
                 tree.tooltip_obj.hidetip()
                 tree.last_tooltip_item = item
                 tree.last_tooltip_col = col
                 
-                # Kolon index kontrolü (Excluded Check)
                 try:
                     col_idx = int(col.replace("#", "")) - 1
                     if col_idx in excluded_columns:
-                        return # Excluded, timer başlatma
+                        return
                 except:
                     return
 
-                # İçeriği al ve timer başlat
                 try:
                     col_idx = int(col.replace("#", "")) - 1
                     values = tree.item(item, 'values')
@@ -234,17 +224,15 @@ class UiShared:
                     if 0 <= col_idx < len(values):
                         text = str(values[col_idx])
                         if text:
-                            # 700ms Gecikmeli Gösterim
                             tree.tooltip_timer = tree.after(700, lambda t=text: show_tip_delayed(t))
                 except:
                     pass
 
         def show_tip_delayed(text):
-            # Mouse pozisyonunu al
             x = tree.winfo_pointerx()
             y = tree.winfo_pointery()
             tree.tooltip_obj.showtip(text, x, y)
-            tree.tooltip_timer = None # Timer bitti
+            tree.tooltip_timer = None
         
         def on_leave(event):
             cancel_tooltip_timer()
@@ -260,15 +248,12 @@ class UiShared:
             return "Veri Yok"
         
         try:
-            # "1.234.567 views" -> "1.234.567"
             s = str(view_text).strip().split(' ')[0]
             s_lower = s.lower()
             
-            # Halihazırda formatlı ise (1.5M, 100K vb)
             if any(x in s_lower for x in ['m', 'k', 'b']) and any(c.isdigit() for c in s_lower):
                 return s.upper()
 
-            # Sadece rakamları al
             clean_str = "".join([c for c in s if c.isdigit()])
             
             if not clean_str:
@@ -292,9 +277,6 @@ class UiShared:
 
 
 class ToolTip:
-    """
-    Basit ToolTip sınıfı.
-    """
     def __init__(self, widget):
         self.widget = widget
         self.tipwindow = None
@@ -302,26 +284,22 @@ class ToolTip:
         self.x = self.y = 0
 
     def showtip(self, text, x, y):
-        "Display text in tooltip window"
-        # Halihazırda açıksa veya text yoksa çık
         if self.tipwindow or not text:
             return
         
         self.tipwindow = tw = tk.Toplevel(self.widget)
-        # Pencere kenarlıklarını kaldır (Sadece text kutusu gibi görünsün)
         tw.wm_overrideredirect(True)
         
-        # Mouse'un biraz sağına ve altına konumlandır (Offset)
         tw.wm_geometry(f"+{x+10}+{y+20}")
         
         label = tk.Label(tw, text=text, justify=tk.LEFT,
-                      background="#ffffe0", relief=tk.SOLID, borderwidth=1,
-                      font=("tahoma", "8", "normal"))
-        label.pack(ipadx=2, ipady=1)
+                      background=T.TOOLTIP_BG, foreground=T.TOOLTIP_FG,
+                      relief=tk.SOLID, borderwidth=1,
+                      font=T.FONT_TOOLTIP)
+        label.pack(ipadx=4, ipady=2)
 
     def hidetip(self):
         tw = self.tipwindow
         self.tipwindow = None
         if tw:
             tw.destroy()
-

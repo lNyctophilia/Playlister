@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 from services.utils_downloader import Downloader
+from ui import theme as T
 
 class ContextMenuMixin:
     def show_context_menu(self, event, tree, menu):
@@ -16,6 +17,8 @@ class ContextMenuMixin:
         
         if is_search_tree or is_fav_tree:
              menu.delete(0, tk.END)
+             menu.config(bg=T.MENU_BG, fg=T.MENU_FG, activebackground=T.MENU_ACTIVE_BG, 
+                         activeforeground=T.MENU_ACTIVE_FG, borderwidth=0)
              
              video_id = None
              song_title = ""
@@ -62,6 +65,8 @@ class ContextMenuMixin:
              menu.post(event.x_root, event.y_root)
              
         else:
+             menu.config(bg=T.MENU_BG, fg=T.MENU_FG, activebackground=T.MENU_ACTIVE_BG, 
+                         activeforeground=T.MENU_ACTIVE_FG, borderwidth=0)
              menu.post(event.x_root, event.y_root)
 
     def context_toggle_fav(self, video_id, tree, item):

@@ -7,30 +7,35 @@ from tkinter import messagebox
 from services.utils_downloader import Downloader
 from core.constants import FAV_FILE, DOWNLOAD_DIR
 from utils.utils import parse_views, parse_duration
+from ui import theme as T
 
 
 
 class ViewFav:
     def setup_fav_view(self):
-        # Üst Panel
-        top_frame = tk.Frame(self.fav_view, pady=10)
+        top_frame = tk.Frame(self.fav_view, pady=10, bg=T.BG_PANEL)
         top_frame.pack(side=tk.TOP, fill=tk.X)
         
-        tk.Label(top_frame, text="Favorilerim", font=("Helvetica", 12, "bold")).pack(side=tk.LEFT, padx=10)
+        lbl_title = tk.Label(top_frame, text="Favorilerim")
+        T.style_label(lbl_title, bg=T.BG_PANEL, font=T.FONT_HEADING)
+        lbl_title.pack(side=tk.LEFT, padx=10)
         
-        self.btn_refresh_fav = tk.Button(top_frame, text="Yenile", command=self.load_fav_ui, bg="#2196F3", fg="white")
+        self.btn_refresh_fav = tk.Button(top_frame, text="Yenile", command=self.load_fav_ui)
+        T.style_button(self.btn_refresh_fav)
         self.btn_refresh_fav.pack(side=tk.RIGHT, padx=(5, 20))
 
-        self.btn_download_all = tk.Button(top_frame, text="Tümünü İndir", command=self.download_all_favs, bg="#FF9800", fg="white")
+        self.btn_download_all = tk.Button(top_frame, text="Tümünü İndir", command=self.download_all_favs)
+        T.style_button(self.btn_download_all, bg=T.BTN_WARNING, hover_bg=T.BTN_WARNING_HOVER)
         self.btn_download_all.pack(side=tk.RIGHT, padx=5)
 
-        self.btn_delete_all_dl = tk.Button(top_frame, text="Tüm İndirilenleri Sil", command=self.delete_all_downloads_ui, bg="red", fg="white")
+        self.btn_delete_all_dl = tk.Button(top_frame, text="Tüm İndirilenleri Sil", command=self.delete_all_downloads_ui)
+        T.style_button(self.btn_delete_all_dl, bg=T.BTN_DANGER, hover_bg=T.BTN_DANGER_HOVER)
         self.btn_delete_all_dl.pack(side=tk.RIGHT, padx=5)
 
-        self.btn_open_downloads = tk.Button(top_frame, text="📂 Klasörü Aç", command=self.open_downloads_folder, bg="#607D8B", fg="white")
+        self.btn_open_downloads = tk.Button(top_frame, text="📂 Klasörü Aç", command=self.open_downloads_folder)
+        T.style_button(self.btn_open_downloads, bg="#2a2f5a", hover_bg="#353b6e")
         self.btn_open_downloads.pack(side=tk.RIGHT, padx=5)
 
-        # Liste
         cols = ("Sıra", "Şarkı", "Sanatçı", "Albüm", "Dinlenme", "Süre", "İşlemler")
         self.tree_fav = ttk.Treeview(self.fav_view, columns=cols, show='headings')
         
@@ -46,7 +51,7 @@ class ViewFav:
         self.tree_fav.column("Albüm", width=140)
         self.tree_fav.column("Dinlenme", width=90)
         self.tree_fav.column("Süre", width=60)
-        self.tree_fav.column("İşlemler", width=240, anchor=tk.CENTER) # Genişletildi
+        self.tree_fav.column("İşlemler", width=240, anchor=tk.CENTER)
         
         sb = ttk.Scrollbar(self.fav_view, orient=tk.VERTICAL, command=self.tree_fav.yview)
         self.tree_fav.configure(yscroll=sb.set)
@@ -55,13 +60,11 @@ class ViewFav:
         self.tree_fav.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         
         self.tree_fav.bind("<ButtonRelease-1>", self.on_fav_list_click)
-        self.tree_fav.tag_configure('odd', background='#f9f9f9')
-        self.tree_fav.tag_configure('even', background='white')
+        self.tree_fav.tag_configure('odd', background=T.TREE_ODD, foreground=T.FG_PRIMARY)
+        self.tree_fav.tag_configure('even', background=T.TREE_EVEN, foreground=T.FG_PRIMARY)
         
         self.tree_fav.bind("<Button-3>", lambda e: self.show_context_menu(e, self.tree_fav, self.context_menu_search))
 
-        # Tooltip
-        # Exclude: Sıra(0), Dinlenme(4), Süre(5), İşlemler(6)
         self.setup_treeview_tooltip(self.tree_fav, excluded_columns=[0, 4, 5, 6])
 
     def show_fav_view(self):
@@ -74,12 +77,10 @@ class ViewFav:
         self.load_fav_ui()
 
     def load_fav_ui(self):
-        # Temizle
         for item in self.tree_fav.get_children():
             self.tree_fav.delete(item)
         self.fav_map.clear()
         
-        # Verileri al
         self.favorites = self.load_favorites()
         favs = self.favorites
         
@@ -91,8 +92,6 @@ class ViewFav:
             
         self.update_status(f"Favoriler yükleniyor... ({len(favs)} şarkı)", "blue")
 
-        # Veri Hazırlığı (Thread bloğu oluşturmamak için batch hazırlayalım)
-        # Sanatçı ismiyle sırala
         sorted_favs = sorted(favs, key=lambda x: x.get('artist', '').lower())
         dl_cache = Downloader.get_downloads_cache()
         
@@ -104,13 +103,8 @@ class ViewFav:
              artist = song.get('artist', '')
              video_id = song.get('video_id', '')
              
-             # Cache kullanarak kontrol et
              is_downloaded = Downloader.is_downloaded_cached(dl_cache, video_id, artist, title)
              dl_icon = "🗑" if is_downloaded else "📥"
-             
-             # LRC Kontrolü (Opsiyonel: ikon eklemek istersek)
-             # is_lrc = Downloader.is_lrc_downloaded(artist, title) 
-             # lrc_icon = "📝" if is_lrc else ""
              
              full_action_text = f"🔗            ▶            ♥            {dl_icon}"
              
@@ -125,7 +119,6 @@ class ViewFav:
              )
              items_to_insert.append((values, tag, song))
 
-        # Chunklı Ekleme Başlat
         self._insert_fav_chunk(items_to_insert, 0)
 
     def _insert_fav_chunk(self, items, start_index):
@@ -138,16 +131,11 @@ class ViewFav:
             self.fav_map[iid] = song
             
         if end_index < len(items):
-            # UI'ın nefes alması için 10ms bekle ve devam et
             self.root.after(10, lambda: self._insert_fav_chunk(items, end_index))
         else:
             self.update_status(f"Favoriler listelendi: {len(items)} şarkı.", "green")
 
     def refresh_action_buttons_state(self):
-        """
-        Favori listesindeki indirilme durumuna göre butonları
-        aktif veya pasif yapar.
-        """
         if not hasattr(self, 'favorites') or not self.favorites:
             self.btn_download_all.config(state=tk.DISABLED)
             self.btn_delete_all_dl.config(state=tk.DISABLED)
@@ -156,20 +144,17 @@ class ViewFav:
         total = len(self.favorites)
         downloaded = 0
         
-        # Optimize edilmiş kontrol
         dl_cache = Downloader.get_downloads_cache()
         
         for s in self.favorites:
             if Downloader.is_downloaded_cached(dl_cache, s.get('video_id'), s.get('artist'), s.get('title')):
                 downloaded += 1
         
-        # Tümü indirilmişse -> İndir butonu pasif
         if downloaded == total and total > 0:
             self.btn_download_all.config(state=tk.DISABLED)
         else:
             self.btn_download_all.config(state=tk.NORMAL)
             
-        # Hiçbiri indirilmemişse -> Sil butonu pasif
         if downloaded == 0:
             self.btn_delete_all_dl.config(state=tk.DISABLED)
         else:
@@ -182,7 +167,6 @@ class ViewFav:
             if region != "cell": return
             
             col = tree.identify_column(event.x)
-            # #7 -> İşlemler
             if col == "#7":
                 item_id = tree.identify_row(event.y)
                 if not item_id: return
@@ -192,7 +176,6 @@ class ViewFav:
                 x, y, w, h = bbox
                 click_x = event.x - x
                 
-                # 4 butona boluyoruz
                 section = w / 4
                 
                 song_data = self.fav_map.get(item_id)
@@ -200,14 +183,11 @@ class ViewFav:
                 video_id = song_data.get('video_id')
 
                 if click_x < section:
-                    # Link
                     self.copy_link_by_id(video_id)
                 elif click_x < section * 2:
-                    # Play
                     title = f"{song_data.get('title')} - {song_data.get('artist')}"
                     self.play_music_start(video_id, title)
                 elif click_x < section * 3:
-                     # Remove Fav (Buton 3)
                     res = messagebox.askyesno("Onay", "Bu şarkıyı favorilerden kaldırmak istiyor musunuz?")
                     if res:
                         self.toggle_favorite(song_data)
@@ -215,7 +195,6 @@ class ViewFav:
                         del self.fav_map[item_id]
                         self.refresh_action_buttons_state()
                 else:
-                    # Download / Delete (Buton 4)
                     self.handle_download_click(item_id, song_data)
                         
         except Exception as e:
@@ -223,32 +202,25 @@ class ViewFav:
             print(f"Fav Click Error: {e}")
 
     def sort_fav_column(self, col, reverse):
-        """Favori listesini kolona göre sıralar ve Sıra no günceller"""
         l = [(self.tree_fav.set(k, col), k) for k in self.tree_fav.get_children('')]
         
-        # Sıralama Mantığı
         if col == "Dinlenme":
              l.sort(key=lambda x: parse_views(x[0]), reverse=reverse)
         elif col == "Süre":
              l.sort(key=lambda x: parse_duration(x[0]), reverse=reverse)
         elif col == "İşlemler":
-             # İçinde Çöp Kutusu (🗑) varsa indirilmiştir -> 1, yoksa -> 0
              l.sort(key=lambda x: 1 if "🗑" in x[0] else 0, reverse=reverse)
         else:
-             # String sıralama (Şarkı, Sanatçı, Albüm)
              l.sort(key=lambda x: x[0].lower(), reverse=reverse)
              
         for index, (val, k) in enumerate(l):
             self.tree_fav.move(k, '', index)
-            # Sıra numarasını güncelle (index 0)
             current_values = list(self.tree_fav.item(k, 'values'))
             current_values[0] = str(index + 1)
             
-            # Zebra çizgilerini güncelle
             tag = 'odd' if (index + 1) % 2 == 1 else 'even'
             self.tree_fav.item(k, values=current_values, tags=(tag,))
             
-        # Sonraki tıklama için yönü tersine çevir
         self.tree_fav.heading(col, command=lambda: self.sort_fav_column(col, not reverse))
 
     def load_favorites(self):
@@ -273,7 +245,6 @@ class ViewFav:
         artist = song_data.get('artist')
         
         if Downloader.is_downloaded(video_id, artist, title):
-            # Silme işlemi
             if messagebox.askyesno("Sil", f"'{title}' dosyası silinsin mi?"):
                 success = Downloader.delete_content(video_id, artist, title)
                 if success:
@@ -282,7 +253,6 @@ class ViewFav:
                 else:
                     messagebox.showerror("Hata", "Dosya silinemedi.")
         else:
-            # İndirme işlemi
             album = song_data.get('album')
             self.update_status(f"İndiriliyor: {title}...", "blue")
             threading.Thread(target=self.download_single_thread, args=(item_id, video_id, title, artist, album), daemon=True).start()
@@ -299,8 +269,6 @@ class ViewFav:
 
     def update_fav_row_icon(self, item_id, dl_icon):
         if self.tree_fav.exists(item_id):
-            # Mevcut texti alıp son ikonu güncelle
-            # Text format: "🔗    ▶    ♥    ICON"
             new_text = f"🔗            ▶            ♥            {dl_icon}"
             self.tree_fav.set(item_id, "İşlemler", new_text)
             self.refresh_action_buttons_state()
@@ -333,7 +301,8 @@ class ViewFav:
             
         self._is_downloading_all_favs = True
         self._cancel_favs_dl = False
-        self.btn_download_all.config(text="Durdur", bg="#f44336")
+        self.btn_download_all.config(text="Durdur", bg=T.BTN_DANGER)
+        T.apply_hover(self.btn_download_all, T.BTN_DANGER, T.BTN_DANGER_HOVER)
         
         threading.Thread(target=self.download_all_thread, args=(to_download,), daemon=True).start()
 
@@ -346,32 +315,17 @@ class ViewFav:
                 
             self.update_status(f"İndiriliyor ({i+1}/{total}): {s['title']}...", "blue")
             
-            # Senkron indirme (sırayla)
-            # 403 Hatasını önlemek için bekleme
             import time
             import random
             
-            # Hata kontrolü için callback'li yapıya geçebiliriz ama şimdilik direkt çağırıp
-            # utils içinde exception logluyoruz.
-            # Downloader.download_song senkron olduğu için bitmesini bekler.
-            
             Downloader.download_song(s['video_id'], s['title'], s['artist'], s.get('album'))
             
-            # UI güncelle (listedeki ilgili satırı bulup ikonunu güncelle)
             self.root.after(0, lambda vid=s['video_id']: self.update_icon_by_videoid(vid))
             
-            # Burst Logic:
-            # - Her şarkı arası 1 sn bekle
-            # - Her 3 şarkıda bir 10 sn dinlen (Cooldown)
-            
             if i < total - 1 and not getattr(self, '_cancel_favs_dl', False):
-                # 3. şarkıdan sonra uzun dinlenme
-                # i+1 çünkü i 0'dan başlıyor. (i+1) % 3 == 0 ise 3, 6, 9...
                 if (i + 1) % 3 == 0:
                     cooldown_count = (i + 1) // 3
                     
-                    # Tek sayılarda (1, 3, 5...): 7-10 sn
-                    # Çift sayılarda (2, 4, 6...): 10-16 sn
                     if cooldown_count % 2 == 1:
                         wait = random.uniform(7, 10)
                         msg = f"Soğuma (Kısa): {wait:.1f}s..."
@@ -388,7 +342,6 @@ class ViewFav:
                         time.sleep(0.5)
                         slept += 0.5
                 else:
-                    # 1-3 sn arası rastgele
                     wait = random.uniform(1, 3)
                     slept = 0
                     while slept < wait:
@@ -404,12 +357,12 @@ class ViewFav:
         self._cancel_favs_dl = False
         
         self.root.after(0, lambda: self.btn_download_all.config(
-            text="Tümünü İndir", state=tk.NORMAL, bg="#FF9800"
+            text="Tümünü İndir", state=tk.NORMAL, bg=T.BTN_WARNING
         ))
+        self.root.after(0, lambda: T.apply_hover(self.btn_download_all, T.BTN_WARNING, T.BTN_WARNING_HOVER))
         self.root.after(0, self.load_fav_ui) 
 
     def update_icon_by_videoid(self, video_id):
-        # find item with video_id in fav_map
         for iid, data in self.fav_map.items():
             if data.get('video_id') == video_id:
                 self.update_fav_row_icon(iid, "🗑")
@@ -418,7 +371,7 @@ class ViewFav:
     def delete_all_downloads_ui(self):
         if messagebox.askyesno("DİKKAT", "Downloads klasöründeki TÜM dosyalar silinecek!\nBu favorilerde olmayan indirilmiş dosyaları da siler.\nOnaylıyor musunuz?"):
             if Downloader.delete_all_downloads():
-                self.load_fav_ui() # Listeyi yenile ikonları güncelle
+                self.load_fav_ui()
                 self.update_status("Tüm indirilenler temizlendi.", "red")
             else:
                 messagebox.showerror("Hata", "Silme işlemi başarısız.")

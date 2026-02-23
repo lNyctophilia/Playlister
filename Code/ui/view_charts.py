@@ -3,15 +3,17 @@ from tkinter import ttk, messagebox
 import threading
 import locale
 import json
+from ui import theme as T
 
 class ViewCharts:
     def setup_chart_view(self):
-        ctrl_frame = tk.Frame(self.chart_view, pady=10)
+        ctrl_frame = tk.Frame(self.chart_view, pady=10, bg=T.BG_PANEL)
         ctrl_frame.pack(side=tk.TOP, fill=tk.X)
         
-        tk.Label(ctrl_frame, text="Ülke Seç:").pack(side=tk.LEFT, padx=10)
+        lbl_country = tk.Label(ctrl_frame, text="Ülke Seç:")
+        T.style_label(lbl_country, bg=T.BG_PANEL)
+        lbl_country.pack(side=tk.LEFT, padx=10)
         
-        # Geniş Kapsamlı Ülke Listesi
         self.countries = {
             "Global": "ZZ", "Türkiye": "TR", "ABD": "US", "İngiltere": "GB", "Almanya": "DE", 
             "Fransa": "FR", "Japonya": "JP", "Güney Kore": "KR", "Brezilya": "BR", "Hindistan": "IN",
@@ -31,44 +33,43 @@ class ViewCharts:
             "İzlanda": "IS", "Lüksemburg": "LU", "Kıbrıs": "CY", "Malta": "MT"
         }
 
-        # Sistem dilini/ülkesini otomatik algıla
-        local_name = "Türkiye" # Varsayılan
+        local_name = "Türkiye"
         try:
             locale.setlocale(locale.LC_ALL, '')
             sys_lang = locale.getlocale()[0]
             if sys_lang:
                 local_code = sys_lang.split('_')[-1].upper()
-                # Sözlükten ismini bul
                 found_name = next((k for k, v in self.countries.items() if v == local_code), None)
                 if found_name:
                     local_name = found_name
         except:
             pass
             
-        # Listeyi Hazırla
         other_countries = [k for k in self.countries.keys() if k != local_name and k != "Global"]
-        other_countries.sort() # Alfabetik sırala
+        other_countries.sort()
         
         display_values = [local_name, "-------------------", "Global"] + other_countries
 
         self.combo_country = ttk.Combobox(ctrl_frame, values=display_values, state="readonly")
-        self.combo_country.current(0) # İlk sıradaki (Lokal) seçili
+        self.combo_country.current(0)
         self.combo_country.pack(side=tk.LEFT, padx=10)
         
-        # Limit Seçimi
-        tk.Label(ctrl_frame, text="Limit:").pack(side=tk.LEFT, padx=(10, 2))
+        lbl_limit = tk.Label(ctrl_frame, text="Limit:")
+        T.style_label(lbl_limit, bg=T.BG_PANEL)
+        lbl_limit.pack(side=tk.LEFT, padx=(10, 2))
         self.entry_chart_limit = tk.Entry(ctrl_frame, width=5)
-        self.entry_chart_limit.insert(0, "40") # Varsayılan 40
+        T.style_entry(self.entry_chart_limit)
+        self.entry_chart_limit.insert(0, "40")
         self.entry_chart_limit.pack(side=tk.LEFT, padx=2)
         self.entry_chart_limit.bind("<Return>", lambda e: self.start_chart_load())
         
-        self.btn_chart_load = tk.Button(ctrl_frame, text="Listele", command=self.start_chart_load, bg="#FF9800", fg="white", width=25)
+        self.btn_chart_load = tk.Button(ctrl_frame, text="Listele", command=self.start_chart_load, width=25)
+        T.style_button(self.btn_chart_load, bg=T.BTN_WARNING, hover_bg=T.BTN_WARNING_HOVER)
         self.btn_chart_load.pack(side=tk.LEFT, padx=20)
         
-        self.lbl_chart_progress = tk.Label(ctrl_frame, text="", fg="gray")
+        self.lbl_chart_progress = tk.Label(ctrl_frame, text="", fg=T.FG_SECONDARY, bg=T.BG_PANEL, font=T.FONT_BODY)
         self.lbl_chart_progress.pack(side=tk.LEFT)
         
-        # Sonuç Tablosu
         cols = ("Rank", "Sanatçı", "Toplam Dinlenme", "Trend", "Ara")
         self.tree_chart = ttk.Treeview(self.chart_view, columns=cols, show='headings')
         self.tree_chart.heading("Rank", text="Sıra")
@@ -90,16 +91,15 @@ class ViewCharts:
         
         self.tree_chart.bind("<ButtonRelease-1>", self.on_chart_list_click)
 
-        # Zebra
-        self.tree_chart.tag_configure('odd', background='#f9f9f9')
-        self.tree_chart.tag_configure('even', background='white')
+        self.tree_chart.tag_configure('odd', background=T.TREE_ODD, foreground=T.FG_PRIMARY)
+        self.tree_chart.tag_configure('even', background=T.TREE_EVEN, foreground=T.FG_PRIMARY)
 
-        self.context_menu_chart = tk.Menu(self.root, tearoff=0)
+        self.context_menu_chart = tk.Menu(self.root, tearoff=0, bg=T.MENU_BG, fg=T.MENU_FG,
+                                          activebackground=T.MENU_ACTIVE_BG, activeforeground=T.MENU_ACTIVE_FG,
+                                          borderwidth=0)
         self.context_menu_chart.add_command(label="Bu Sanatçıyı Ara", command=self.switch_to_artist_from_chart)
         self.tree_chart.bind("<Button-3>", lambda e: self.show_context_menu(e, self.tree_chart, self.context_menu_chart))
         
-        # Tooltip
-        # Exclude: Rank(0), Toplam Dinlenme(2), Trend(3), Ara(4)
         self.setup_treeview_tooltip(self.tree_chart, excluded_columns=[0, 2, 3, 4])
 
     def direct_search_artist(self, artist_name):
@@ -121,7 +121,6 @@ class ViewCharts:
 
         country_code = self.countries.get(country_name, "TR")
         
-        # Limit
         try:
             limit = int(self.entry_chart_limit.get())
             if limit > 40: 
@@ -133,12 +132,12 @@ class ViewCharts:
             self.entry_chart_limit.delete(0, tk.END)
             self.entry_chart_limit.insert(0, "40")
 
-        self.btn_chart_load.config(text="Durdur", bg="#F44336")
+        self.btn_chart_load.config(text="Durdur", bg=T.BTN_DANGER)
+        T.apply_hover(self.btn_chart_load, T.BTN_DANGER, T.BTN_DANGER_HOVER)
         self.combo_country.config(state=tk.DISABLED)
         self.entry_chart_limit.config(state=tk.DISABLED)
         self.update_status(f"{country_name} listeleri ve dinlenme sayıları çekiliyor... (Limit: {limit})", "blue")
         
-        # Temizle
         for item in self.tree_chart.get_children():
             self.tree_chart.delete(item)
         self.chart_map.clear()
@@ -163,7 +162,8 @@ class ViewCharts:
 
     def reset_chart_ui(self):
         def _reset():
-            self.btn_chart_load.config(text="Listele", bg="#FF9800")
+            self.btn_chart_load.config(text="Listele", bg=T.BTN_WARNING)
+            T.apply_hover(self.btn_chart_load, T.BTN_WARNING, T.BTN_WARNING_HOVER)
             self.lbl_chart_progress.config(text="")
             self.combo_country.config(state="readonly")
             self.entry_chart_limit.config(state=tk.NORMAL)
@@ -185,7 +185,6 @@ class ViewCharts:
                 self.reset_chart_ui()
                 return
 
-            # Limiti uygula
             if limit > 0:
                 artists = artists[:limit]
 
@@ -205,7 +204,6 @@ class ViewCharts:
                 
                 if browse_id:
                     try:
-                        # Dinlenme sayısı için profil detayı
                         details = self.yt.get_artist(browse_id)
                         v_val = details.get('views')
                         views_text = self.format_view_count(v_val)
@@ -239,7 +237,6 @@ class ViewCharts:
             self.reset_chart_ui()
 
     def on_chart_list_click(self, event):
-        """Chart listesindeki arama butonuna tıklamayı algılar"""
         try:
             tree = event.widget
             region = tree.identify_region(event.x, event.y)

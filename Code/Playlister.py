@@ -28,12 +28,14 @@ from ui.view_fav import ViewFav
 from ui.view_player import ViewPlayer
 from ui.view_settings import ViewSettings
 from ui.context_menu import ContextMenuMixin
+from ui import theme as T
 
 class App(UiShared, ContextMenuMixin, ViewSearch, ViewCharts, ViewGenre, ViewFav, ViewPlayer, ViewSettings):
     def __init__(self, root):
         self.root = root
         self.root.title("Playlister")
         self.root.geometry("1100x700")
+        self.root.config(bg=T.BG_MAIN)
         
         try:
             self.yt = YTMusic()
@@ -41,81 +43,51 @@ class App(UiShared, ContextMenuMixin, ViewSearch, ViewCharts, ViewGenre, ViewFav
             messagebox.showerror("Başlatma Hatası", f"API Başlatılamadı: {e}")
             self.yt = None
 
-        # --- Üst Navigasyon Barı (Mod Seçimi) ---
-        self.nav_frame = tk.Frame(root, bg="#333", pady=5)
+        style = ttk.Style()
+        T.configure_ttk_styles(style)
+
+        self.nav_frame = tk.Frame(root, bg=T.BG_NAV, pady=5)
         self.nav_frame.pack(side=tk.TOP, fill=tk.X)
         
-        # Stil
-        style = ttk.Style()
-        try:
-            style.theme_use("clam")
-        except:
-            pass
-        
-        # Treeview ve Başlıklar için Stil
-        style.configure("Treeview", 
-                        background="white",
-                        fieldbackground="white",
-                        foreground="black",
-                        rowheight=25)
-        
-        style.configure("Treeview.Heading", 
-                        font=("Helvetica", 9, "bold"), 
-                        background="#e1e1e1", 
-                        foreground="#333",
-                        relief="raised")
-        
-        style.map("Treeview", background=[('selected', '#4CAF50')])
-
-        style.configure("Nav.TButton", font=("Helvetica", 11, "bold"), padding=6)
-        
         self.btn_mode_search = tk.Button(self.nav_frame, text="🎵 Sanatçı & Şarkı Arama", 
-                                         command=self.show_search_view, 
-                                         font=("Helvetica", 10, "bold"),
-                                         bg="#ddd", fg="#333", relief=tk.RAISED)
+                                         command=self.show_search_view)
+        T.style_button(self.btn_mode_search, bg=T.NAV_INACTIVE, hover_bg=T.NAV_HOVER)
         self.btn_mode_search.pack(side=tk.LEFT, padx=(20, 5), pady=5)
         
         self.btn_mode_chart = tk.Button(self.nav_frame, text="🌍 Ülke Top Listeleri", 
-                                        command=self.show_chart_view,
-                                        font=("Helvetica", 10, "bold"),
-                                        bg="#ddd", fg="#333", relief=tk.RAISED)
+                                        command=self.show_chart_view)
+        T.style_button(self.btn_mode_chart, bg=T.NAV_INACTIVE, hover_bg=T.NAV_HOVER)
         self.btn_mode_chart.pack(side=tk.LEFT, padx=5, pady=5)
 
         self.btn_mode_genre = tk.Button(self.nav_frame, text="🎸 Türe Göre Öneri",
-                                        command=self.show_genre_view,
-                                        font=("Helvetica", 10, "bold"),
-                                        bg="#ddd", fg="#333", relief=tk.RAISED)
+                                        command=self.show_genre_view)
+        T.style_button(self.btn_mode_genre, bg=T.NAV_INACTIVE, hover_bg=T.NAV_HOVER)
         self.btn_mode_genre.pack(side=tk.LEFT, padx=5, pady=5)
 
         self.btn_mode_fav = tk.Button(self.nav_frame, text="❤ Favoriler",
-                                        command=self.show_fav_view,
-                                        font=("Helvetica", 10, "bold"),
-                                        bg="#ddd", fg="#333", relief=tk.RAISED)
+                                        command=self.show_fav_view)
+        T.style_button(self.btn_mode_fav, bg=T.NAV_INACTIVE, hover_bg=T.NAV_HOVER)
         self.btn_mode_fav.pack(side=tk.LEFT, padx=5, pady=5)
 
-        # Ayarlar Butonu (Sağ Üst)
         self.btn_settings = tk.Button(self.nav_frame, text="⚙ Ayarlar",
-                                      command=self.open_settings,
-                                      font=("Helvetica", 9),
-                                      bg="#555", fg="white", relief=tk.RAISED)
+                                      command=self.open_settings)
+        T.style_button(self.btn_settings, bg="#2a2f5a", hover_bg="#353b6e")
+        self.btn_settings.config(font=T.FONT_BODY)
         self.btn_settings.pack(side=tk.RIGHT, padx=20, pady=5)
 
-
-        # --- Ana Konteyner ---
-        self.container = tk.Frame(root)
+        self.container = tk.Frame(root, bg=T.BG_MAIN)
         self.container.pack(fill="both", expand=True, pady=5)
         
-        # --- Görünümler ---
-        self.search_view = tk.Frame(self.container)
-        self.chart_view = tk.Frame(self.container)
-        self.genre_view = tk.Frame(self.container)
-        self.fav_view = tk.Frame(self.container)
+        self.search_view = tk.Frame(self.container, bg=T.BG_MAIN)
+        self.chart_view = tk.Frame(self.container, bg=T.BG_MAIN)
+        self.genre_view = tk.Frame(self.container, bg=T.BG_MAIN)
+        self.fav_view = tk.Frame(self.container, bg=T.BG_MAIN)
         
-        # Status Bar
-        self.status_bar = tk.Label(root, text="Hazır", bd=1, relief=tk.SUNKEN, anchor=tk.W, bg="#f0f0f0", font=("Consolas", 9))
+        self.status_bar = tk.Label(root, text="Hazır", bd=0, relief=tk.FLAT, anchor=tk.W, 
+                                   bg=T.BG_STATUS, fg=T.FG_SECONDARY, font=T.FONT_STATUS,
+                                   padx=10, pady=4)
         self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
 
-        # Player Init
         self.vlc_instance = None
         self.player = None
         self.is_playing = False
@@ -126,8 +98,6 @@ class App(UiShared, ContextMenuMixin, ViewSearch, ViewCharts, ViewGenre, ViewFav
         
         if vlc:
             try:
-                # --no-video: Video penceresini engeller (Audio-only)
-                # --quiet: Konsol hatalarını azaltır
                 self.vlc_instance = vlc.Instance('--no-video', '--quiet')
                 self.player = self.vlc_instance.media_player_new()
             except Exception as e:
@@ -135,22 +105,18 @@ class App(UiShared, ContextMenuMixin, ViewSearch, ViewCharts, ViewGenre, ViewFav
                 
         self.setup_player_view()
 
-        # UI Components Setup (From Mixins)
         self.setup_search_view()
         self.setup_chart_view()
         self.setup_genre_view()
         self.setup_fav_view()
         
-        # Varsayılan görünüm
         self.show_search_view()
         
-        # Veri saklama
         self.song_map = {} 
         self.chart_map = {} 
         self.fav_map = {} 
         self.favorites = self.load_favorites()
         
-        # Last.fm API Init
         self.config_file = CONFIG_FILE
         
         conf = load_config()
@@ -165,10 +131,9 @@ class App(UiShared, ContextMenuMixin, ViewSearch, ViewCharts, ViewGenre, ViewFav
         self.current_search_id = None
         self.update_status("Durduruluyor...", "orange")
         
-        # Arayüzü arama yapılabilir hale anında getir (Durdur -> Ara dönüşümü)
         if hasattr(self, 'btn_search'):
             self.root.after(0, lambda: self.lbl_search_progress.config(text=""))
-            self.root.after(0, lambda: self.btn_search.config(text="Ara", bg="#2196F3", fg="white"))
+            self.root.after(0, lambda: self.btn_search.config(text="Ara", bg=T.BTN_PRIMARY, fg=T.FG_PRIMARY))
             self.root.after(0, lambda: self.entry_artist.config(state=tk.NORMAL))
             self.root.after(0, lambda: self.entry_search_limit.config(state=tk.NORMAL))
             self.root.after(0, lambda: self.combo_search_mode.config(state="readonly"))
