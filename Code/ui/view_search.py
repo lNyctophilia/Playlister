@@ -41,23 +41,15 @@ class ViewSearch:
         filter_frame = tk.Frame(self.search_view)
         filter_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=5)
         
-        self.btn_tab_pop = tk.Button(filter_frame, text="🔥 Popülerlik", 
-                                     command=lambda: self.switch_search_tab("pop"),
-                                     font=("Helvetica", 9, "bold"),
-                                     bg="#e0e0e0", fg="#333", relief=tk.RAISED)
-        self.btn_tab_pop.pack(side=tk.LEFT, padx=5)
+        tk.Label(filter_frame, text="Liste Türü:").pack(side=tk.LEFT, padx=(0, 5))
         
-        self.btn_tab_views = tk.Button(filter_frame, text="📈 En Çok Dinlenenler", 
-                                       command=lambda: self.switch_search_tab("views"),
-                                       font=("Helvetica", 9, "bold"),
-                                       bg="#e0e0e0", fg="#333", relief=tk.RAISED)
-        self.btn_tab_views.pack(side=tk.LEFT, padx=5)
-
-        self.btn_tab_smart = tk.Button(filter_frame, text="✨ Karma Liste", 
-                                       command=lambda: self.switch_search_tab("smart"),
-                                       font=("Helvetica", 9, "bold"),
-                                       bg="#e0e0e0", fg="#333", relief=tk.RAISED)
-        self.btn_tab_smart.pack(side=tk.LEFT, padx=5)
+        # Dropdown (Combobox) ile tab seçimi
+        self.tab_mode_var = tk.StringVar(value="🔥 Popülerlik")
+        self.combo_tabs = ttk.Combobox(filter_frame, textvariable=self.tab_mode_var, 
+                                       values=["🔥 Popülerlik", "📈 En Çok Dinlenenler", "✨ Karma Liste"], 
+                                       state="readonly", width=25)
+        self.combo_tabs.pack(side=tk.LEFT, padx=5)
+        self.combo_tabs.bind("<<ComboboxSelected>>", self.on_tab_combobox_selected)
 
         # Liste Alanı
         self.list_container = tk.Frame(self.search_view)
@@ -78,8 +70,17 @@ class ViewSearch:
         self.tree_views.bind("<Button-3>", lambda e: self.show_context_menu(e, self.tree_views, self.context_menu_search))
         self.tree_smart.bind("<Button-3>", lambda e: self.show_context_menu(e, self.tree_smart, self.context_menu_search))
 
+    def on_tab_combobox_selected(self, event=None):
+        val = self.tab_mode_var.get()
+        if "Popülerlik" in val:
+            self.switch_search_tab("pop")
+        elif "En Çok" in val:
+            self.switch_search_tab("views")
+        else:
+            self.switch_search_tab("smart")
+
     def switch_search_tab(self, tab_type):
-        """Tablar arası geçiş ve buton renk yönetimi"""
+        """Tablar arası geçiş (Dropdown üzerinden)"""
         # Listeleri (Frame'leri) gizle
         self.frame_pop.pack_forget()
         self.frame_views.pack_forget()
@@ -87,20 +88,13 @@ class ViewSearch:
         
         if tab_type == "pop":
             self.frame_pop.pack(fill=tk.BOTH, expand=True)
-            # Renk güncelleme
-            self.btn_tab_pop.config(bg="#FF5722", fg="white", relief=tk.SUNKEN)
-            self.btn_tab_views.config(bg="#e0e0e0", fg="#333", relief=tk.RAISED)
-            self.btn_tab_smart.config(bg="#e0e0e0", fg="#333", relief=tk.RAISED)
+            self.tab_mode_var.set("🔥 Popülerlik")
         elif tab_type == "views":
             self.frame_views.pack(fill=tk.BOTH, expand=True)
-            self.btn_tab_views.config(bg="#FF5722", fg="white", relief=tk.SUNKEN)
-            self.btn_tab_pop.config(bg="#e0e0e0", fg="#333", relief=tk.RAISED)
-            self.btn_tab_smart.config(bg="#e0e0e0", fg="#333", relief=tk.RAISED)
+            self.tab_mode_var.set("📈 En Çok Dinlenenler")
         else: # smart
             self.frame_smart.pack(fill=tk.BOTH, expand=True)
-            self.btn_tab_smart.config(bg="#FF5722", fg="white", relief=tk.SUNKEN)
-            self.btn_tab_pop.config(bg="#e0e0e0", fg="#333", relief=tk.RAISED)
-            self.btn_tab_views.config(bg="#e0e0e0", fg="#333", relief=tk.RAISED)
+            self.tab_mode_var.set("✨ Karma Liste")
             
         # Geçişte ikonları tazele
         self.refresh_search_icons()
@@ -294,8 +288,8 @@ class ViewSearch:
                 # limiti `min(target_count * 2, 800)` seviyesine çekeceğiz.
                 pass
                 
-            # --- API ÇAĞRISI (Limit düşürüldü ki hızlı dönsün) ---
-            fetch_limit = min(target_count * 2, 400) 
+            # --- API ÇAĞRISI (Havuz genişletildi) ---
+            fetch_limit = min(target_count * 4, 800) 
             self.update_status(f"API Sorgusu Bekleniyor... (Havuz: {fetch_limit*2})", "orange")
             song_results = self.yt.search(query=f"{artist_true_name}", filter="songs", limit=fetch_limit)
             
@@ -381,8 +375,8 @@ class ViewSearch:
             for i, song in enumerate(candidates):
                 if self.stop_listing or self.current_search_id != search_token: return
                 
-                # Yeterli hedefe ulaştıysak elemeye devam edip zaman kaybetmeyelim
-                if len(all_songs) >= target_count:
+                # Hedefin 3 katı kadar (fermuar sistemi için) şarki biriktir
+                if len(all_songs) >= target_count * 3:
                     break
                     
                 norm_title = song['title'].lower().strip()
@@ -448,21 +442,33 @@ class ViewSearch:
             sorted_by_views = sorted(all_songs, key=lambda x: x['_views_num'], reverse=True)
             views_list = sorted_by_views[:target_count]
             
+            # Kesişim (Her iki listede de olanlar)
             views_ids = set(s['video_id'] for s in views_list)
             intersection = [s for s in pop_list if s['video_id'] in views_ids]
             
-            needed = target_count - len(intersection)
-            if needed < 0: needed = 0
+            # Kesişimdeki şarkıları kendi içinde en çok dinlenene göre sırala (Opsiyonel ama mantıklı)
+            intersection.sort(key=lambda x: x['_views_num'], reverse=True)
             
             intersection_ids = set(s['video_id'] for s in intersection)
             unique_pop = [s for s in pop_list if s['video_id'] not in intersection_ids]
             unique_views = [s for s in views_list if s['video_id'] not in intersection_ids]
             
-            count_pop = (needed + 1) // 2
-            count_views = needed - count_pop
+            # Fermuar Sistemi
+            smart_list = list(intersection)
             
-            smart_list = intersection + unique_pop[:count_pop] + unique_views[:count_views]
+            p_idx, v_idx = 0, 0
+            while len(smart_list) < target_count and (p_idx < len(unique_pop) or v_idx < len(unique_views)):
+                # Popülerden 1 tane al
+                if p_idx < len(unique_pop) and len(smart_list) < target_count:
+                    smart_list.append(unique_pop[p_idx])
+                    p_idx += 1
+                    
+                # Ek Çok Dinlenenden 1 tane al
+                if v_idx < len(unique_views) and len(smart_list) < target_count:
+                    smart_list.append(unique_views[v_idx])
+                    v_idx += 1
             
+            # Eğer hala hedef sayıya ulaşılamadıysa (Çok nadir) havuzdan tamamla
             if len(smart_list) < target_count:
                 extra_needed = target_count - len(smart_list)
                 used_ids = set(s['video_id'] for s in smart_list)
@@ -473,7 +479,7 @@ class ViewSearch:
             if self.stop_listing or self.current_search_id != search_token: return
             
             self.populate_tabs(pop_list, views_list, smart_list)
-            self.update_status(f"Tamamlandı. {len(all_songs)} şarkı işlenip listelendi.", "green")
+            self.update_status(f"Tamamlandı. {len(all_songs)} şarkı havuzundan {target_count} şarkılık 3 liste oluşturuldu.", "green")
 
         except Exception as e:
             if not self.stop_listing and self.current_search_id == search_token:
