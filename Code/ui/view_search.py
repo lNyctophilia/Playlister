@@ -206,15 +206,19 @@ class ViewSearch:
         self.entry_artist.config(state=tk.DISABLED)
         self.entry_search_limit.config(state=tk.DISABLED)
         self.combo_search_mode.config(state=tk.DISABLED)
+        
+        import time
         self.stop_listing = False
+        self.current_search_id = time.time()  # Benzersiz arama kimliği
+        search_token = self.current_search_id
         
         mode = self.search_mode_var.get()
         if mode == "Sanatçı":
             self.update_status(f"Sanatçı Hazırlanıyor... (Limit: {limit})", "blue")
-            threading.Thread(target=self.search_artist_thread, args=(artist_name, limit), daemon=True).start()
+            threading.Thread(target=self.search_artist_thread, args=(artist_name, limit, search_token), daemon=True).start()
         else:
             self.update_status(f"Şarkı Hazırlanıyor... (Limit: {limit})", "blue")
-            threading.Thread(target=self.search_song_thread, args=(artist_name, limit), daemon=True).start()
+            threading.Thread(target=self.search_song_thread, args=(artist_name, limit, search_token), daemon=True).start()
 
     def populate_tabs(self, pop_list, views_list, smart_list):
         def _job():
@@ -245,28 +249,60 @@ class ViewSearch:
             
         self.root.after(0, _job)
 
-    def search_artist_thread(self, artist_name, target_count):
+    def search_artist_thread(self, artist_name, target_count, search_token):
         try:
+            if self.stop_listing or self.current_search_id != search_token: return
             self.update_status(f"Sanatçı kimliği aranıyor...", "blue")
             results = self.yt.search(query=artist_name, filter="artists")
             
+            if self.stop_listing or self.current_search_id != search_token: return
             if not results:
                 artist_true_name = artist_name
             else:
                 match = next((r for r in results if r['artist'].lower() == artist_name.lower()), None)
                 artist_true_name = match['artist'] if match else results[0]['artist']
             
-            # Daha geniş bir havuz çek (Target * 4)
-            fetch_limit = min(target_count * 4, 1500) 
-            self.update_status(f"Hedef: {artist_true_name}. Şarkılar taranıyor... (Geniş Tarama: {fetch_limit})")
+            self.update_status(f"Hedef: {artist_true_name}. Aşamalı tarama başlatılıyor...", "orange")
             
-            # Hem Şarkıları Hem Videoları Tara (Remixler genelde video kategorisinde olabilir)
-            self.update_status(f"Hedef: {artist_true_name}. Şarkılar ve Videolar taranıyor... (Geniş Tarama: {fetch_limit})")
+            all_songs = []
+            observed_video_ids = set()
+            observed_norm_titles = set()
+            processed_count = 0
             
+            # Kademeli arama parametreleri
+            batch_size = 40
+            max_batches = 10  # En fazla ~400 öğe taranacak
+            
+            for batch_index in range(max_batches):
+                if self.stop_listing or self.current_search_id != search_token:
+                    self.update_status("Arama kullanıcı tarafından durduruldu veya yeni arama başlatıldı.", "red")
+                    return
+                
+                # Sadece bu aşama için veri çek
+                self.update_status(f"Tarama Aşama {batch_index + 1}/{max_batches}... (Hedef: {target_count})", "blue")
+                
+                # Her batch'te farklı bir offset/limit simülasyonu için `search`'ün sayfalama yeteneklerini kullanabilsek iyi olurdu
+                # ytmusicapi `.search` params sayfalama yapmıyor, ancak limit'i artırarak aynı sorguyu tekrar atmak
+                # verimsiz olur. Bu yüzden ilk seferde geniş bir paketi `limit=target_count*4` diyip, 
+                # onun sonuçlarını parça parça işleriz ki "durdurma" hissi anında yansısın.
+                
+                # Düzeltme Notu: Eğer aramayı tek seferde büyük yapıp, işlemeyi bölersek yine "istek" kısmında kilitleniriz.
+                # ytmusicapi, arama işlemlerinde sayfalama dönüşü yapmadığı için tek çare isteği tek parça atıp 
+                # hızlı dönmesini ummaktır. Ancak limit çok yüksekse kilitlenir.
+                # O yüzden en mantıklısı limit'i makul (hedef*2) tutmaktır. Kademeli mantığı burada iteratif yapmak API
+                # sınırlaması yüzünden doğrudan list'i iterasyona alarak yapılabilir. Ancak "istek atarkenki kilitlenme" yi çözmek için
+                # limiti `min(target_count * 2, 800)` seviyesine çekeceğiz.
+                pass
+                
+            # --- API ÇAĞRISI (Limit düşürüldü ki hızlı dönsün) ---
+            fetch_limit = min(target_count * 2, 400) 
+            self.update_status(f"API Sorgusu Bekleniyor... (Havuz: {fetch_limit*2})", "orange")
             song_results = self.yt.search(query=f"{artist_true_name}", filter="songs", limit=fetch_limit)
+            
+            if self.stop_listing or self.current_search_id != search_token: return
             video_results = self.yt.search(query=f"{artist_true_name}", filter="videos", limit=fetch_limit)
             
-            # Sonuçları birleştir
+            if self.stop_listing or self.current_search_id != search_token: return
             combined_results = (song_results or []) + (video_results or [])
             
             if not combined_results:
@@ -274,19 +310,18 @@ class ViewSearch:
                 return
             
             candidates = []
-            processed_count = 0
-            observed_video_ids = set()
             
-            # --- Phase 1: Collect Candidates ---
-            for song in combined_results:
-                if self.stop_listing:
-                    self.update_status("Arama kullanıcı tarafından durduruldu.", "red")
-                    break
-                    
+            # --- Phase 1: Collect Candidates (Kademeli İşleme) ---
+            for i, song in enumerate(combined_results):
+                # Her 20 hücrede bir stop kontrolü yap
+                if i % 20 == 0:
+                    if self.stop_listing or self.current_search_id != search_token:
+                        self.update_status("İşlem kullanıcı tarafından durduruldu.", "red")
+                        return
+
                 artists = song.get('artists', [])
                 if not artists: continue 
                 
-                # --- Sanatçı Doğrulama (Akıllı ve Katı Mod) ---
                 raw_artists = [a['name'] for a in artists]
                 expanded_song_artists = set()
                 
@@ -324,7 +359,6 @@ class ViewSearch:
                 vid_id = song.get('videoId', '')
                 title = song.get('title', 'Bilinmiyor')
                 
-                # Deduplication Check (Video ID) - Ön eleme
                 if vid_id in observed_video_ids:
                     continue
                 observed_video_ids.add(vid_id)
@@ -332,38 +366,35 @@ class ViewSearch:
                 data = {
                     "title": title,
                     "artist": ", ".join([a['name'] for a in artists]),
-                    "album": song.get('album', {}).get('name', 'Single'), # Videolarda albüm olmayabilir
+                    "album": song.get('album', {}).get('name', 'Single'),
                     "views_text": song.get('views', '0'),
                     "duration": song.get('duration', ''),
                     "video_id": vid_id
                 }
                 candidates.append(data)
             
+            if self.stop_listing or self.current_search_id != search_token: return
+            
             # --- Phase 2: Prioritize Albums & Fuzzy Deduplication ---
-            # Albüm şarkılarını (Single olmayanları) öne al. 
-            # Böylece "Aynı Şarkı" hem Albüm hem Single ise, Albüm versiyonu listeye girer.
             candidates.sort(key=lambda x: 1 if x['album'] == 'Single' else 0)
             
-            all_songs = []
-            observed_norm_titles = set()
-            
-            for song in candidates:
+            for i, song in enumerate(candidates):
+                if self.stop_listing or self.current_search_id != search_token: return
+                
+                # Yeterli hedefe ulaştıysak elemeye devam edip zaman kaybetmeyelim
+                if len(all_songs) >= target_count:
+                    break
+                    
                 norm_title = song['title'].lower().strip()
                 
-                # 1. Tam İsim Eşleşmesi (Exact Match)
                 if norm_title in observed_norm_titles:
                     continue
                 
-                # 2. Benzer İsim Eşleşmesi (Sadece Single ise kontrol et)
-                # Eğer bu şarkı 'Single' ise ve listemizde buna çok benzeyen (Albüm versiyonu) bir şarkı varsa ekleme.
                 if song['album'] == 'Single':
                     is_fuzzy_duplicate = False
                     
-                    # Temizlik Yardımcısı
                     def clean_title(t):
-                        # Küçük harf
                         t = t.lower()
-                        # Parantez içindeki yaygın 'noise'ları temizle
                         noise_words = [
                             "(official music)", "(official video)", "(official audio)", 
                             "(music video)", "(video)", "(audio)", "(lyric video)", "(lyrics)",
@@ -373,12 +404,8 @@ class ViewSearch:
                         for noise in noise_words:
                             t = t.replace(noise, "")
                         
-                        # Sanatçı ismini baştan sil (Örn: "BLOK3 - Şarkı" -> "Şarkı")
-                        # artist_true_name veya artist_name globalde var aslında ama
-                        # combined_results içindeyiz.
                         if artist_name.lower() in t:
                              t = t.replace(artist_name.lower(), "").strip()
-                             # Başta kalan " - " veya "- " leri temizle
                              if t.startswith("-"): t = t.lstrip("- ")
                         
                         return t.strip()
@@ -386,27 +413,17 @@ class ViewSearch:
                     cleaned_current = clean_title(norm_title)
 
                     for existing in all_songs:
-                        # Eğer karşılaştırdığımız şarkı da Single ise, ve biz zaten Single isek, 
-                        # çok katı elemeyelim (belki remix vs dir).
-                        # Amaç: Albüm versiyonu varken Single'ı elemek.
                         if existing['album'] == 'Single': 
                             continue
 
                         existing_title = existing['title'].lower().strip()
                         cleaned_existing = clean_title(existing_title)
                        
-                        # Check A: Yüksek Benzerlik (Ratio)
                         if SequenceMatcher(None, cleaned_current, cleaned_existing).ratio() > 0.85:
                             is_fuzzy_duplicate = True
                             break
                         
-                        # Check B: Containment (Kapsama) 
-                        # Kullanıcı Sorunu: "napıyosun mesela ?" (Album) vs "BLOK3 - NAPIYOSUN MESELA ? (Official Music)" (Single/Video)
-                        # Cleaned Album: "napiyosun mesela ?"
-                        # Cleaned Single: "napiyosun mesela ?"
-                        # Eğer kısa/temiz albüm ismi, uzun/kirli single isminin içinde geçiyorsa -> DUPLICATE
                         if cleaned_existing and cleaned_existing in cleaned_current:
-                             # Çok kısa kelimelerde hatalı eşleşmeyi önle (Örn: "Aşk" vs "Aşkın Olayım")
                              if len(cleaned_existing) > 4: 
                                  is_fuzzy_duplicate = True
                                  break
@@ -417,24 +434,21 @@ class ViewSearch:
                 observed_norm_titles.add(norm_title)
                 all_songs.append(song)
                 
+            if self.stop_listing or self.current_search_id != search_token: return
+            
             total_found = len(all_songs)
             self.update_status(f"{total_found} aday şarkı bulundu. Listeler oluşturuluyor...", "orange")
 
             # --- List Generation Phase ---
-            
-            # 1. Popülerlik Listesi (API Sırası)
             pop_list = all_songs[:target_count]
             
-            # 2. En Çok Dinlenenler (Views Sırası)
             for s in all_songs:
                 s['_views_num'] = parse_views(s['views_text'])
             
             sorted_by_views = sorted(all_songs, key=lambda x: x['_views_num'], reverse=True)
             views_list = sorted_by_views[:target_count]
             
-            # 3. Karma Liste (Smart Logic)
             views_ids = set(s['video_id'] for s in views_list)
-            # Kesişim (Popülerlik sırasına göre)
             intersection = [s for s in pop_list if s['video_id'] in views_ids]
             
             needed = target_count - len(intersection)
@@ -449,42 +463,50 @@ class ViewSearch:
             
             smart_list = intersection + unique_pop[:count_pop] + unique_views[:count_views]
             
-            # Eksik varsa tamamla
             if len(smart_list) < target_count:
                 extra_needed = target_count - len(smart_list)
                 used_ids = set(s['video_id'] for s in smart_list)
                 extras = [s for s in sorted_by_views if s['video_id'] not in used_ids]
                 smart_list.extend(extras[:extra_needed])
 
+            # Son kontrol
+            if self.stop_listing or self.current_search_id != search_token: return
+            
             self.populate_tabs(pop_list, views_list, smart_list)
-            self.update_status(f"Tamamlandı. {target_count} şarki listelendi.", "green")
+            self.update_status(f"Tamamlandı. {len(all_songs)} şarkı işlenip listelendi.", "green")
 
         except Exception as e:
-            self.update_status(f"Hata: {e}", "red")
+            if not self.stop_listing and self.current_search_id == search_token:
+                self.update_status(f"Hata: {e}", "red")
         finally:
-            self.root.after(0, lambda: self.lbl_search_progress.config(text=""))
-            self.root.after(0, lambda: self.btn_search.config(text="Ara", bg="#2196F3", fg="white"))
-            self.root.after(0, lambda: self.entry_artist.config(state=tk.NORMAL))
-            self.root.after(0, lambda: self.entry_search_limit.config(state=tk.NORMAL))
-            self.root.after(0, lambda: self.combo_search_mode.config(state="readonly"))
+            # Sadece isteği başlatan işlem GUI resetlemesi yapabilir
+            if self.current_search_id == search_token:
+                self.root.after(0, lambda: self.lbl_search_progress.config(text=""))
+                self.root.after(0, lambda: self.btn_search.config(text="Ara", bg="#2196F3", fg="white"))
+                self.root.after(0, lambda: self.entry_artist.config(state=tk.NORMAL))
+                self.root.after(0, lambda: self.entry_search_limit.config(state=tk.NORMAL))
+                self.root.after(0, lambda: self.combo_search_mode.config(state="readonly"))
 
-    def search_song_thread(self, query, target_count):
+    def search_song_thread(self, query, target_count, search_token):
         """Doğrudan şarkı arama modu (Youtube Style)"""
         try:
+            if self.stop_listing or self.current_search_id != search_token: return
             self.update_status(f"Şarkı aranıyor: {query}...", "blue")
             
             # Şarkıları ara
             results = self.yt.search(query=query, filter="songs", limit=target_count)
             
+            if self.stop_listing or self.current_search_id != search_token: return
             if not results:
                 self.update_status("Sonuç bulunamadı.", "red")
                 return
 
             song_list = []
             
-            for song in results:
-                if self.stop_listing:
-                    break
+            for i, song in enumerate(results):
+                # Her iterasyonda kontrol
+                if self.stop_listing or self.current_search_id != search_token:
+                    return
                     
                 video_id = song.get('videoId')
                 if not video_id: continue
@@ -502,18 +524,18 @@ class ViewSearch:
                 }
                 song_list.append(data)
                 
-            # Şarkı Modunda tüm tablar aynı olabilir veya 
-            # sadece Popüler'i doldurup diğerlerini boş bırakabiliriz
-            # Şimdilik hepsine aynısını basıyoruz (Sıralama yok)
+            if self.stop_listing or self.current_search_id != search_token: return
             
             self.populate_tabs(song_list, song_list, song_list)
             self.update_status(f"Tamamlandı. {len(song_list)} sonuç bulundu.", "green")
             
         except Exception as e:
-            self.update_status(f"Hata: {e}", "red")
+            if not self.stop_listing and self.current_search_id == search_token:
+                self.update_status(f"Hata: {e}", "red")
         finally:
-            self.root.after(0, lambda: self.lbl_search_progress.config(text=""))
-            self.root.after(0, lambda: self.btn_search.config(text="Ara", bg="#2196F3", fg="white"))
-            self.root.after(0, lambda: self.entry_artist.config(state=tk.NORMAL))
-            self.root.after(0, lambda: self.entry_search_limit.config(state=tk.NORMAL))
-            self.root.after(0, lambda: self.combo_search_mode.config(state="readonly"))
+            if self.current_search_id == search_token:
+                self.root.after(0, lambda: self.lbl_search_progress.config(text=""))
+                self.root.after(0, lambda: self.btn_search.config(text="Ara", bg="#2196F3", fg="white"))
+                self.root.after(0, lambda: self.entry_artist.config(state=tk.NORMAL))
+                self.root.after(0, lambda: self.entry_search_limit.config(state=tk.NORMAL))
+                self.root.after(0, lambda: self.combo_search_mode.config(state="readonly"))

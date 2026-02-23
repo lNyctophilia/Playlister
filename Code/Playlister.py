@@ -156,10 +156,20 @@ class App(UiShared, ViewSearch, ViewCharts, ViewGenre, ViewFav, ViewPlayer, View
         self.lastfm_api_key = decrypt_text(encrypted_key) if encrypted_key else ""
         
         self.stop_listing = False
+        self.current_search_id = None
 
     def stop_current_listing(self):
         self.stop_listing = True
+        self.current_search_id = None
         self.update_status("Durduruluyor...", "orange")
+        
+        # Arayüzü arama yapılabilir hale anında getir (Durdur -> Ara dönüşümü)
+        if hasattr(self, 'btn_search'):
+            self.root.after(0, lambda: self.lbl_search_progress.config(text=""))
+            self.root.after(0, lambda: self.btn_search.config(text="Ara", bg="#2196F3", fg="white"))
+            self.root.after(0, lambda: self.entry_artist.config(state=tk.NORMAL))
+            self.root.after(0, lambda: self.entry_search_limit.config(state=tk.NORMAL))
+            self.root.after(0, lambda: self.combo_search_mode.config(state="readonly"))
 
 if __name__ == "__main__":
     root = tk.Tk()
