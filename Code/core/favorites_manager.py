@@ -1,6 +1,6 @@
 import json
 import os
-from constants import FAV_FILE
+from core.constants import FAV_FILE
 
 def load_favorites():
     if os.path.exists(FAV_FILE):

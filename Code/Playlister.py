@@ -16,10 +16,10 @@ except ImportError:
     vlc = None
     yt_dlp = None
 
-from constants import CONFIG_FILE
-from config_manager import load_config
-from crypto import decrypt_text
-from utils import parse_views
+from core.constants import CONFIG_FILE
+from core.config_manager import load_config
+from core.crypto import decrypt_text
+from utils.utils import parse_views
 from ui.ui_shared import UiShared
 from ui.view_search import ViewSearch
 from ui.view_charts import ViewCharts

@@ -1,5 +1,5 @@
 from difflib import SequenceMatcher
-from utils import parse_views
+from utils.utils import parse_views
 
 
 def expand_artist_names(raw_artists):
@@ -96,7 +96,7 @@ def filter_candidates(combined_results, user_query, artist_true_name, stop_check
         data = {
             "title": song.get('title', 'Bilinmiyor'),
             "artist": ", ".join(raw_artists),
-            "album": song.get('album', {}).get('name', 'Single'),
+            "album": (song.get('album') or {}).get('name', 'Single'),
             "views_text": song.get('views', 'Veri Yok'),
             "duration": song.get('duration', ''),
             "video_id": vid_id

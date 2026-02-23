@@ -3,8 +3,8 @@ from tkinter import ttk, messagebox
 import webbrowser
 import json
 import os
-from utils_downloader import Downloader
-from constants import FAV_FILE
+from services.utils_downloader import Downloader
+from core.constants import FAV_FILE
 
 class UiShared:
     def update_status(self, text, color="black"):

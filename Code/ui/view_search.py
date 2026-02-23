@@ -1,9 +1,9 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import threading
-from utils import parse_views
-from utils_downloader import Downloader
-from search_engine import filter_candidates, deduplicate_candidates, generate_lists
+from utils.utils import parse_views
+from services.utils_downloader import Downloader
+from services.search_engine import filter_candidates, deduplicate_candidates, generate_lists
 
 class ViewSearch:
     def setup_search_view(self):

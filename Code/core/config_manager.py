@@ -1,6 +1,6 @@
 import json
 import os
-from constants import CONFIG_FILE
+from core.constants import CONFIG_FILE
 
 def load_config():
     if os.path.exists(CONFIG_FILE):

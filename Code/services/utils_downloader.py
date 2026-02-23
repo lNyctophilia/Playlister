@@ -6,7 +6,7 @@ try:
 except ImportError:
     yt_dlp = None
 
-from constants import DOWNLOAD_DIR, ARCHIVE_FILE
+from core.constants import DOWNLOAD_DIR, ARCHIVE_FILE
 
 class Downloader:
     @staticmethod
@@ -24,7 +24,7 @@ class Downloader:
     # Import Helper
     @staticmethod
     def _clean_meta(text, remove_artists=None):
-        from utils import clean_metadata_text
+        from utils.utils import clean_metadata_text
         return clean_metadata_text(text, remove_artists)
 
     @staticmethod

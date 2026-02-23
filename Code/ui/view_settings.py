@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
-from crypto import encrypt_text
-from config_manager import save_config
+from core.crypto import encrypt_text
+from core.config_manager import save_config
 import webbrowser
 
 class ViewSettings:

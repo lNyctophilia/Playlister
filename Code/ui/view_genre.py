@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import threading
 import requests
-from utils import parse_views
+from utils.utils import parse_views
 
 class ViewGenre:
     def setup_genre_view(self):

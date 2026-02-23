@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
-from utils_downloader import Downloader
+from services.utils_downloader import Downloader
 
 class ContextMenuMixin:
     def show_context_menu(self, event, tree, menu):

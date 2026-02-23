@@ -4,9 +4,9 @@ import json
 import os
 import threading
 from tkinter import messagebox
-from utils_downloader import Downloader
-from constants import FAV_FILE, DOWNLOAD_DIR
-from utils import parse_views, parse_duration
+from services.utils_downloader import Downloader
+from core.constants import FAV_FILE, DOWNLOAD_DIR
+from utils.utils import parse_views, parse_duration
 
 
 
@@ -252,19 +252,19 @@ class ViewFav:
         self.tree_fav.heading(col, command=lambda: self.sort_fav_column(col, not reverse))
 
     def load_favorites(self):
-        from favorites_manager import load_favorites
+        from core.favorites_manager import load_favorites
         return load_favorites()
 
     def save_favorites(self):
-        from favorites_manager import save_favorites
+        from core.favorites_manager import save_favorites
         save_favorites(self.favorites)
 
     def is_favorite(self, video_id):
-        from favorites_manager import is_favorite
+        from core.favorites_manager import is_favorite
         return is_favorite(self.favorites, video_id)
 
     def toggle_favorite(self, song_data):
-        from favorites_manager import toggle_favorite
+        from core.favorites_manager import toggle_favorite
         return toggle_favorite(self.favorites, song_data)
 
     def handle_download_click(self, item_id, song_data):
