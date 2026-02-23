@@ -64,7 +64,7 @@ class ViewCharts:
         self.entry_chart_limit.bind("<Return>", lambda e: self.start_chart_load())
         
         self.btn_chart_load = tk.Button(ctrl_frame, text="Listele", command=self.start_chart_load, width=25)
-        T.style_button(self.btn_chart_load, bg=T.BTN_WARNING, hover_bg=T.BTN_WARNING_HOVER)
+        T.style_button(self.btn_chart_load, bg=T.BTN_ACCENT, hover_bg=T.BTN_ACCENT_HOVER)
         self.btn_chart_load.pack(side=tk.LEFT, padx=20)
         
         self.lbl_chart_progress = tk.Label(ctrl_frame, text="", fg=T.FG_SECONDARY, bg=T.BG_PANEL, font=T.FONT_BODY)

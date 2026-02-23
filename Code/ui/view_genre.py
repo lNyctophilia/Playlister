@@ -46,7 +46,7 @@ class ViewGenre:
         
         self.btn_genre_load = tk.Button(ctrl_frame, text="Sanatçıları Listele (Last.fm)", 
                                         command=self.start_genre_load, width=25)
-        T.style_button(self.btn_genre_load, bg="#7c3aed", hover_bg="#8b5cf6")
+        T.style_button(self.btn_genre_load, bg=T.BTN_ACCENT, hover_bg=T.BTN_ACCENT_HOVER)
         self.btn_genre_load.pack(side=tk.LEFT, padx=10)
         
         self.lbl_genre_progress = tk.Label(ctrl_frame, text="", fg=T.FG_SECONDARY, bg=T.BG_PANEL, font=T.FONT_BODY)

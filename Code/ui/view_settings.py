@@ -110,7 +110,7 @@ class ViewSettings:
                         messagebox.showerror("Hata", "Lütfen geçerli bir API Key girin.")
 
                 btn_save = tk.Button(input_frame, text="Kaydet", command=save_new_key)
-                T.style_button(btn_save, bg=T.BTN_SUCCESS, hover_bg=T.BTN_SUCCESS_HOVER)
+                T.style_button(btn_save, bg=T.BTN_CONFIRM, hover_bg=T.BTN_CONFIRM_HOVER)
                 btn_save.pack(side=tk.LEFT)
                 
         refresh_ui()

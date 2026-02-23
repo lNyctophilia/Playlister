@@ -71,7 +71,7 @@ class App(UiShared, ContextMenuMixin, ViewSearch, ViewCharts, ViewGenre, ViewFav
 
         self.btn_settings = tk.Button(self.nav_frame, text="⚙ Ayarlar",
                                       command=self.open_settings)
-        T.style_button(self.btn_settings, bg="#2a2f5a", hover_bg="#353b6e")
+        T.style_button(self.btn_settings, bg=T.BTN_SECONDARY, hover_bg=T.BTN_SECONDARY_HOVER)
         self.btn_settings.config(font=T.FONT_BODY)
         self.btn_settings.pack(side=tk.RIGHT, padx=20, pady=5)
 

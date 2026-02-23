@@ -25,7 +25,7 @@ class ViewFav:
         self.btn_refresh_fav.pack(side=tk.RIGHT, padx=(5, 20))
 
         self.btn_download_all = tk.Button(top_frame, text="Tümünü İndir", command=self.download_all_favs)
-        T.style_button(self.btn_download_all, bg=T.BTN_WARNING, hover_bg=T.BTN_WARNING_HOVER)
+        T.style_button(self.btn_download_all, bg=T.BTN_INFO, hover_bg=T.BTN_INFO_HOVER)
         self.btn_download_all.pack(side=tk.RIGHT, padx=5)
 
         self.btn_delete_all_dl = tk.Button(top_frame, text="Tüm İndirilenleri Sil", command=self.delete_all_downloads_ui)
@@ -33,7 +33,7 @@ class ViewFav:
         self.btn_delete_all_dl.pack(side=tk.RIGHT, padx=5)
 
         self.btn_open_downloads = tk.Button(top_frame, text="📂 Klasörü Aç", command=self.open_downloads_folder)
-        T.style_button(self.btn_open_downloads, bg="#2a2f5a", hover_bg="#353b6e")
+        T.style_button(self.btn_open_downloads, bg=T.BTN_SECONDARY, hover_bg=T.BTN_SECONDARY_HOVER)
         self.btn_open_downloads.pack(side=tk.RIGHT, padx=5)
 
         cols = ("Sıra", "Şarkı", "Sanatçı", "Albüm", "Dinlenme", "Süre", "İşlemler")
