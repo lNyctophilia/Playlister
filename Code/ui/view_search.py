@@ -361,7 +361,7 @@ class ViewSearch:
                     "title": title,
                     "artist": ", ".join([a['name'] for a in artists]),
                     "album": song.get('album', {}).get('name', 'Single'),
-                    "views_text": song.get('views', '0'),
+                    "views_text": song.get('views', 'Veri Yok'),
                     "duration": song.get('duration', ''),
                     "video_id": vid_id
                 }
@@ -524,7 +524,7 @@ class ViewSearch:
                     "title": song.get('title', 'Bilinmiyor'),
                     "artist": artist_text,
                     "album": song.get('album', {}).get('name', 'Single'),
-                    "views_text": "0", # Search results don't always give views for songs
+                    "views_text": song.get('views', 'Veri Yok'),
                     "duration": song.get('duration', ''),
                     "video_id": video_id
                 }
