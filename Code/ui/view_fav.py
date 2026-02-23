@@ -23,14 +23,6 @@ class ViewFav:
         self.btn_download_all = tk.Button(top_frame, text="Tümünü İndir", command=self.download_all_favs, bg="#FF9800", fg="white")
         self.btn_download_all.pack(side=tk.RIGHT, padx=5)
 
-        # Yeni Butonlar: LRC
-        self.btn_dl_lyrics = tk.Button(top_frame, text="Sözleri İndir (.lrc)", command=self.download_all_lyrics_ui, bg="#9C27B0", fg="white")
-        self.btn_dl_lyrics.pack(side=tk.RIGHT, padx=5)
-
-        self.btn_del_lyrics = tk.Button(top_frame, text="Sözleri Sil", command=self.delete_all_lyrics_ui, bg="#E91E63", fg="white")
-        self.btn_del_lyrics.pack(side=tk.RIGHT, padx=5)
-        # ------------------
-
         self.btn_delete_all_dl = tk.Button(top_frame, text="Tüm İndirilenleri Sil", command=self.delete_all_downloads_ui, bg="red", fg="white")
         self.btn_delete_all_dl.pack(side=tk.RIGHT, padx=5)
 
@@ -463,70 +455,3 @@ class ViewFav:
             os.startfile(path)
         except Exception as e:
             messagebox.showerror("Hata", f"Klasör açılamadı: {e}")
-
-    # --- LRC Methods ---
-    def download_all_lyrics_ui(self):
-        if getattr(self, '_is_downloading_fav_lyrics', False):
-            self._cancel_fav_lyrics_dl = True
-            self.btn_dl_lyrics.config(text="Duruyor...", state=tk.DISABLED)
-            return
-
-        favs = self.load_favorites()
-        if not favs:
-            messagebox.showinfo("Bilgi", "Favori listeniz boş.")
-            return
-
-        if not messagebox.askyesno("Söz İndirme", f"{len(favs)} şarkı için sözler kontrol edilecek ve indirilecek.\nDevam edilsin mi?"):
-            return
-
-        self._is_downloading_fav_lyrics = True
-        self._cancel_fav_lyrics_dl = False
-        self.btn_dl_lyrics.config(text="Durdur", bg="#f44336")
-
-        threading.Thread(target=self.download_lyrics_thread, args=(favs,), daemon=True).start()
-
-    def download_lyrics_thread(self, songs):
-        import time
-        total = len(songs)
-        
-        for i, s in enumerate(songs):
-            if self.stop_listing or getattr(self, '_cancel_fav_lyrics_dl', False):
-                self.update_status("Söz indirme işlemi iptal edildi.", "orange")
-                break
-            
-            title = s.get('title', '')
-            artist = s.get('artist', '')
-            album = s.get('album', '')
-            duration_str = s.get('duration', '')
-            duration_sec = parse_duration(duration_str)
-            
-            self.update_status(f"Sözler aranıyor ({i+1}/{total}): {title}...", "blue")
-            
-            def cb(success, msg):
-                pass # Status barı thread içinden güncelliyoruz zaten
-            
-            # Senkron çağrı, thread içinde olduğu için UI kilitlemez
-            Downloader.download_lyrics(title, artist, album, duration_sec, cb)
-            
-            # Rate limit için kısa bekleme
-            if i < total - 1 and not getattr(self, '_cancel_fav_lyrics_dl', False):
-                time.sleep(0.5)
-
-        if not getattr(self, '_cancel_fav_lyrics_dl', False):
-            self.update_status("Söz indirme işlemi tamamlandı!", "green")
-            
-        self._is_downloading_fav_lyrics = False
-        self._cancel_fav_lyrics_dl = False
-        
-        self.root.after(0, lambda: self.btn_dl_lyrics.config(text="Sözleri İndir (.lrc)", state=tk.NORMAL, bg="#9C27B0"))
-
-    def delete_all_lyrics_ui(self):
-         if messagebox.askyesno("Sözleri Sil", "Favori listesindeki şarkılara ait tüm .lrc dosyaları silinecek.\nOnaylıyor musunuz?"):
-            favs = self.load_favorites()
-            count = 0
-            for s in favs:
-                if Downloader.delete_lyrics(s.get('artist'), s.get('title')):
-                    count += 1
-            
-            self.update_status(f"{count} adet .lrc dosyası silindi.", "red")
-    # -------------------

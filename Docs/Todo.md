@@ -10,7 +10,7 @@ Uygulamadaki butonları azaltmak için daha minimalist bi tasarım düşünebili
 
 Proje kodlarını bölebilirsin mimari yapıya göre şuanki proje yapısına benzer ama kodlar büyüdü galiba bölebiliriz ihtiyaç görüyosan
 
-Kral şarkı sözlerini indir butonuna 4.modda gerek var mı sence zaten şarkıyı indirirken indiriyo silerkende siliyo. Şarkı sözleri için indir ve sil butonları bana gereksiz geldi sence mantıklı mı 
+- Kral şarkı sözlerini indir butonuna 4.modda gerek var mı sence zaten şarkıyı indirirken indiriyo silerkende siliyo. Şarkı sözleri için indir ve sil butonları bana gereksiz geldi sence mantıklı mı 
 
 
 
