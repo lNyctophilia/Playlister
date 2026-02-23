@@ -4,10 +4,11 @@ import json
 import os
 import threading
 from tkinter import messagebox
-from utils_downloader import Downloader, DOWNLOAD_DIR
+from utils_downloader import Downloader
+from constants import FAV_FILE, DOWNLOAD_DIR
 from utils import parse_views, parse_duration
 
-FAV_FILE = "Config/favorites.json"
+
 
 class ViewFav:
     def setup_fav_view(self):
@@ -251,46 +252,20 @@ class ViewFav:
         self.tree_fav.heading(col, command=lambda: self.sort_fav_column(col, not reverse))
 
     def load_favorites(self):
-        if os.path.exists(FAV_FILE):
-             try:
-                 with open(FAV_FILE, "r", encoding="utf-8") as f:
-                     return json.load(f)
-             except:
-                 return []
-        return []
+        from favorites_manager import load_favorites
+        return load_favorites()
 
     def save_favorites(self):
-        try:
-            # Ensure directory exists
-            os.makedirs(os.path.dirname(FAV_FILE), exist_ok=True)
-            with open(FAV_FILE, "w", encoding="utf-8") as f:
-                json.dump(self.favorites, f, indent=4, ensure_ascii=False)
-        except Exception as e:
-            print(f"Fav Save Error: {e}")
+        from favorites_manager import save_favorites
+        save_favorites(self.favorites)
 
     def is_favorite(self, video_id):
-        return any(f['video_id'] == video_id for f in self.favorites)
+        from favorites_manager import is_favorite
+        return is_favorite(self.favorites, video_id)
 
     def toggle_favorite(self, song_data):
-        video_id = song_data.get('video_id')
-        if self.is_favorite(video_id):
-            # Remove
-            self.favorites = [f for f in self.favorites if f['video_id'] != video_id]
-            self.save_favorites()
-            return False # Removed
-        else:
-            # Add
-            saved_item = {
-                "video_id": video_id,
-                "title": song_data.get('title'),
-                "artist": song_data.get('artist'),
-                "album": song_data.get('album'),
-                "views_text": song_data.get('views_text'),
-                "duration": song_data.get('duration')
-            }
-            self.favorites.append(saved_item)
-            self.save_favorites()
-            return True # Added
+        from favorites_manager import toggle_favorite
+        return toggle_favorite(self.favorites, song_data)
 
     def handle_download_click(self, item_id, song_data):
         video_id = song_data.get('video_id')

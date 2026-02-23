@@ -16,7 +16,10 @@ except ImportError:
     vlc = None
     yt_dlp = None
 
-from utils import decrypt_text, parse_views, ENC_KEY
+from constants import CONFIG_FILE
+from config_manager import load_config
+from crypto import decrypt_text
+from utils import parse_views
 from ui.ui_shared import UiShared
 from ui.view_search import ViewSearch
 from ui.view_charts import ViewCharts
@@ -24,10 +27,9 @@ from ui.view_genre import ViewGenre
 from ui.view_fav import ViewFav
 from ui.view_player import ViewPlayer
 from ui.view_settings import ViewSettings
+from ui.context_menu import ContextMenuMixin
 
-FAV_FILE = "Config/favorites.json"
-
-class App(UiShared, ViewSearch, ViewCharts, ViewGenre, ViewFav, ViewPlayer, ViewSettings):
+class App(UiShared, ContextMenuMixin, ViewSearch, ViewCharts, ViewGenre, ViewFav, ViewPlayer, ViewSettings):
     def __init__(self, root):
         self.root = root
         self.root.title("Playlister")
@@ -149,9 +151,9 @@ class App(UiShared, ViewSearch, ViewCharts, ViewGenre, ViewFav, ViewPlayer, View
         self.favorites = self.load_favorites()
         
         # Last.fm API Init
-        self.config_file = "Config/config.json"
+        self.config_file = CONFIG_FILE
         
-        conf = self.load_config()
+        conf = load_config()
         encrypted_key = conf.get("lastfm_api_key", "")
         self.lastfm_api_key = decrypt_text(encrypted_key) if encrypted_key else ""
         

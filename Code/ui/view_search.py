@@ -1,9 +1,9 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import threading
-from difflib import SequenceMatcher
 from utils import parse_views
 from utils_downloader import Downloader
+from search_engine import filter_candidates, deduplicate_candidates, generate_lists
 
 class ViewSearch:
     def setup_search_view(self):
@@ -245,11 +245,14 @@ class ViewSearch:
 
     def search_artist_thread(self, artist_name, target_count, search_token):
         try:
-            if self.stop_listing or self.current_search_id != search_token: return
+            def stop_check():
+                return self.stop_listing or self.current_search_id != search_token
+
+            if stop_check(): return
             self.update_status(f"Sanatçı kimliği aranıyor...", "blue")
             results = self.yt.search(query=artist_name, filter="artists")
             
-            if self.stop_listing or self.current_search_id != search_token: return
+            if stop_check(): return
             if not results:
                 artist_true_name = artist_name
             else:
@@ -258,225 +261,36 @@ class ViewSearch:
             
             self.update_status(f"Hedef: {artist_true_name}. Aşamalı tarama başlatılıyor...", "orange")
             
-            all_songs = []
-            observed_video_ids = set()
-            observed_norm_titles = set()
-            processed_count = 0
-            
-            # Kademeli arama parametreleri
-            batch_size = 40
-            max_batches = 10  # En fazla ~400 öğe taranacak
-            
-            for batch_index in range(max_batches):
-                if self.stop_listing or self.current_search_id != search_token:
-                    self.update_status("Arama kullanıcı tarafından durduruldu veya yeni arama başlatıldı.", "red")
-                    return
-                
-                # Sadece bu aşama için veri çek
-                self.update_status(f"Tarama Aşama {batch_index + 1}/{max_batches}... (Hedef: {target_count})", "blue")
-                
-                # Her batch'te farklı bir offset/limit simülasyonu için `search`'ün sayfalama yeteneklerini kullanabilsek iyi olurdu
-                # ytmusicapi `.search` params sayfalama yapmıyor, ancak limit'i artırarak aynı sorguyu tekrar atmak
-                # verimsiz olur. Bu yüzden ilk seferde geniş bir paketi `limit=target_count*4` diyip, 
-                # onun sonuçlarını parça parça işleriz ki "durdurma" hissi anında yansısın.
-                
-                # Düzeltme Notu: Eğer aramayı tek seferde büyük yapıp, işlemeyi bölersek yine "istek" kısmında kilitleniriz.
-                # ytmusicapi, arama işlemlerinde sayfalama dönüşü yapmadığı için tek çare isteği tek parça atıp 
-                # hızlı dönmesini ummaktır. Ancak limit çok yüksekse kilitlenir.
-                # O yüzden en mantıklısı limit'i makul (hedef*2) tutmaktır. Kademeli mantığı burada iteratif yapmak API
-                # sınırlaması yüzünden doğrudan list'i iterasyona alarak yapılabilir. Ancak "istek atarkenki kilitlenme" yi çözmek için
-                # limiti `min(target_count * 2, 800)` seviyesine çekeceğiz.
-                pass
-                
-            # --- API ÇAĞRISI (Havuz genişletildi) ---
             fetch_limit = min(target_count * 4, 800) 
             self.update_status(f"API Sorgusu Bekleniyor... (Havuz: {fetch_limit*2})", "orange")
             song_results = self.yt.search(query=f"{artist_true_name}", filter="songs", limit=fetch_limit)
             
-            if self.stop_listing or self.current_search_id != search_token: return
+            if stop_check(): return
             video_results = self.yt.search(query=f"{artist_true_name}", filter="videos", limit=fetch_limit)
             
-            if self.stop_listing or self.current_search_id != search_token: return
+            if stop_check(): return
             combined_results = (song_results or []) + (video_results or [])
             
             if not combined_results:
                 self.update_status("Şarkı bulunamadı.", "red")
                 return
             
-            candidates = []
+            candidates = filter_candidates(combined_results, artist_name, artist_true_name, stop_check)
+            if candidates is None: return
             
-            # --- Phase 1: Collect Candidates (Kademeli İşleme) ---
-            for i, song in enumerate(combined_results):
-                # Her 20 hücrede bir stop kontrolü yap
-                if i % 20 == 0:
-                    if self.stop_listing or self.current_search_id != search_token:
-                        self.update_status("İşlem kullanıcı tarafından durduruldu.", "red")
-                        return
-
-                artists = song.get('artists', [])
-                if not artists: continue 
-                
-                raw_artists = [a['name'] for a in artists]
-                expanded_song_artists = set()
-                
-                separators = [" ft ", " ft.", " feat ", " feat.", " featuring ", " & ", " x ", " ve ", ",", " and ", "/", " + "]
-                
-                for r_art in raw_artists:
-                    temp_art = r_art.lower() if hasattr(r_art, 'lower') else str(r_art).lower()
-                    for sep in separators:
-                        temp_art = temp_art.replace(sep, "|")
-                    tokens = [t.strip() for t in temp_art.split("|") if t.strip()]
-                    expanded_song_artists.update(tokens)
-
-                search_targets = set()
-                user_query_parts = artist_name.lower().replace(" & ", "&").replace(" ve ", "&").replace(",", "&").split("&")
-                for q in user_query_parts:
-                    clean_q = q.strip()
-                    if clean_q: search_targets.add(clean_q)
-                
-                if artist_true_name:
-                    search_targets.add(artist_true_name.lower().strip())
-                
-                match_found = False
-                for target in search_targets:
-                    if target in expanded_song_artists:
-                        match_found = True
-                        break
-                
-                if not match_found:
-                    continue
-
-                processed_count += 1
-                if processed_count % 10 == 0:
-                     self.root.after(0, lambda c=processed_count: self.lbl_search_progress.config(text=f"İşleniyor: {c}"))
-                
-                vid_id = song.get('videoId', '')
-                title = song.get('title', 'Bilinmiyor')
-                
-                if vid_id in observed_video_ids:
-                    continue
-                observed_video_ids.add(vid_id)
-
-                data = {
-                    "title": title,
-                    "artist": ", ".join([a['name'] for a in artists]),
-                    "album": song.get('album', {}).get('name', 'Single'),
-                    "views_text": song.get('views', 'Veri Yok'),
-                    "duration": song.get('duration', ''),
-                    "video_id": vid_id
-                }
-                candidates.append(data)
+            if stop_check(): return
             
-            if self.stop_listing or self.current_search_id != search_token: return
+            all_songs = deduplicate_candidates(candidates, target_count, artist_name, stop_check)
+            if all_songs is None: return
             
-            # --- Phase 2: Prioritize Albums & Fuzzy Deduplication ---
-            candidates.sort(key=lambda x: 1 if x['album'] == 'Single' else 0)
-            
-            for i, song in enumerate(candidates):
-                if self.stop_listing or self.current_search_id != search_token: return
-                
-                # Hedefin 3 katı kadar (fermuar sistemi için) şarki biriktir
-                if len(all_songs) >= target_count * 3:
-                    break
-                    
-                norm_title = song['title'].lower().strip()
-                
-                if norm_title in observed_norm_titles:
-                    continue
-                
-                if song['album'] == 'Single':
-                    is_fuzzy_duplicate = False
-                    
-                    def clean_title(t):
-                        t = t.lower()
-                        noise_words = [
-                            "(official music)", "(official video)", "(official audio)", 
-                            "(music video)", "(video)", "(audio)", "(lyric video)", "(lyrics)",
-                            " official music", " official video", " official audio", "!", "(Canlı)",
-                            "Canlı", "(Canlı Senfonik)", "canlı senfonik", "(Live)", "Live"
-                        ]
-                        for noise in noise_words:
-                            t = t.replace(noise, "")
-                        
-                        if artist_name.lower() in t:
-                             t = t.replace(artist_name.lower(), "").strip()
-                             if t.startswith("-"): t = t.lstrip("- ")
-                        
-                        return t.strip()
-
-                    cleaned_current = clean_title(norm_title)
-
-                    for existing in all_songs:
-                        if existing['album'] == 'Single': 
-                            continue
-
-                        existing_title = existing['title'].lower().strip()
-                        cleaned_existing = clean_title(existing_title)
-                       
-                        if SequenceMatcher(None, cleaned_current, cleaned_existing).ratio() > 0.85:
-                            is_fuzzy_duplicate = True
-                            break
-                        
-                        if cleaned_existing and cleaned_existing in cleaned_current:
-                             if len(cleaned_existing) > 4: 
-                                 is_fuzzy_duplicate = True
-                                 break
-                    
-                    if is_fuzzy_duplicate:
-                        continue
-                
-                observed_norm_titles.add(norm_title)
-                all_songs.append(song)
-                
-            if self.stop_listing or self.current_search_id != search_token: return
+            if stop_check(): return
             
             total_found = len(all_songs)
             self.update_status(f"{total_found} aday şarkı bulundu. Listeler oluşturuluyor...", "orange")
 
-            # --- List Generation Phase ---
-            pop_list = all_songs[:target_count]
-            
-            for s in all_songs:
-                s['_views_num'] = parse_views(s['views_text'])
-            
-            sorted_by_views = sorted(all_songs, key=lambda x: x['_views_num'], reverse=True)
-            views_list = sorted_by_views[:target_count]
-            
-            # Kesişim (Her iki listede de olanlar)
-            views_ids = set(s['video_id'] for s in views_list)
-            intersection = [s for s in pop_list if s['video_id'] in views_ids]
-            
-            # Kesişimdeki şarkıları kendi içinde en çok dinlenene göre sırala (Opsiyonel ama mantıklı)
-            intersection.sort(key=lambda x: x['_views_num'], reverse=True)
-            
-            intersection_ids = set(s['video_id'] for s in intersection)
-            unique_pop = [s for s in pop_list if s['video_id'] not in intersection_ids]
-            unique_views = [s for s in views_list if s['video_id'] not in intersection_ids]
-            
-            # Fermuar Sistemi
-            smart_list = list(intersection)
-            
-            p_idx, v_idx = 0, 0
-            while len(smart_list) < target_count and (p_idx < len(unique_pop) or v_idx < len(unique_views)):
-                # Popülerden 1 tane al
-                if p_idx < len(unique_pop) and len(smart_list) < target_count:
-                    smart_list.append(unique_pop[p_idx])
-                    p_idx += 1
-                    
-                # Ek Çok Dinlenenden 1 tane al
-                if v_idx < len(unique_views) and len(smart_list) < target_count:
-                    smart_list.append(unique_views[v_idx])
-                    v_idx += 1
-            
-            # Eğer hala hedef sayıya ulaşılamadıysa (Çok nadir) havuzdan tamamla
-            if len(smart_list) < target_count:
-                extra_needed = target_count - len(smart_list)
-                used_ids = set(s['video_id'] for s in smart_list)
-                extras = [s for s in sorted_by_views if s['video_id'] not in used_ids]
-                smart_list.extend(extras[:extra_needed])
+            pop_list, views_list, smart_list = generate_lists(all_songs, target_count)
 
-            # Son kontrol
-            if self.stop_listing or self.current_search_id != search_token: return
+            if stop_check(): return
             
             self.populate_tabs(pop_list, views_list, smart_list)
             self.update_status(f"Tamamlandı. {len(all_songs)} şarkı havuzundan {target_count} şarkılık 3 liste oluşturuldu.", "green")
@@ -485,7 +299,6 @@ class ViewSearch:
             if not self.stop_listing and self.current_search_id == search_token:
                 self.update_status(f"Hata: {e}", "red")
         finally:
-            # Sadece isteği başlatan işlem GUI resetlemesi yapabilir
             if self.current_search_id == search_token:
                 self.root.after(0, lambda: self.lbl_search_progress.config(text=""))
                 self.root.after(0, lambda: self.btn_search.config(text="Ara", bg="#2196F3", fg="white"))

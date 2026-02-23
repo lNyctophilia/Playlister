@@ -6,8 +6,6 @@ Renkler ve temayı daha modern tercih edebiliriz butonların görünüşü falan
 
 Uygulamadaki butonları azaltmak için daha minimalist bi tasarım düşünebiliriz mesela bi buton olcak işlemler modda ona hover yapınca işte 4 adet şey çıkıcak tümünü indir gibi gibi
 
-Proje kodlarını bölebilirsin mimari yapıya göre şuanki proje yapısına benzer ama kodlar büyüdü galiba bölebiliriz ihtiyaç görüyosan
+ben bu projeyi github'a attığımda biz api keyi encrypt'liyoruz ya ve zaten herkes kendi api keyini kendi alıyo  bu yüzden şey yapmaya gerek var mı şifrelemeye sence veya bunun yerine biz kendimizin api keyini şifreleyip projeye gömsek başkaları api keyden kullanabilse öyle mi yapsak karar veremedim sence hangisi daha mantıklı
 
-
-
-Tele at "wegh - bu ben olmamak" "venüs - Aşk herşeyi affeder mi"
+- Proje kodlarını klasörle

@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
-from utils import encrypt_text
+from crypto import encrypt_text
+from config_manager import save_config
 import webbrowser
 
 class ViewSettings:
@@ -33,7 +34,7 @@ class ViewSettings:
                 
                 def delete_key():
                     self.lastfm_api_key = ""
-                    self.save_config({"lastfm_api_key": ""})
+                    save_config({"lastfm_api_key": ""})
                     messagebox.showinfo("Bilgi", "API Anahtarı silindi.")
                     # Eğer 3. Mod açıksa 1. moda at
                     if hasattr(self, 'genre_view') and self.genre_view.winfo_ismapped():
@@ -81,9 +82,9 @@ class ViewSettings:
                     if key:
                         self.lastfm_api_key = key
                         enc = encrypt_text(self.lastfm_api_key)
-                        self.save_config({"lastfm_api_key": enc})
+                        save_config({"lastfm_api_key": enc})
                         messagebox.showinfo("Bilgi", "API Anahtarı başarıyla güncellendi.")
-                        refresh_ui()
+                        win.destroy()
                     else:
                         messagebox.showerror("Hata", "Lütfen geçerli bir API Key girin.")
                         
