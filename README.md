@@ -189,6 +189,22 @@ Proje klasöründeki `Playlister.bat` dosyasına çift tıklayın.
 
 ---
 
+## 📸 Ekran Görüntüleri
+
+### 🔍 Arama Ekranı
+![Arama](Docs/Screenshots/search.png)
+
+### 🌍 Top Listeler
+![Top Listeler](Docs/Screenshots/top_lists.png)
+
+### 🎸 Tür Önerileri
+![Tür Önerileri](Docs/Screenshots/genre.png)
+
+### ❤️ Favoriler
+![Favoriler](Docs/Screenshots/favorites.png)
+
+---
+
 ## 📁 Proje Yapısı
 
 ```
