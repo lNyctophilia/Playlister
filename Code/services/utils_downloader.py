@@ -1,6 +1,7 @@
 import os
 import glob
 import threading
+import re
 try:
     import yt_dlp
 except ImportError:
@@ -15,6 +16,13 @@ class Downloader:
         if not s: return ""
         s = str(s)
         return "".join([c for c in s if c.isalnum() or c in " -_()."]).strip()
+
+    @staticmethod
+    def strip_parentheses(s):
+        if not s: return ""
+        s = re.sub(r'\s*\([^)]*\)', '', str(s))
+        s = re.sub(r'\s+', ' ', s)
+        return s.strip()
 
     @staticmethod
     def ensure_dir():
@@ -43,6 +51,7 @@ class Downloader:
 
         # 1. Yeni Format Kontrolü: "Artist - Title.mp3 / .webm / .m4a"
         if artist and title:
+            title = Downloader.strip_parentheses(title)
             base_name = f"{clean(artist)} - {clean(title)}"
             # Uzantı ne olabilir bilmiyoruz, glob ile bakalım
             pattern = os.path.join(DOWNLOAD_DIR, f"{base_name}.*")
@@ -94,6 +103,7 @@ class Downloader:
         
         # 1. İsim ile kontrol (Hızlı - O(1))
         if artist and title:
+            title = Downloader.strip_parentheses(title)
             base_name = f"{Downloader.clean_filename(artist)} - {Downloader.clean_filename(title)}"
             if base_name in basenames:
                 return True
@@ -120,6 +130,7 @@ class Downloader:
              base_name_full = os.path.splitext(path)[0]
         elif artist and title:
              clean = Downloader.clean_filename
+             title = Downloader.strip_parentheses(title)
              base_name_full = os.path.join(DOWNLOAD_DIR, f"{clean(artist)} - {clean(title)}")
         
         deleted_any = False
@@ -202,12 +213,10 @@ class Downloader:
         # O yüzden yt-dlp'nin "zaten indirildi" dememesi için video_id'yi archive'den çıkar.
         Downloader.remove_from_archive(video_id)
 
-        # Dosya ismi formatı: Artist - Title.ext (ID YOK)
-        # Karakter temizliği
         clean = Downloader.clean_filename
+        file_title = Downloader.strip_parentheses(title)
         
-        # Video ID artık isme eklenmiyor
-        fname = f"{clean(artist)} - {clean(title)}.%(ext)s"
+        fname = f"{clean(artist)} - {clean(file_title)}.%(ext)s"
         
         
         # Tarayıcı Deneme Sırası: Edge -> Chrome -> Firefox -> None (Cookie'siz)
@@ -261,7 +270,7 @@ class Downloader:
                     song_date = raw_date
 
             # İndirme sonrası dosya kontrolü
-            base_name_full = os.path.join(DOWNLOAD_DIR, f"{clean(artist)} - {clean(title)}")
+            base_name_full = os.path.join(DOWNLOAD_DIR, f"{clean(artist)} - {clean(file_title)}")
             possible_files = glob.glob(f"{glob.escape(base_name_full)}.*")
             audio_found = any(p.endswith('.opus') for p in possible_files)
 
@@ -277,7 +286,7 @@ class Downloader:
                 import base64
 
                 # Temel dosya adı (uzantısız)
-                base_name_full = os.path.join(DOWNLOAD_DIR, f"{clean(artist)} - {clean(title)}")
+                base_name_full = os.path.join(DOWNLOAD_DIR, f"{clean(artist)} - {clean(file_title)}")
                 
                 # Dosyaları bul (.opus ve resim)
                 audio_path = None
@@ -424,7 +433,8 @@ class Downloader:
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
             
             clean = Downloader.clean_filename
-            base_name = f"{clean(artist)} - {clean(title)}"
+            file_title = Downloader.strip_parentheses(title)
+            base_name = f"{clean(artist)} - {clean(file_title)}"
             lrc_filename = f"{base_name}.lrc"
             lrc_path = os.path.join(DOWNLOAD_DIR, lrc_filename)
             
@@ -552,6 +562,7 @@ class Downloader:
         """Şarkının .lrc dosyasını siler"""
         try:
             clean = Downloader.clean_filename
+            title = Downloader.strip_parentheses(title)
             base_name = f"{clean(artist)} - {clean(title)}"
             lrc_path = os.path.join(DOWNLOAD_DIR, f"{base_name}.lrc")
             
@@ -566,6 +577,7 @@ class Downloader:
     @staticmethod
     def is_lrc_downloaded(artist, title):
         clean = Downloader.clean_filename
+        title = Downloader.strip_parentheses(title)
         base_name = f"{clean(artist)} - {clean(title)}"
         lrc_path = os.path.join(DOWNLOAD_DIR, f"{base_name}.lrc")
         return os.path.exists(lrc_path)
