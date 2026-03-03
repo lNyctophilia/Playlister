@@ -305,27 +305,17 @@ class Downloader:
                     if audio.tags is None:
                         audio.add_tags()
 
-                    # 1. Albüm Tagini Ayarla
-                    # "Unknown Album" veya boş ise Şarkı Adı (Title) yap (Kullanıcı İsteği)
+                    clean_title = Downloader._clean_meta(title, remove_artists=[artist])
+                    clean_artist = Downloader._clean_meta(artist)
+
                     final_album = album
-                    # Check: None, Empty, "Unknown Album", or "Single" (Case Insensitive)
                     if not final_album or \
                        not final_album.strip() or \
                        final_album.strip().lower() in ["unknown album", "single"]:
-                        final_album = title
-                    
-                    # --- METADATA CLEANING ---
-                    # 1. Clean Title
-                    # Remove "Official Video" etc. AND remove Artist Name if it's in the title
-                    clean_title = Downloader._clean_meta(title, remove_artists=[artist])
-                    
-                    # 2. Clean Artist
-                    clean_artist = Downloader._clean_meta(artist)
-                    
-                    # 3. Clean Album
-                    clean_album = Downloader._clean_meta(final_album)
+                        clean_album = clean_title
+                    else:
+                        clean_album = Downloader._clean_meta(final_album)
 
-                    # Update Tags (Force Overwrite)
                     audio.tags['title'] = [clean_title]
                     audio.tags['artist'] = [clean_artist]
                     audio.tags['album'] = [clean_album]
