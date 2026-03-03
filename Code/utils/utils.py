@@ -64,12 +64,11 @@ def clean_metadata_text(text, remove_artists=None):
             
         for artist in remove_artists:
             if not artist: continue
-            # Check if title starts with artist (case insensitive)
             if clean_text.lower().startswith(artist.lower()):
-                # Remove it
                 clean_text = clean_text[len(artist):]
-                # Clean leading separator again
                 clean_text = clean_text.lstrip(" -|:")
+
+        clean_text = re.sub(r'^/\s*[^-]+\s*-\s*', '', clean_text)
     
     # Parantez içi boş kaldıysa sil () veya []
     clean_text = clean_text.replace("()", "").replace("[]", "")
