@@ -357,9 +357,9 @@ class ViewFav:
         self._cancel_favs_dl = False
         
         self.root.after(0, lambda: self.btn_download_all.config(
-            text="Tümünü İndir", state=tk.NORMAL, bg=T.BTN_WARNING
+            text="Tümünü İndir", state=tk.NORMAL, bg=T.BTN_INFO
         ))
-        self.root.after(0, lambda: T.apply_hover(self.btn_download_all, T.BTN_WARNING, T.BTN_WARNING_HOVER))
+        self.root.after(0, lambda: T.apply_hover(self.btn_download_all, T.BTN_INFO, T.BTN_INFO_HOVER))
         self.root.after(0, self.load_fav_ui) 
 
     def update_icon_by_videoid(self, video_id):
