@@ -257,8 +257,23 @@ class Downloader:
         try:
             # 1. İndirme İşlemi ve Bilgi Çekimi (Tarih formatı için)
             song_date = None
+            info_dict = None
+            
             with yt_dlp.YoutubeDL(opts) as ydl:
-                info_dict = ydl.extract_info(f"https://music.youtube.com/watch?v={video_id}", download=True)
+                try:
+                    info_dict = ydl.extract_info(f"https://music.youtube.com/watch?v={video_id}", download=True)
+                except Exception as dl_err:
+                    print(f"Orijinal video URL'si hata verdi ({video_id}), alternatif aranıyor... Hata: {dl_err}")
+                    # Hata alırsak "Sanatçı - Şarkı Adı" ile arama yap ve ilk çıkanı indir
+                    search_query = f"ytsearch1:{artist} {title} audio"
+                    info_dict = ydl.extract_info(search_query, download=True)
+                    
+                    # Eğer search üzerinden bir id dönüyorsa onu baz al
+                    if 'entries' in info_dict and len(info_dict['entries']) > 0:
+                        info_dict = info_dict['entries'][0]
+
+                if not info_dict:
+                     raise Exception("Video veya alternatif arama bulunamadı.")
                 
                 # Tarih objesini al: öncelik release_date, olmazsa upload_date (Gelen format genelde '20260326')
                 raw_date = info_dict.get('release_date') or info_dict.get('upload_date')
