@@ -202,6 +202,86 @@ class Downloader:
             return False
 
     @staticmethod
+    def _fetch_best_cover(info_dict, base_name_full):
+        import requests as req
+        from PIL import Image
+        from io import BytesIO
+
+        thumbnails = info_dict.get('thumbnails', [])
+        print(f"[Kapak] Toplam thumbnail sayısı: {len(thumbnails)}")
+        if not thumbnails:
+            print("[Kapak] HATA: info_dict içinde hiç thumbnail yok!")
+            return None, 0, 0
+
+        square_thumbs = []
+        other_thumbs = []
+
+        for t in thumbnails:
+            url = t.get('url', '')
+            w = t.get('width', 0) or 0
+            h = t.get('height', 0) or 0
+            t_id = t.get('id', '?')
+
+            if not url:
+                continue
+
+            if w > 0 and h > 0 and w == h:
+                square_thumbs.append(t)
+                print(f"[Kapak] Kare: {w}x{h} id={t_id}")
+            else:
+                other_thumbs.append(t)
+                print(f"[Kapak] Dikdörtgen: {w}x{h} id={t_id}")
+
+        print(f"[Kapak] Kare: {len(square_thumbs)}, Dikdörtgen: {len(other_thumbs)}")
+
+        square_thumbs.sort(key=lambda x: (x.get('width', 0) or 0), reverse=True)
+        other_thumbs.sort(key=lambda x: (x.get('width', 0) or 0), reverse=True)
+
+        ordered_urls = [t['url'] for t in square_thumbs] + [t['url'] for t in other_thumbs]
+
+        for i, url in enumerate(ordered_urls):
+            try:
+                print(f"[Kapak] Deneme {i+1}/{len(ordered_urls)}: {url[:100]}")
+                resp = req.get(url, timeout=10)
+                print(f"[Kapak] HTTP Durum: {resp.status_code}, Boyut: {len(resp.content)} byte")
+                if resp.status_code != 200:
+                    print(f"[Kapak] Atlandı (HTTP {resp.status_code})")
+                    continue
+
+                if len(resp.content) < 1000:
+                    print(f"[Kapak] Atlandı (çok küçük dosya: {len(resp.content)} byte)")
+                    continue
+
+                img = Image.open(BytesIO(resp.content)).convert("RGB")
+                w, h = img.size
+                print(f"[Kapak] Resim açıldı: {w}x{h}")
+
+                if w != h:
+                    min_dim = min(w, h)
+                    left = (w - min_dim) / 2
+                    top = (h - min_dim) / 2
+                    right = (w + min_dim) / 2
+                    bottom = (h + min_dim) / 2
+                    img = img.crop((left, top, right, bottom))
+
+                buf = BytesIO()
+                img.save(buf, "JPEG", quality=90)
+                image_data = buf.getvalue()
+
+                final_w, final_h = img.size
+                img.close()
+
+                print(f"[Kapak] BAŞARILI ({final_w}x{final_h}, {len(image_data)} byte)")
+                return image_data, final_w, final_h
+
+            except Exception as e:
+                print(f"[Kapak] URL indirme hatası: {type(e).__name__}: {e}")
+                continue
+
+        print("[Kapak] HATA: Hiçbir thumbnail URL'si çalışmadı!")
+        return None, 0, 0
+
+    @staticmethod
     def download_song(video_id, title, artist, album=None, callback=None):
         """Tek bir şarkıyı indirir (Thread içinde çağrılmalı)."""
         Downloader.ensure_dir()
@@ -229,7 +309,7 @@ class Downloader:
             'no_warnings': True,
             'ignoreerrors': False,
             'nocheckcertificate': True,
-            'writethumbnail': True,
+            'writethumbnail': False,
             'extractor_args': {
                 'youtube': {
                     'player_client': ['ios', 'android', 'web'],
@@ -295,25 +375,18 @@ class Downloader:
             # --- Manuel Kapak ve Metadata İşlemi (Pillow + Mutagen) ---
             try:
                 from PIL import Image
-                import mutagen
+                import requests as req
                 from mutagen.oggopus import OggOpus
                 from mutagen.flac import Picture
                 import base64
 
-                # Temel dosya adı (uzantısız)
                 base_name_full = os.path.join(DOWNLOAD_DIR, f"{clean(artist)} - {clean(file_title)}")
                 
-                # Dosyaları bul (.opus ve resim)
                 audio_path = None
-                image_path = None
-                
-                # Ses dosyasını bul
                 possible_files = glob.glob(f"{glob.escape(base_name_full)}.*")
                 for p in possible_files:
                     if p.endswith('.opus'):
                         audio_path = p
-                    elif p.endswith('.jpg') or p.endswith('.webp') or p.endswith('.png'):
-                        image_path = p
                 
                 if audio_path:
                     audio = OggOpus(audio_path)
@@ -323,7 +396,7 @@ class Downloader:
                     clean_title = Downloader._clean_meta(title, remove_artists=[artist])
                     clean_artist = Downloader._clean_meta(artist)
 
-                    final_album = album
+                    final_album = str(album) if album else None
                     if not final_album or \
                        not final_album.strip() or \
                        final_album.strip().lower() in ["unknown album", "single"]:
@@ -335,61 +408,34 @@ class Downloader:
                     audio.tags['artist'] = [clean_artist]
                     audio.tags['album'] = [clean_album]
                     
-                    # Tarih etiketi ataması (ISO 8601 -> YYYY-MM-DD)
                     if song_date:
                         audio.tags['date'] = [song_date]
 
-                    # 2. Kapak Resmi Varsa İşle
-                    if image_path:
-                        # A. Resmi Kare Kırp (Pillow)
-                        img = Image.open(image_path).convert("RGB")
-                        w, h = img.size
-                        min_dim = min(w, h)
-                        
-                        # Merkezden kırp
-                        left = (w - min_dim) / 2
-                        top = (h - min_dim) / 2
-                        right = (w + min_dim) / 2
-                        bottom = (h + min_dim) / 2
-                        
-                        img_cropped = img.crop((left, top, right, bottom))
-                        
-                        # Geçici olarak kaydet
-                        temp_thumb = audio_path.replace(".opus", "_cover.jpg")
-                        img_cropped.save(temp_thumb, "JPEG", quality=90)
-                        
-                        with open(temp_thumb, "rb") as f:
-                            image_data = f.read()
-                        
+                    cover_image_data = None
+                    cover_width = 0
+                    cover_height = 0
+
+                    if info_dict:
+                        cover_image_data, cover_width, cover_height = Downloader._fetch_best_cover(
+                            info_dict, base_name_full
+                        )
+
+                    if cover_image_data:
                         picture = Picture()
-                        picture.data = image_data
-                        picture.type = 3 # 3 = Cover (front)
+                        picture.data = cover_image_data
+                        picture.type = 3
                         picture.mime = u"image/jpeg"
                         picture.desc = u"Album Art"
-                        picture.width = img_cropped.width
-                        picture.height = img_cropped.height
+                        picture.width = cover_width
+                        picture.height = cover_height
                         picture.depth = 24
                         
-                        # OggOpus resmi 'metadata_block_picture' tagi olarak base64 formatında tutar
                         picture_data = picture.write()
                         base64_picture = base64.b64encode(picture_data).decode('ascii')
-                        
-                        # Eski resimleri silip yenisini ekle
                         audio.tags['metadata_block_picture'] = [base64_picture]
-                        
-                        # Temizlik
-                        try:
-                            # Dosyayı kapatıp siliyoruz (Pillow bazen tutabilir, save yaptık zaten)
-                            img.close()
-                            if os.path.exists(image_path): os.remove(image_path) # İndirilen ham resim
-                            if os.path.exists(temp_thumb): os.remove(temp_thumb) # Kırpılmış resim
-                        except: pass
 
                     audio.save()
                     
-            except Exception as e:
-                print(f"Kapak/Metadata işleme hatası (PIL/Mutagen): {e}")
-
             except Exception as e:
                 print(f"Kapak/Metadata işleme hatası (PIL/Mutagen): {e}")
 
