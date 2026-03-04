@@ -2,7 +2,7 @@ Build Code
 
 ---------------------
 
-python -m nuitka --standalone --windows-disable-console --enable-plugin=tk-inter --include-package=core --include-package=ui --include-package=utils --include-package=services --include-package-data=ytmusicapi --include-data-files=Requriements/libvlc.dll=./libvlc.dll --include-data-files=Docs/Screenshots/icon.ico=./icon.ico --windows-icon-from-ico=Docs/Screenshots/icon.ico --output-dir=DistBin Code/Playlister.py
+python -m nuitka --standalone --windows-disable-console --enable-plugin=tk-inter --include-package=core --include-package=ui --include-package=utils --include-package=services --include-package-data=ytmusicapi --include-data-files=Requriements/libvlc.dll=./libvlc.dll --include-data-files=Requriements/libvlccore.dll=./libvlccore.dll --include-data-dir=Requriements/plugins=./plugins --include-data-files=Docs/Screenshots/Playlister256x256RoundedCorner.png=./Playlister256x256RoundedCorner.png --windows-icon-from-ico=Docs/Screenshots/icon.ico --output-dir=DistBin Code/Playlister.py
 
 
 Setup Code
@@ -10,9 +10,8 @@ Setup Code
 ---------------------
 
 [Setup]
-; Uygulama Bilgileri
 AppName=Playlister
-AppVersion=1.0
+AppVersion=12.0
 DefaultDirName={autopf}\Playlister
 DefaultGroupName=Playlister
 UninstallDisplayIcon={app}\Playlister.exe
@@ -23,11 +22,10 @@ OutputBaseFilename=Playlister_Setup
 SetupIconFile=Docs\Screenshots\icon.ico
 
 [Files]
-; Ana EXE dosyan (Nuitka'nın oluşturduğu klasör içindeki her şeyi alıyoruz)
 Source: "DistBin\Playlister.dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "Requriements\vc_redist.x64.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
 
 [Icons]
-; Başlat Menüsü ve Masaüstü Kısayolları
 Name: "{group}\Playlister"; Filename: "{app}\Playlister.exe"
 Name: "{autodesktop}\Playlister"; Filename: "{app}\Playlister.exe"; Tasks: desktopicon
 
@@ -35,5 +33,5 @@ Name: "{autodesktop}\Playlister"; Filename: "{app}\Playlister.exe"; Tasks: deskt
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Run]
-; Kurulum bittince uygulamayı çalıştır seçeneği
+Filename: "{tmp}\vc_redist.x64.exe"; Parameters: "/install /quiet /norestart"; StatusMsg: "Visual C++ Runtime yükleniyor..."; Flags: waituntilterminated
 Filename: "{app}\Playlister.exe"; Description: "{cm:LaunchProgram,Playlister}"; Flags: nowait postinstall skipifsilent
