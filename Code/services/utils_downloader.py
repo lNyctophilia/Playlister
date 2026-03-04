@@ -301,7 +301,7 @@ class Downloader:
         
         # Tarayıcı Deneme Sırası: Edge -> Chrome -> Firefox -> None (Cookie'siz)
         opts = {
-            'format': 'bestaudio[ext=opus]/bestaudio/best',
+            'format': 'bestaudio[ext=m4a]/bestaudio/best',
             'outtmpl': os.path.join(DOWNLOAD_DIR, fname),
             'download_archive': ARCHIVE_FILE,
             'noplaylist': True,
@@ -318,7 +318,7 @@ class Downloader:
             'postprocessors': [
                 {
                     'key': 'FFmpegExtractAudio',
-                    'preferredcodec': 'opus',
+                    'preferredcodec': 'aac',
                     'preferredquality': '192',
                 },
                 {
@@ -367,7 +367,7 @@ class Downloader:
             # İndirme sonrası dosya kontrolü
             base_name_full = os.path.join(DOWNLOAD_DIR, f"{clean(artist)} - {clean(file_title)}")
             possible_files = glob.glob(f"{glob.escape(base_name_full)}.*")
-            audio_found = any(p.endswith('.opus') for p in possible_files)
+            audio_found = any(p.endswith('.m4a') for p in possible_files)
 
             if not audio_found:
                  raise Exception("İndirme işlemi tamamlandı görünüyor ancak dosya oluşmadı.")
@@ -376,22 +376,18 @@ class Downloader:
             try:
                 from PIL import Image
                 import requests as req
-                from mutagen.oggopus import OggOpus
-                from mutagen.flac import Picture
-                import base64
+                from mutagen.mp4 import MP4, MP4Cover
 
                 base_name_full = os.path.join(DOWNLOAD_DIR, f"{clean(artist)} - {clean(file_title)}")
                 
                 audio_path = None
                 possible_files = glob.glob(f"{glob.escape(base_name_full)}.*")
                 for p in possible_files:
-                    if p.endswith('.opus'):
+                    if p.endswith('.m4a'):
                         audio_path = p
                 
                 if audio_path:
-                    audio = OggOpus(audio_path)
-                    if audio.tags is None:
-                        audio.add_tags()
+                    audio = MP4(audio_path)
 
                     clean_title = Downloader._clean_meta(title, remove_artists=[artist])
                     clean_artist = Downloader._clean_meta(artist)
@@ -404,12 +400,12 @@ class Downloader:
                     else:
                         clean_album = Downloader._clean_meta(final_album)
 
-                    audio.tags['title'] = [clean_title]
-                    audio.tags['artist'] = [clean_artist]
-                    audio.tags['album'] = [clean_album]
+                    audio.tags['\xa9nam'] = [clean_title]
+                    audio.tags['\xa9ART'] = [clean_artist]
+                    audio.tags['\xa9alb'] = [clean_album]
                     
                     if song_date:
-                        audio.tags['date'] = [song_date]
+                        audio.tags['\xa9day'] = [song_date]
 
                     cover_image_data = None
                     cover_width = 0
@@ -421,18 +417,9 @@ class Downloader:
                         )
 
                     if cover_image_data:
-                        picture = Picture()
-                        picture.data = cover_image_data
-                        picture.type = 3
-                        picture.mime = u"image/jpeg"
-                        picture.desc = u"Album Art"
-                        picture.width = cover_width
-                        picture.height = cover_height
-                        picture.depth = 24
-                        
-                        picture_data = picture.write()
-                        base64_picture = base64.b64encode(picture_data).decode('ascii')
-                        audio.tags['metadata_block_picture'] = [base64_picture]
+                        audio.tags['covr'] = [
+                            MP4Cover(cover_image_data, imageformat=MP4Cover.FORMAT_JPEG)
+                        ]
 
                     audio.save()
                     
@@ -445,7 +432,7 @@ class Downloader:
                 duration_sec = 0
                 if audio_path:
                     try:
-                        audio_info = OggOpus(audio_path)
+                        audio_info = MP4(audio_path)
                         duration_sec = audio_info.info.length
                     except: pass
                 
@@ -584,13 +571,11 @@ class Downloader:
                 if callback: callback(True, "İndirildi")
             elif found_plain_lyrics:
                 try:
-                    from mutagen.oggopus import OggOpus
+                    from mutagen.mp4 import MP4
                     audio_file = Downloader.get_file_path(artist=artist, title=title)
-                    if audio_file and audio_file.endswith('.opus'):
-                        audio = OggOpus(audio_file)
-                        if audio.tags is None:
-                            audio.add_tags()
-                        audio.tags['lyrics'] = [found_plain_lyrics]
+                    if audio_file and audio_file.endswith('.m4a'):
+                        audio = MP4(audio_file)
+                        audio.tags['\xa9lyr'] = [found_plain_lyrics]
                         audio.save()
                         print(f"[LRC] Plain Text Metadata'ya Gömüldü: {base_name}")
                         if callback: callback(True, "Sözler (Düz Metin) Gömüldü")

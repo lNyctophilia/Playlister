@@ -81,7 +81,7 @@ class ViewPlayer:
     def player_load_thread(self, video_id, title_info):
         try:
             ydl_opts = {
-                'format': 'bestaudio[ext=opus]/bestaudio/best',
+                'format': 'bestaudio[ext=m4a]/bestaudio/best',
                 'noplaylist': True,
                 'quiet': True,
                 'nocheckcertificate': True,
