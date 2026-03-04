@@ -1,3 +1,8 @@
 Config/config.json
 Config/favorites.json
 Docs/Artists.md
+
+# Nuitka Build and Distribution
+DistBin/
+*.build/
+*.dist/
