@@ -1,6 +1,4 @@
-Artists gitignorelansın eğer zaten öyleyse githubtan kaldırılsın
-
-Tanıtım videosunun fotosu readmeye yapılabiliyosa 1920x1080 gibi oranla olsun galiba 16/9 diye geçiyo bunlar şuanki hali güzel ama siyah üstte bişiler var onları istemiyorum
+Artists githubtan kaldırılsın
 
 Ayrıca exe dosyası docs klasörünü dahil etmesin screenshots hariç belki onlarıda etmesin sadece lazım olan kısımları falan alsın
 
