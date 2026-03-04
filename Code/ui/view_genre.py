@@ -93,6 +93,7 @@ class ViewGenre:
         self.search_view.pack_forget()
         self.chart_view.pack_forget()
         self.fav_view.pack_forget()
+        self.settings_view.pack_forget()
         self.genre_view.pack(fill="both", expand=True)
         self.update_status("Mod: Türe Göre (Beta) - Pop, Rock, Rap gibi türlerde popüler sanatçıları keşfedin.")
 

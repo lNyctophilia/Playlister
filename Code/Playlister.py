@@ -82,6 +82,7 @@ class App(UiShared, ContextMenuMixin, ViewSearch, ViewCharts, ViewGenre, ViewFav
         self.chart_view = tk.Frame(self.container, bg=T.BG_MAIN)
         self.genre_view = tk.Frame(self.container, bg=T.BG_MAIN)
         self.fav_view = tk.Frame(self.container, bg=T.BG_MAIN)
+        self.settings_view = tk.Frame(self.container, bg=T.BG_MAIN)
         
         self.status_bar = tk.Label(root, text="Hazır", bd=0, relief=tk.FLAT, anchor=tk.W, 
                                    bg=T.BG_STATUS, fg=T.FG_SECONDARY, font=T.FONT_STATUS,

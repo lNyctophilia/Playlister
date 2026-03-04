@@ -72,6 +72,7 @@ class ViewFav:
         self.search_view.pack_forget()
         self.chart_view.pack_forget()
         self.genre_view.pack_forget()
+        self.settings_view.pack_forget()
         self.fav_view.pack(fill="both", expand=True)
         self.update_status("Mod: Favoriler - Kaydettiğiniz şarkılar.")
         self.load_fav_ui()
