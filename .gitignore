@@ -4,6 +4,8 @@ Docs/Artists.md
 
 # Nuitka Build and Distribution
 DistBin/
+!DistBin/installer.iss
+!DistBin/Build&SetupCode.md
 *.build/
 *.dist/
 
