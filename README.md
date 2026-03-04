@@ -196,7 +196,7 @@ Proje klasöründeki `Playlister.bat` dosyasına çift tıklayın.
 ## 📹 Tanıtım Videosu & 📸 Ekran Görüntüleri
 
 ### 🎥 Uygulama Tanıtımı
-[![Playlister Tanıtım Videosu](https://img.youtube.com/vi/jtIg3EKB8NQ/0.jpg)](https://youtu.be/jtIg3EKB8NQ)
+[![Playlister Tanıtım Videosu](https://img.youtube.com/vi/jtIg3EKB8NQ/maxresdefault.jpg)](https://youtu.be/jtIg3EKB8NQ)
 
 ---
 
