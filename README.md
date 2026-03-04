@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="Docs/Screenshots/PlaylisterLogo.png" alt="Playlister Logo" width="150">
+</p>
+
 # 🎵 Playlister
 
 YouTube Music üzerinden sanatçı/şarkı arama, ülke top listeleri, türe göre öneri, favori yönetimi, şarkı indirme ve gömülü müzik çalar sunan bir masaüstü uygulaması.
