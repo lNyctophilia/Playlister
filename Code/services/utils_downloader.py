@@ -207,10 +207,10 @@ class Downloader:
         from PIL import Image
         from io import BytesIO
 
+        song_label = os.path.basename(base_name_full)
         thumbnails = info_dict.get('thumbnails', [])
-        print(f"[Kapak] Toplam thumbnail sayısı: {len(thumbnails)}")
         if not thumbnails:
-            print("[Kapak] HATA: info_dict içinde hiç thumbnail yok!")
+            print(f"[Kapak] Bulunamadı: {song_label}")
             return None, 0, 0
 
         square_thumbs = []
@@ -220,19 +220,14 @@ class Downloader:
             url = t.get('url', '')
             w = t.get('width', 0) or 0
             h = t.get('height', 0) or 0
-            t_id = t.get('id', '?')
 
             if not url:
                 continue
 
             if w > 0 and h > 0 and w == h:
                 square_thumbs.append(t)
-                print(f"[Kapak] Kare: {w}x{h} id={t_id}")
             else:
                 other_thumbs.append(t)
-                print(f"[Kapak] Dikdörtgen: {w}x{h} id={t_id}")
-
-        print(f"[Kapak] Kare: {len(square_thumbs)}, Dikdörtgen: {len(other_thumbs)}")
 
         square_thumbs.sort(key=lambda x: (x.get('width', 0) or 0), reverse=True)
         other_thumbs.sort(key=lambda x: (x.get('width', 0) or 0), reverse=True)
@@ -241,20 +236,15 @@ class Downloader:
 
         for i, url in enumerate(ordered_urls):
             try:
-                print(f"[Kapak] Deneme {i+1}/{len(ordered_urls)}: {url[:100]}")
                 resp = req.get(url, timeout=10)
-                print(f"[Kapak] HTTP Durum: {resp.status_code}, Boyut: {len(resp.content)} byte")
                 if resp.status_code != 200:
-                    print(f"[Kapak] Atlandı (HTTP {resp.status_code})")
                     continue
 
                 if len(resp.content) < 1000:
-                    print(f"[Kapak] Atlandı (çok küçük dosya: {len(resp.content)} byte)")
                     continue
 
                 img = Image.open(BytesIO(resp.content)).convert("RGB")
                 w, h = img.size
-                print(f"[Kapak] Resim açıldı: {w}x{h}")
 
                 if w != h:
                     min_dim = min(w, h)
@@ -271,14 +261,13 @@ class Downloader:
                 final_w, final_h = img.size
                 img.close()
 
-                print(f"[Kapak] BAŞARILI ({final_w}x{final_h}, {len(image_data)} byte)")
+                print(f"[Kapak] İndirildi: {song_label}")
                 return image_data, final_w, final_h
 
-            except Exception as e:
-                print(f"[Kapak] URL indirme hatası: {type(e).__name__}: {e}")
+            except Exception:
                 continue
 
-        print("[Kapak] HATA: Hiçbir thumbnail URL'si çalışmadı!")
+        print(f"[Kapak] Bulunamadı: {song_label}")
         return None, 0, 0
 
     @staticmethod
@@ -343,7 +332,7 @@ class Downloader:
                 try:
                     info_dict = ydl.extract_info(f"https://music.youtube.com/watch?v={video_id}", download=True)
                 except Exception as dl_err:
-                    print(f"Orijinal video URL'si hata verdi ({video_id}), alternatif aranıyor... Hata: {dl_err}")
+
                     # Hata alırsak "Sanatçı - Şarkı Adı" ile arama yap ve ilk çıkanı indir
                     search_query = f"ytsearch1:{artist} {title} audio"
                     info_dict = ydl.extract_info(search_query, download=True)
@@ -424,7 +413,7 @@ class Downloader:
                     audio.save()
                     
             except Exception as e:
-                print(f"Kapak/Metadata işleme hatası (PIL/Mutagen): {e}")
+                print(f"[Kapak] HATA: {clean(artist)} - {clean(file_title)} - {e}")
 
             # --- Otomatik Şarkı Sözü İndirme ---
             try:
@@ -440,12 +429,13 @@ class Downloader:
                 # Arka planda sessizce indirsin, kullanıcıyı bekletmesin veya log kirliliği yapmasın
                 # Ancak 'callback' vermezsek hata durumunda sessiz kalır, bu istenen bir durum.
                 # Şarkı başarılı indiği için callback(True) döneceğiz, sözler ekstra.
-                print(f"[Oto-LRC] Başlatılıyor: {title} - {artist} (Süre: {duration_sec}s)")
+
                 threading.Thread(target=Downloader.download_lyrics, args=(title, artist, final_album, duration_sec), daemon=True).start()
                 
             except Exception as e:
-                print(f"Oto-LRC Tetikleme Hatası: {e}")
+                print(f"[LRC] HATA: {clean(artist)} - {clean(file_title)} - {e}")
 
+            print(f"[Şarkı] İndirildi: {clean(artist)} - {clean(file_title)}")
             if callback: callback(True, "İndirme Tamamlandı")
         except Exception as e:
             if callback: callback(False, str(e))
@@ -478,6 +468,7 @@ class Downloader:
             
             if os.path.exists(lrc_path):
                 print(f"[LRC] Zaten mevcut: {base_name}")
+
                 if callback: callback(True, "Zaten mevcut")
                 return
 
@@ -528,18 +519,15 @@ class Downloader:
 
                         if synced:
                             found_lyrics = synced
-                            print(f"[LRC] Bulundu ({strat['name']}): {base_name}")
                             break
                         elif plain and not found_plain_lyrics:
-                             # Synced yoksa ama plain varsa, yedekte tutalım (daha iyi bir eşleşme bulamazsak bunu kullanırız)
                              found_plain_lyrics = plain
-                             print(f"[LRC] Plain Text Bulundu (Yedek - {strat['name']}): {base_name}")
 
                     elif resp.status_code == 404:
                         continue # Diğer stratejiye geç
                         
                 except Exception as e:
-                    print(f"[LRC] Hata ({strat['name']}): {e}")
+
                     continue
 
             # Eğer hala bulunamadıysa Search API deneyelim (Daha geniş arama)
@@ -555,19 +543,18 @@ class Downloader:
                             if abs(res_dur - duration) <= 3:
                                 if res.get("syncedLyrics"):
                                     found_lyrics = res.get("syncedLyrics")
-                                    print(f"[LRC] Bulundu (Geniş Arama): {base_name}")
                                     break
                                 elif res.get("plainLyrics") and not found_plain_lyrics:
                                     found_plain_lyrics = res.get("plainLyrics")
-                                    print(f"[LRC] Plain Text Bulundu (Geniş Arama Yedek): {base_name}")
 
-                except Exception as ex:
-                    print(f"[LRC] Geniş Arama Hatası: {ex}")
+                except Exception:
+                    pass
 
             if found_lyrics:
                 Downloader.ensure_dir()
                 with open(lrc_path, "w", encoding="utf-8") as f:
                     f.write(found_lyrics)
+                print(f"[LRC] Synced indirildi: {base_name}")
                 if callback: callback(True, "İndirildi")
             elif found_plain_lyrics:
                 try:
@@ -577,20 +564,20 @@ class Downloader:
                         audio = MP4(audio_file)
                         audio.tags['\xa9lyr'] = [found_plain_lyrics]
                         audio.save()
-                        print(f"[LRC] Plain Text Metadata'ya Gömüldü: {base_name}")
+                        print(f"[LRC] Plain text gömüldü: {base_name}")
                         if callback: callback(True, "Sözler (Düz Metin) Gömüldü")
                     else:
-                        print(f"[LRC] Ses dosyası bulunamadı, plain text gömmek için: {base_name}")
+                        print(f"[LRC] HATA: Ses dosyası bulunamadı - {base_name}")
                         if callback: callback(False, "Ses dosyası bulunamadı")
                 except Exception as embed_err:
-                    print(f"[LRC] Plain Text Gömme Hatası: {embed_err}")
+                    print(f"[LRC] HATA: {base_name} - {embed_err}")
                     if callback: callback(False, str(embed_err))
             else:
-                print(f"[LRC] Bulunamadı (Tüm Yöntemler): {base_name}")
+                print(f"[LRC] Bulunamadı: {base_name}")
                 if callback: callback(False, "Sözler bulunamadı")
                 
         except Exception as e:
-            print(f"[LRC] Genel Hata: {e}")
+            print(f"[LRC] HATA: {e}")
             if callback: callback(False, str(e))
 
     @staticmethod

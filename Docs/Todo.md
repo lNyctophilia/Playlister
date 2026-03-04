@@ -1,3 +1,1 @@
 Yt videosu çekip linkedin ve github.io'ya bu videoyu ekle
-
-Kral debuglar şu şekilde olsun mesela şarkıyı buldu diyelim indirilirken zaten bi indirme şeyi çıkıyo en son indirildiğinde indirildi desin şu şarkı eğer hata çıktıysa hata mesajı olsun, lyrics içinde mesela eğer synced bulunduysa onu indirsin başarılı olunca indirildi desin eğer bulunamadıysa plain olanı indirsin başarılı olunca synced olanın mesajı yerine plain başarılı mesajı atsın eğer hata olursa hata mesajını atsın, kapak fotoğrafı içinde aynı başarılı şekilde bulursa bulundu dicek bulunmadıysa hata mesajı

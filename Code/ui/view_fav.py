@@ -352,6 +352,7 @@ class ViewFav:
             
         if not getattr(self, '_cancel_favs_dl', False):
             self.update_status("Tüm indirmeler tamamlandı!", "green")
+            print(f"[Toplu İndirme] Tamamlandı: {total} şarkı")
             
         self._is_downloading_all_favs = False
         self._cancel_favs_dl = False
