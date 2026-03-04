@@ -3,7 +3,7 @@ Config/favorites.json
 Docs/Artists.md
 
 # Nuitka Build and Distribution
-DistBin/
+DistBin/*
 !DistBin/installer.iss
 !DistBin/Build&SetupCode.md
 *.build/
