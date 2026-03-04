@@ -11,19 +11,19 @@ Setup Code
 
 [Setup]
 AppName=Playlister
-AppVersion=v12.4
+AppVersion=v12.6
 DefaultDirName={autopf}\Playlister
 DefaultGroupName=Playlister
 UninstallDisplayIcon={app}\Playlister.exe
 Compression=lzma2
 SolidCompression=yes
-OutputDir=DistBin\Setup
+OutputDir=..\DistBin\Setup
 OutputBaseFilename=Playlister_Setup
-SetupIconFile=Docs\Screenshots\icon.ico
+SetupIconFile=..\Docs\Screenshots\icon.ico
 
 [Files]
-Source: "DistBin\Playlister.dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "Requriements\vc_redist.x64.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
+Source: "..\DistBin\Playlister.dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\Requriements\vc_redist.x64.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
 
 [Icons]
 Name: "{group}\Playlister"; Filename: "{app}\Playlister.exe"

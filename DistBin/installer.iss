@@ -1,6 +1,6 @@
 [Setup]
 AppName=Playlister
-AppVersion=v12.4
+AppVersion=v12.6
 DefaultDirName={autopf}\Playlister
 DefaultGroupName=Playlister
 UninstallDisplayIcon={app}\Playlister.exe
