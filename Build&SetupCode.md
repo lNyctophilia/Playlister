@@ -18,13 +18,13 @@ DefaultGroupName=Playlister
 UninstallDisplayIcon={app}\Playlister.exe
 Compression=lzma2
 SolidCompression=yes
-OutputDir=..\DistBin\Setup
+OutputDir=DistBin\Setup
 OutputBaseFilename=Playlister_Setup
-SetupIconFile=..\Docs\Screenshots\icon.ico
+SetupIconFile=Docs\Screenshots\icon.ico
 
 [Files]
 ; Ana EXE dosyan (Nuitka'nın oluşturduğu klasör içindeki her şeyi alıyoruz)
-Source: "..\DistBin\Playlister.dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "DistBin\Playlister.dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 ; Başlat Menüsü ve Masaüstü Kısayolları
