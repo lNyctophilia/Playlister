@@ -1,4 +1,5 @@
 import tkinter as tk
+import sys
 from tkinter import ttk, messagebox
 import requests
 from ytmusicapi import YTMusic
@@ -36,6 +37,14 @@ class App(UiShared, ContextMenuMixin, ViewSearch, ViewCharts, ViewGenre, ViewFav
         self.root.title("Playlister")
         self.root.geometry("1100x700")
         self.root.config(bg=T.BG_MAIN)
+
+        if "__compiled__" in globals():
+            base_path = os.path.dirname(sys.executable)
+            icon_path = os.path.join(base_path, "icon.ico")
+        else:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            icon_path = os.path.join(base_path, "..", "Docs", "Screenshots", "icon.ico")
+        self.root.iconbitmap(icon_path)
         
         try:
             self.yt = YTMusic()
