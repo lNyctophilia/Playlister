@@ -1,0 +1,19 @@
+Bu klasörde build ve setup için gerekli olan büyük dosyalar bulunmalıdır.
+Bu dosyalar boyutları nedeniyle Git reposuna dahil edilmemiştir.
+
+Gerekli Dosyalar:
+=================
+
+1. ffmpeg.exe
+   - İndirme: https://www.gyan.dev/ffmpeg/builds/
+   - "release builds" bölümünden ffmpeg-release-essentials.zip indirin
+   - ZIP içindeki bin/ffmpeg.exe dosyasını bu klasöre koyun
+
+2. libvlc.dll ve libvlccore.dll
+   - VLC Media Player kurulu ise: C:\Program Files\VideoLAN\VLC\ klasöründen kopyalayın
+
+3. plugins/ klasörü
+   - VLC Media Player kurulu ise: C:\Program Files\VideoLAN\VLC\plugins\ klasörünü buraya kopyalayın
+
+4. VC_redist.x64.exe
+   - İndirme: https://aka.ms/vs/17/release/vc_redist.x64.exe

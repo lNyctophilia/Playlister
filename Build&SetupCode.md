@@ -2,7 +2,7 @@ Build Code
 
 ---------------------
 
-python -m nuitka --standalone --windows-disable-console --enable-plugin=tk-inter --include-package=core --include-package=ui --include-package=utils --include-package=services --include-package-data=ytmusicapi --include-data-files=Requriements/libvlc.dll=./libvlc.dll --include-data-files=Requriements/libvlccore.dll=./libvlccore.dll --include-data-dir=Requriements/plugins=./plugins --include-data-files=Docs/Screenshots/Playlister256x256RoundedCorner.png=./Playlister256x256RoundedCorner.png --windows-icon-from-ico=Docs/Screenshots/icon.ico --output-dir=DistBin Code/Playlister.py
+python -m nuitka --standalone --windows-disable-console --enable-plugin=tk-inter --include-package=core --include-package=ui --include-package=utils --include-package=services --include-package-data=ytmusicapi --include-data-files=Requriements/libvlc.dll=./libvlc.dll --include-data-files=Requriements/libvlccore.dll=./libvlccore.dll --include-data-dir=Requriements/plugins=./plugins --include-data-files=Requriements/ffmpeg.exe=./ffmpeg.exe --include-data-files=Docs/Screenshots/Playlister256x256RoundedCorner.png=./Playlister256x256RoundedCorner.png --windows-icon-from-ico=Docs/Screenshots/icon.ico --output-dir=DistBin Code/Playlister.py
 
 
 Setup Code
@@ -11,7 +11,7 @@ Setup Code
 
 [Setup]
 AppName=Playlister
-AppVersion=12.0
+AppVersion=12.2
 DefaultDirName={autopf}\Playlister
 DefaultGroupName=Playlister
 UninstallDisplayIcon={app}\Playlister.exe

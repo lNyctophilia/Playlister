@@ -6,3 +6,11 @@ Docs/Artists.md
 DistBin/
 *.build/
 *.dist/
+
+# Requriements (büyük binary dosyalar)
+Requriements/*.exe
+Requriements/*.dll
+Requriements/plugins/
+
+__pycache__/
+*.pyc

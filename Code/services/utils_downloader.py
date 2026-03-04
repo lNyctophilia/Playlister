@@ -1,4 +1,5 @@
 import os
+import sys
 import glob
 import threading
 import re
@@ -289,6 +290,9 @@ class Downloader:
         
         
         # Tarayıcı Deneme Sırası: Edge -> Chrome -> Firefox -> None (Cookie'siz)
+        exe_dir = os.path.dirname(os.path.abspath(sys.executable if getattr(sys, 'frozen', False) else sys.argv[0]))
+        ffmpeg_path = os.path.join(exe_dir, 'ffmpeg.exe')
+
         opts = {
             'format': 'bestaudio[ext=m4a]/bestaudio/best',
             'outtmpl': os.path.join(DOWNLOAD_DIR, fname),
@@ -314,7 +318,6 @@ class Downloader:
                     'key': 'FFmpegMetadata',
                     'add_metadata': True,
                 },
-                # EmbedThumbnail YOK - Manuel yapacağız
             ],
             'http_headers': {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -322,6 +325,9 @@ class Downloader:
                 'Accept-Language': 'en-us,en;q=0.5',
             }
         }
+
+        if os.path.exists(ffmpeg_path):
+            opts['ffmpeg_location'] = exe_dir
         
         try:
             # 1. İndirme İşlemi ve Bilgi Çekimi (Tarih formatı için)
