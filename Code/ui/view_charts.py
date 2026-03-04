@@ -162,8 +162,8 @@ class ViewCharts:
 
     def reset_chart_ui(self):
         def _reset():
-            self.btn_chart_load.config(text="Listele", bg=T.BTN_WARNING)
-            T.apply_hover(self.btn_chart_load, T.BTN_WARNING, T.BTN_WARNING_HOVER)
+            self.btn_chart_load.config(text="Listele", bg=T.BTN_ACCENT)
+            T.apply_hover(self.btn_chart_load, T.BTN_ACCENT, T.BTN_ACCENT_HOVER)
             self.lbl_chart_progress.config(text="")
             self.combo_country.config(state="readonly")
             self.entry_chart_limit.config(state=tk.NORMAL)

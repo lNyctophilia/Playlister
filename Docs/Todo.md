@@ -1,1 +1,0 @@
-Yt videosu çekip linkedin ve github.io'ya bu videoyu ekle
