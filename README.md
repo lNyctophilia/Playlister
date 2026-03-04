@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="Docs/Screenshots/PlaylisterLogo.png" alt="Playlister Logo" width="150">
+  <img src="Docs/Screenshots/PlaylisterLogoRoundedCorner.png" alt="Playlister Logo" width="150">
 </p>
 
 # 🎵 Playlister
