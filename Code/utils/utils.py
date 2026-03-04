@@ -53,6 +53,8 @@ def clean_metadata_text(text, remove_artists=None):
         pattern = re.compile(re.escape(noise), re.IGNORECASE)
         clean_text = pattern.sub("", clean_text)
     
+    clean_text = re.sub(r'\s*\([^)]*\)', '', clean_text)
+    
     # Remove leading/trailing whitespace/dashes
     clean_text = clean_text.strip(" -|")
     
