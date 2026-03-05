@@ -22,6 +22,7 @@ class Downloader:
     def strip_parentheses(s):
         if not s: return ""
         s = re.sub(r'\s*\([^)]*\)', '', str(s))
+        s = re.sub(r'\s*\[[^\]]*\]', '', s)
         s = re.sub(r'\s+', ' ', s)
         return s.strip()
 
