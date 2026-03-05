@@ -62,6 +62,15 @@ YouTube Music üzerinden sanatçı/şarkı arama, ülke top listeleri, türe gö
 
 ---
 
+## ❤️ Teşekkürler
+
+Bu projenin geliştirilmesinde katkısı olan ve altyapımızı güçlendiren açık kaynaklı yazılımlara teşekkür ederiz:
+- [FFmpeg](https://ffmpeg.org/) — Medya işleme altyapısı.
+- [yt-dlp](https://github.com/yt-dlp/yt-dlp) — Ses indirme modülü.
+- [VLC (python-vlc)](https://www.videolan.org/) — Medya oynatıcı motoru.
+
+---
+
 ## 📄 Lisans
 
 Bu proje **All Rights Reserved** lisansı altındadır. Kodun kopyalanması, dağıtılması, değiştirilmesi veya ticari amaçlarla kullanılması **yasaktır**. Detaylar için [LICENSE](LICENSE) dosyasına bakınız.

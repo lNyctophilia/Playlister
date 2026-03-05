@@ -17,7 +17,7 @@ Bu setup kodu, hem derlenmiş dosyaları hem de Visual C++ Runtime (VC++) paketi
 ```pascal
 [Setup]
 AppName=Playlister
-AppVersion=v12.7
+AppVersion=v13.5
 DefaultDirName={autolocalprogramming}\Playlister
 DefaultGroupName=Playlister
 UninstallDisplayIcon={app}\Playlister.exe
@@ -47,4 +47,3 @@ Filename: "{tmp}\vc_redist.x64.exe"; Parameters: "/install /quiet /norestart"; S
 ; Uygulamayı başlat
 Filename: "{app}\Playlister.exe"; Description: "{cm:LaunchProgram,Playlister}"; Flags: nowait postinstall skipifsilent
 ```
-
