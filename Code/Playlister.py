@@ -111,6 +111,7 @@ class App(UiShared, ContextMenuMixin, ViewSearch, ViewCharts, ViewGenre, ViewFav
         self.is_shuffling = False
         self.current_playlist = []
         self.current_playlist_index = -1
+        self.is_loading_next = False
         
         if vlc:
             try:

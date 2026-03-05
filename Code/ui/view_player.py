@@ -92,6 +92,7 @@ class ViewPlayer:
             self.btn_player_shuffle.config(fg=T.FG_SECONDARY)
 
     def play_music_start(self, video_id, title_info="Yükleniyor..."):
+        self.is_loading_next = True
         if not self.player:
             messagebox.showinfo("Player Hatası", "VLC Modülü bulunamadı. Lütfen VLC Player ve python-vlc kurulumunu yapın.\nŞarkı tarayıcıda açılıyor.")
             webbrowser.open(f"https://music.youtube.com/watch?v={video_id}")
@@ -118,6 +119,7 @@ class ViewPlayer:
                 info = ydl.extract_info(video_id, download=False)
                 if not info:
                      self.update_status("Video bilgisi alınamadı.", "red")
+                     self.is_loading_next = False
                      self.root.after(0, lambda: self.btn_player_play.config(text="▶"))
                      return
 
@@ -148,6 +150,7 @@ class ViewPlayer:
         self.player.play()
         
         self.is_playing = True
+        self.is_loading_next = False
         self.total_duration = duration
         self.lbl_player_title.config(text=title)
         self.btn_player_play.config(text="⏸")
@@ -211,15 +214,17 @@ class ViewPlayer:
             state = self.player.get_state()
             
             if state == vlc.State.Ended:
-                self.player.stop() 
-                if self.is_looping:
-                    self.player.play()
-                else:
-                    if self.current_play_mode == "fav":
-                        self.root.after(100, self.play_next_in_playlist)
+                if not self.is_loading_next:
+                    self.player.stop() 
+                    if self.is_looping:
+                        self.player.play()
                     else:
-                        self.is_playing = False
-                        self.btn_player_play.config(text="▶")
+                        if self.current_play_mode == "fav" and self.loop_state == 1:
+                            self.is_loading_next = True
+                            self.root.after(100, self.play_next_in_playlist)
+                        else:
+                            self.is_playing = False
+                            self.btn_player_play.config(text="▶")
 
             if not self.is_dragging_time and state == vlc.State.Playing:
                 current_ms = self.player.get_time()
