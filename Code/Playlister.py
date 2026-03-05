@@ -10,9 +10,14 @@ import json
 import os
 import webbrowser
 
-try:
-    import vlc
+import vlc
     import yt_dlp
+    
+    # Derlenmiş versiyonda DLL yollarını ayarla
+    if "__compiled__" in globals():
+        os.environ['PYTHON_VLC_LIB_PATH'] = os.path.join(os.path.dirname(sys.executable), "libvlc.dll")
+        if hasattr(os, 'add_dll_directory'):
+            os.add_dll_directory(os.path.dirname(sys.executable))
 except ImportError:
     vlc = None
     yt_dlp = None
