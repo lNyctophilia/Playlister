@@ -211,12 +211,12 @@ class ViewPlayer:
             state = self.player.get_state()
             
             if state == vlc.State.Ended:
+                self.player.stop() 
                 if self.is_looping:
-                    self.player.stop()
                     self.player.play()
                 else:
                     if self.current_play_mode == "fav":
-                        self.play_next_in_playlist()
+                        self.root.after(100, self.play_next_in_playlist)
                     else:
                         self.is_playing = False
                         self.btn_player_play.config(text="▶")
@@ -242,6 +242,8 @@ class ViewPlayer:
         import random
         if self.is_shuffling:
             next_index = random.randint(0, len(self.current_playlist) - 1)
+            if next_index == self.current_playlist_index and len(self.current_playlist) > 1:
+                next_index = (next_index + 1) % len(self.current_playlist)
         else:
             next_index = self.current_playlist_index + 1
             if next_index >= len(self.current_playlist):
