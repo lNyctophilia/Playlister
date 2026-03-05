@@ -311,7 +311,7 @@ class Downloader:
             'postprocessors': [
                 {
                     'key': 'FFmpegExtractAudio',
-                    'preferredcodec': 'aac',
+                    'preferredcodec': 'm4a',
                     'preferredquality': '192',
                 },
                 {
@@ -417,6 +417,23 @@ class Downloader:
                         ]
 
                     audio.save()
+                    
+                    # --- FastStart Metadatasını Başa Al ---
+                    try:
+                        import subprocess, shutil
+                        ffmpeg_cmd_path = ffmpeg_path if os.path.exists(ffmpeg_path) else 'ffmpeg'
+                        temp_audio = audio_path + ".tmp.m4a"
+                        subprocess.run([
+                            ffmpeg_cmd_path, "-y", "-i", audio_path,
+                            "-c", "copy", "-movflags", "+faststart",
+                            temp_audio
+                        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        
+                        if os.path.exists(temp_audio) and os.path.getsize(temp_audio) > 0:
+                            shutil.move(temp_audio, audio_path)
+                    except Exception as fe:
+                        print(f"[FastStart] Hata: {fe}")
+                    # --------------------------------------
                     
             except Exception as e:
                 print(f"[Kapak] HATA: {clean(artist)} - {clean(file_title)} - {e}")
