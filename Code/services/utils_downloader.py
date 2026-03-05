@@ -3,6 +3,8 @@ import sys
 import glob
 import threading
 import re
+import subprocess
+import shutil
 try:
     import yt_dlp
 except ImportError:
@@ -423,14 +425,14 @@ class Downloader:
                     
                     # --- FastStart Metadatasını Başa Al ---
                     try:
-                        import subprocess, shutil
                         ffmpeg_cmd_path = ffmpeg_path if os.path.exists(ffmpeg_path) else 'ffmpeg'
                         temp_audio = audio_path + ".tmp.m4a"
                         subprocess.run([
                             ffmpeg_cmd_path, "-y", "-i", audio_path,
                             "-c", "copy", "-movflags", "+faststart",
                             temp_audio
-                        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                           creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
                         
                         if os.path.exists(temp_audio) and os.path.getsize(temp_audio) > 0:
                             shutil.move(temp_audio, audio_path)
