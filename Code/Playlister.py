@@ -16,10 +16,16 @@ try:
     
     # Derlenmiş versiyonda DLL yollarını ayarla
     if "__compiled__" in globals():
-        os.environ['PYTHON_VLC_LIB_PATH'] = os.path.join(os.path.dirname(sys.executable), "libvlc.dll")
+        exe_dir = os.path.dirname(sys.executable)
+        os.environ['PYTHON_VLC_LIB_PATH'] = os.path.join(exe_dir, "libvlc.dll")
+        os.environ['VLC_PLUGIN_PATH'] = os.path.join(exe_dir, "plugins")
         if hasattr(os, 'add_dll_directory'):
-            os.add_dll_directory(os.path.dirname(sys.executable))
-except ImportError:
+            os.add_dll_directory(exe_dir)
+except Exception as e:
+    root_error = tk.Tk()
+    root_error.withdraw()
+    messagebox.showerror("Kritik Hata (VLC/Bağımlılık)", f"Uygulamanın medya oynatıcısı (VLC) yüklenirken hata oluştu.\nEksik bir DLL dosyası veya sistem bileşeni (Örn: Visual C++ Runtime) olabilir.\n\nHata Detayı:\n{e}")
+    root_error.destroy()
     vlc = None
     yt_dlp = None
 
