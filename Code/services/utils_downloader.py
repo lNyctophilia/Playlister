@@ -398,6 +398,8 @@ class Downloader:
 
                     audio.tags['\xa9nam'] = [clean_title]
                     audio.tags['\xa9ART'] = [clean_artist]
+                    audio.tags['aART'] = [clean_artist]
+                    audio.tags['\xa9wrt'] = [clean_artist]
                     audio.tags['\xa9alb'] = [clean_album]
                     
                     if song_date:

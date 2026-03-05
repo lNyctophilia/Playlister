@@ -16,7 +16,7 @@ Bu setup kodu, hem derlenmiş dosyaları hem de Visual C++ Runtime (VC++) paketi
 ```pascal
 [Setup]
 AppName=Playlister
-AppVersion=v13.8
+AppVersion=v13.10
 DefaultDirName={autopf}\Playlister
 DefaultGroupName=Playlister
 UninstallDisplayIcon={app}\Playlister.exe
