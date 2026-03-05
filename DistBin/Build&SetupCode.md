@@ -18,8 +18,8 @@ Bu setup kodu, hem derlenmiş dosyaları hem de Visual C++ Runtime (VC++) paketi
 ```pascal
 [Setup]
 AppName=Playlister
-AppVersion=v13.6
-DefaultDirName={autolocalprogramming}\Playlister
+AppVersion=v13.7
+DefaultDirName={autopf}\Playlister
 DefaultGroupName=Playlister
 UninstallDisplayIcon={app}\Playlister.exe
 Compression=lzma2
