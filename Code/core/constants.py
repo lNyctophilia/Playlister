@@ -1,6 +1,7 @@
 import os
 
-CONFIG_DIR = os.path.join(os.path.expanduser("~"), "Playlister")
+appdata_dir = os.environ.get('APPDATA') or os.path.join(os.path.expanduser("~"), "AppData", "Roaming")
+CONFIG_DIR = os.path.join(appdata_dir, "Playlister")
 os.makedirs(CONFIG_DIR, exist_ok=True)
 
 FAV_FILE = os.path.join(CONFIG_DIR, "favorites.json")
