@@ -10,7 +10,8 @@ import json
 import os
 import webbrowser
 
-import vlc
+try:
+    import vlc
     import yt_dlp
     
     # Derlenmiş versiyonda DLL yollarını ayarla
@@ -21,6 +22,7 @@ import vlc
 except ImportError:
     vlc = None
     yt_dlp = None
+
 
 from core.constants import CONFIG_FILE
 from core.config_manager import load_config
