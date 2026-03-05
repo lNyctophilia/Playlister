@@ -187,6 +187,17 @@ class ViewFav:
                     self.copy_link_by_id(video_id)
                 elif click_x < section * 2:
                     title = f"{song_data.get('title')} - {song_data.get('artist')}"
+                    self.current_play_mode = "fav"
+                    self.current_playlist = []
+                    for child in self.tree_fav.get_children(''):
+                        s_data = self.fav_map.get(child)
+                        if s_data:
+                            self.current_playlist.append(s_data)
+                    for i, s in enumerate(self.current_playlist):
+                        if s.get('video_id') == video_id:
+                            self.current_playlist_index = i
+                            break
+                    self.set_player_mode("fav")
                     self.play_music_start(video_id, title)
                 elif click_x < section * 3:
                     res = messagebox.askyesno("Onay", "Bu şarkıyı favorilerden kaldırmak istiyor musunuz?")

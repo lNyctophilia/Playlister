@@ -107,6 +107,7 @@ class UiShared:
                     self.copy_link_by_id(video_id)
                 elif click_relative_x < section * 2:
                     song_title = f"{vals[1]} - {vals[2]}"
+                    self.set_player_mode("other")
                     self.play_music_start(video_id, song_title)
                 elif click_relative_x < section * 3:
                     song_data = {

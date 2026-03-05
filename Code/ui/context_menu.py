@@ -35,7 +35,22 @@ class ContextMenuMixin:
                      song_title = f"{data.get('title')} - {data.get('artist')}"
             
              if video_id:
-                 menu.add_command(label="▶ Müziği Oynat", command=lambda v=video_id, t=song_title: self.play_music_start(v, t))
+                 def context_play_action(v, t, tree):
+                     if getattr(self, 'tree_fav', None) == tree:
+                         self.current_playlist = []
+                         for child in tree.get_children(''):
+                             s_data = self.fav_map.get(child)
+                             if s_data: self.current_playlist.append(s_data)
+                         for i, s in enumerate(self.current_playlist):
+                             if s.get('video_id') == v:
+                                 self.current_playlist_index = i
+                                 break
+                         self.set_player_mode("fav")
+                     else:
+                         self.set_player_mode("other")
+                     self.play_music_start(v, t)
+                     
+                 menu.add_command(label="▶ Müziği Oynat", command=lambda v=video_id, t=song_title, tr=tree: context_play_action(v, t, tr))
                  menu.add_command(label="🔗 Linki Kopyala", command=lambda v=video_id: self.copy_link_by_id(v))
                  menu.add_separator()
                  

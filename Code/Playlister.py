@@ -106,6 +106,12 @@ class App(UiShared, ContextMenuMixin, ViewSearch, ViewCharts, ViewGenre, ViewFav
         self.total_duration = 0
         self.is_dragging_time = False
         
+        self.current_play_mode = "other"
+        self.loop_state = 0
+        self.is_shuffling = False
+        self.current_playlist = []
+        self.current_playlist_index = -1
+        
         if vlc:
             try:
                 self.vlc_instance = vlc.Instance('--no-video', '--quiet')
