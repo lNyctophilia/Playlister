@@ -12,7 +12,7 @@ Setup Code
 [Setup]
 AppName=Playlister
 AppVersion=v12.7
-DefaultDirName={autopf}\Playlister
+DefaultDirName={autolocalprogramming}\Playlister
 DefaultGroupName=Playlister
 UninstallDisplayIcon={app}\Playlister.exe
 Compression=lzma2
@@ -20,6 +20,7 @@ SolidCompression=yes
 OutputDir=..\DistBin\Setup
 OutputBaseFilename=Playlister_Setup
 SetupIconFile=..\Docs\Screenshots\icon.ico
+PrivilegesRequired=lowest
 
 [Files]
 Source: "..\DistBin\Playlister.dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs

@@ -1,7 +1,7 @@
 [Setup]
 AppName=Playlister
 AppVersion=v12.7
-DefaultDirName={autopf}\Playlister
+DefaultDirName={autolocalprogramming}\Playlister
 DefaultGroupName=Playlister
 UninstallDisplayIcon={app}\Playlister.exe
 Compression=lzma2
@@ -9,6 +9,7 @@ SolidCompression=yes
 OutputDir=..\DistBin\Setup
 OutputBaseFilename=Playlister_Setup
 SetupIconFile=..\Docs\Screenshots\icon.ico
+PrivilegesRequired=lowest
 
 [Files]
 Source: "..\DistBin\Playlister.dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -24,4 +25,5 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Run]
 Filename: "{tmp}\vc_redist.x64.exe"; Parameters: "/install /quiet /norestart"; StatusMsg: "Visual C++ Runtime yükleniyor..."; Flags: waituntilterminated
 Filename: "{app}\Playlister.exe"; Description: "{cm:LaunchProgram,Playlister}"; Flags: nowait postinstall skipifsilent
+
 

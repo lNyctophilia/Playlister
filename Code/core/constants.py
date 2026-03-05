@@ -1,11 +1,20 @@
 import os
+import sys
 
-appdata_dir = os.environ.get('APPDATA') or os.path.join(os.path.expanduser("~"), "AppData", "Roaming")
-CONFIG_DIR = os.path.join(appdata_dir, "Playlister")
+# Uygulamanın çalıştığı dizini bul (Nuitka ile derlenmişse sys.executable, değilse __file__)
+if getattr(sys, 'frozen', False) or "__compiled__" in globals():
+    BASE_DIR = os.path.dirname(sys.executable)
+else:
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+CONFIG_DIR = os.path.join(BASE_DIR, "Data")
 os.makedirs(CONFIG_DIR, exist_ok=True)
 
 FAV_FILE = os.path.join(CONFIG_DIR, "favorites.json")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 DOWNLOAD_DIR = os.path.join(os.path.expanduser("~"), "Music", "Playlister")
+os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 ARCHIVE_FILE = os.path.join(DOWNLOAD_DIR, "archive.txt")
+
+
 
