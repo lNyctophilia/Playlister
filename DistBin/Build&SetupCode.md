@@ -2,13 +2,11 @@ Build Code
 
 ---------------------
 
+python -m nuitka --standalone --windows-console-mode=disable --enable-plugin=tk-inter --include-package=core --include-package=ui --include-package=utils --include-package=services --include-module=vlc --include-package=yt_dlp --include-package-data=ytmusicapi --include-data-files=Requriements/libvlc.dll=./libvlc.dll --include-data-files=Requriements/libvlccore.dll=./libvlccore.dll --include-data-dir=Requriements/plugins=plugins --include-data-files=Requriements/ffmpeg.exe=./ffmpeg.exe --include-data-files=Docs/Screenshots/icon.ico=./icon.ico --include-data-files=Docs/Screenshots/Playlister256x256RoundedCorner.png=./Playlister256x256RoundedCorner.png --windows-icon-from-ico=Docs/Screenshots/icon.ico --output-dir=DistBin Code/Playlister.py
 
-python -m nuitka --standalone --windows-console-mode=disable --enable-plugin=tk-inter --include-package=core --include-package=ui --include-package=utils --include-package=services --include-module=vlc --include-package=yt_dlp --follow-import-to=yt_dlp --include-package-data=ytmusicapi --include-data-files=Requriements/libvlc.dll=./libvlc.dll --include-data-files=Requriements/libvlccore.dll=./libvlccore.dll --include-data-dir=Requriements/plugins=./plugins --include-data-files=Requriements/ffmpeg.exe=./ffmpeg.exe --include-data-files=Docs/Screenshots/icon.ico=./icon.ico --include-data-files=Docs/Screenshots/Playlister256x256RoundedCorner.png=./Playlister256x256RoundedCorner.png --windows-icon-from-ico=Docs/Screenshots/icon.ico --output-dir=DistBin Code/Playlister.py
-
--- Yeni Test --
-
-python -m nuitka --standalone --windows-console-mode=disable --enable-plugin=tk-inter --include-package=core --include-package=ui --include-package=utils --include-package=services --include-module=vlc --include-package=yt_dlp --follow-import-to=yt_dlp --include-package-data=ytmusicapi --include-data-files=Requriements/libvlc.dll=./libvlc.dll --include-data-files=Requriements/libvlccore.dll=./libvlccore.dll --include-data-dir=Requriements/plugins=./plugins --include-data-files=Requriements/ffmpeg.exe=./ffmpeg.exe --include-data-files=Docs/Screenshots/icon.ico=./icon.ico --include-data-files=Docs/Screenshots/Playlister256x256RoundedCorner.png=./Playlister256x256RoundedCorner.png --windows-icon-from-ico=Docs/Screenshots/icon.ico --output-dir=DistBin Code/Playlister.py
-
+# KRİTİK ADIM: Nuitka bazen plugins klasöründeki alt klasörleri eksik kopyalayabiliyor. 
+# Derleme bittikten sonra şu komutu çalıştırarak eklentileri manuel olarak tamamlayın (Kesin Çözüm):
+robocopy Requriements\plugins DistBin\Playlister.dist\plugins /E
 
 
 Setup Code (Inno Setup)
@@ -27,7 +25,7 @@ SolidCompression=yes
 OutputDir=..\DistBin\Setup
 OutputBaseFilename=Playlister_Setup
 SetupIconFile=..\Docs\Screenshots\icon.ico
-PrivilegesRequired=admin
+PrivilegesRequired=lowest
 
 [Files]
 ; Derlenmiş tüm dosyalar (VLC ve FFmpeg dahil)

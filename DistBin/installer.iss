@@ -9,7 +9,7 @@ SolidCompression=yes
 OutputDir=..\DistBin\Setup
 OutputBaseFilename=Playlister_Setup
 SetupIconFile=..\Docs\Screenshots\icon.ico
-PrivilegesRequired=admin
+PrivilegesRequired=lowest
 
 [Files]
 ; Derlenmiş tüm dosyalar (VLC ve FFmpeg dahil)

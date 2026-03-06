@@ -5,12 +5,11 @@ import time
 import webbrowser
 from ui import theme as T
 
-try:
-    import vlc
-    import yt_dlp
-except ImportError:
-    vlc = None
-    yt_dlp = None
+# Not: vlc ve yt_dlp ana uygulama (Playlister.py) tarafından global olarak 
+# yönetildiği için burada tekrar import denemesi yapmıyoruz.
+import vlc
+import yt_dlp
+
 
 class ViewPlayer:
     def setup_player_view(self):

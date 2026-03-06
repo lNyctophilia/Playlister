@@ -1,5 +1,9 @@
-import tkinter as tk
 import sys
+import traceback
+import os
+
+
+import tkinter as tk
 from tkinter import ttk, messagebox
 import requests
 from ytmusicapi import YTMusic
@@ -10,21 +14,32 @@ import json
 import os
 import webbrowser
 
+
+# VLC ve yt-dlp Kütüphanelerinin Kontrollü İçe Aktarımı ve DLL Zırhı
 try:
-    import vlc
-    import yt_dlp
-    
-    # Derlenmiş versiyonda DLL yollarını ayarla
     if "__compiled__" in globals():
         exe_dir = os.path.dirname(sys.executable)
+        
+        # 1. Hamle: Çalışma Dizinini EXE'nin yanına (DLL'lerin olduğu yere) zorla çekiyoruz.
+        os.chdir(exe_dir)
+        
+        # 2. Hamle: Ctypes ve VLC'nin içine gizli eklenti / modül yollarını kalıcı mühürlüyoruz
         os.environ['PYTHON_VLC_LIB_PATH'] = os.path.join(exe_dir, "libvlc.dll")
+        os.environ['PYTHON_VLC_MODULE_PATH'] = os.path.join(exe_dir, "plugins")
         os.environ['VLC_PLUGIN_PATH'] = os.path.join(exe_dir, "plugins")
+        
         if hasattr(os, 'add_dll_directory'):
             os.add_dll_directory(exe_dir)
+            
+            
+    import vlc
+    import yt_dlp
 except Exception as e:
+    import traceback
+    error_trace = traceback.format_exc()
     root_error = tk.Tk()
     root_error.withdraw()
-    messagebox.showerror("Kritik Hata (VLC/Bağımlılık)", f"Uygulamanın medya oynatıcısı (VLC) yüklenirken hata oluştu.\nEksik bir DLL dosyası veya sistem bileşeni (Örn: Visual C++ Runtime) olabilir.\n\nHata Detayı:\n{e}")
+    messagebox.showerror("Kritik Hata (VLC/Bağımlılık)", f"Uygulamanın medya oynatıcısı (VLC) veya kütüphanesi yüklenirken hata oluştu.\nDLL veya sistem bileşeni eksik olabilir.\n\nHata:\n{e}\n\nDetay:\n{error_trace}")
     root_error.destroy()
     vlc = None
     yt_dlp = None
@@ -128,10 +143,17 @@ class App(UiShared, ContextMenuMixin, ViewSearch, ViewCharts, ViewGenre, ViewFav
         
         if vlc:
             try:
-                self.vlc_instance = vlc.Instance('--no-video', '--quiet')
-                self.player = self.vlc_instance.media_player_new()
+                self.vlc_instance = vlc.Instance('--no-video')
+                
+                if self.vlc_instance is not None:
+                    self.player = self.vlc_instance.media_player_new()
             except Exception as e:
-                print(f"VLC Init Error: {e}")
+                import traceback
+                error_trace = traceback.format_exc()
+                root_error = tk.Tk()
+                root_error.withdraw()
+                messagebox.showerror("VLC Başlatma Hatası", f"VLC yüklendi ancak başlatılamadı.\nC++ veya eklenti gereksinimleri eksik olabilir.\n\nHata: {e}\n\nDetay:\n{error_trace}")
+                root_error.destroy()
                 
         self.setup_player_view()
 
