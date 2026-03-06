@@ -143,7 +143,8 @@ class App(UiShared, ContextMenuMixin, ViewSearch, ViewCharts, ViewGenre, ViewFav
         
         if vlc:
             try:
-                self.vlc_instance = vlc.Instance('--no-video')
+                # Ağ dalgalanmaları ve kopmaları önlemek için ek parametreler
+                self.vlc_instance = vlc.Instance('--no-video', '--network-caching=5000', '--http-reconnect')
                 
                 if self.vlc_instance is not None:
                     self.player = self.vlc_instance.media_player_new()
