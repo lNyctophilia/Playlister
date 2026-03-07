@@ -275,6 +275,52 @@ class Downloader:
         return None, 0, 0
 
     @staticmethod
+    def _apply_faststart(audio_path, ffmpeg_path):
+        """Dosyanın metadatalarını (kapak vb.) dosyanın başına (1. sıraya) taşır."""
+        try:
+            if not audio_path or not os.path.exists(audio_path):
+                return
+            
+            ffmpeg_cmd_path = ffmpeg_path if os.path.exists(ffmpeg_path) else 'ffmpeg'
+            temp_audio = audio_path + ".tmp.m4a"
+            
+            # Windows'ta bazen dosya kilitli kalabiliyor diye ufak bir bekleme ve retry ekleyelim
+            import time
+            max_retries = 3
+            
+            for attempt in range(max_retries):
+                try:
+                    subprocess.run([
+                        ffmpeg_cmd_path, "-y", "-i", audio_path,
+                        "-c", "copy", "-movflags", "+faststart",
+                        temp_audio
+                    ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                       creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
+                    
+                    if os.path.exists(temp_audio) and os.path.getsize(temp_audio) > 0:
+                        # shutil.move bazen izin hatası verebilir, os.replace daha garantilidir
+                        os.replace(temp_audio, audio_path)
+                        print(f"[FastStart] Uygulandı: {os.path.basename(audio_path)}")
+                        break # Başarılıysa döngüden çık
+                except PermissionError:
+                    if attempt < max_retries - 1:
+                        time.sleep(0.5) # Yarım saniye bekle ve tekrar dene
+                    else:
+                        print(f"[FastStart] Dosya kilitli (Permission Denied): {audio_path}")
+                except Exception as inner_e:
+                    print(f"[FastStart] Beklenmeyen Hata: {inner_e}")
+                    break
+                    
+            # Eğer tmp dosyası ortada kaldıysa temizle
+            if os.path.exists(temp_audio):
+                try:
+                    os.remove(temp_audio)
+                except: pass
+                
+        except Exception as fe:
+            print(f"[FastStart] Genel Hata: {fe}")
+
+    @staticmethod
     def download_song(video_id, title, artist, album=None, callback=None):
         """Tek bir şarkıyı indirir (Thread içinde çağrılmalı)."""
         Downloader.ensure_dir()
@@ -422,30 +468,14 @@ class Downloader:
                         ]
 
                     audio.save()
-                    
-                    # --- FastStart Metadatasını Başa Al ---
-                    try:
-                        ffmpeg_cmd_path = ffmpeg_path if os.path.exists(ffmpeg_path) else 'ffmpeg'
-                        temp_audio = audio_path + ".tmp.m4a"
-                        subprocess.run([
-                            ffmpeg_cmd_path, "-y", "-i", audio_path,
-                            "-c", "copy", "-movflags", "+faststart",
-                            temp_audio
-                        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                           creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
-                        
-                        if os.path.exists(temp_audio) and os.path.getsize(temp_audio) > 0:
-                            shutil.move(temp_audio, audio_path)
-                    except Exception as fe:
-                        print(f"[FastStart] Hata: {fe}")
-                    # --------------------------------------
+                    print(f"[Kapak/Meta] Başarıyla kaydedildi: {clean(artist)} - {clean(file_title)}")
                     
             except Exception as e:
-                print(f"[Kapak] HATA: {clean(artist)} - {clean(file_title)} - {e}")
+                print(f"[Kapak/Meta] HATA: {clean(artist)} - {clean(file_title)} - {e}")
 
             # --- Otomatik Şarkı Sözü İndirme ---
             try:
-                # Süreyi dosyadan okumaya çalış (en doğrusu budur)
+                # Süreyi dosyadan okumaya çalış
                 duration_sec = 0
                 if audio_path:
                     try:
@@ -453,15 +483,17 @@ class Downloader:
                         duration_sec = audio_info.info.length
                     except: pass
                 
-                # Eğer dosyadan okuyamazsak 0 göndeririz, download_lyrics API'si idare eder.
-                # Arka planda sessizce indirsin, kullanıcıyı bekletmesin veya log kirliliği yapmasın
-                # Ancak 'callback' vermezsek hata durumunda sessiz kalır, bu istenen bir durum.
-                # Şarkı başarılı indiği için callback(True) döneceğiz, sözler ekstra.
-
-                threading.Thread(target=Downloader.download_lyrics, args=(title, artist, final_album, duration_sec), daemon=True).start()
+                # Thread İPTAL EDİLDİ: Artık senkron çalışıyor
+                # Çünkü sözleri gömdükten sonra faststart yapmamız lazım
+                Downloader.download_lyrics(title, artist, final_album, duration_sec)
                 
             except Exception as e:
                 print(f"[LRC] HATA: {clean(artist)} - {clean(file_title)} - {e}")
+                
+            # --- FastStart İşlemi (EN SON ADIM) ---
+            # Kapak ve şarkı sözleri dosyaya gömüldüğü için artık hepsini birlikte 1. sıraya taşıyabiliriz.
+            if audio_path:
+                Downloader._apply_faststart(audio_path, ffmpeg_path)
 
             print(f"[Şarkı] İndirildi: {clean(artist)} - {clean(file_title)}")
             if callback: callback(True, "İndirme Tamamlandı")
