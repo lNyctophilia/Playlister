@@ -11,7 +11,7 @@ YouTube Music üzerinden sanatçı/şarkı arama, ülke top listeleri, türe gö
 - 🔍 **Sanatçı & Şarkı Arama** — YouTube Music veritabanında detaylı arama
 - 🌍 **Ülke Top Listeleri** — 60+ ülkenin güncel müzik trendleri
 - 🎸 **Türe Göre Öneri** — Last.fm entegrasyonu ile tür bazlı şarkı keşfi
-- ❤️ **Favori Yönetimi** — Beğendiğin şarkıları kaydet, düzenle, filtrele
+- ❤️ **Favori Yönetimi** — Beğendiğin şarkıları kaydet, düzenle, filtrele ve favori listeni kesintisiz dinle
 - ⬇️ **Şarkı İndirme** — Yüksek kalite ses indirme (AAC formatında)
 - 🎧 **Gömülü Müzik Çalar** — Uygulama içi VLC tabanlı çalar
 - 📝 **Otomatik Şarkı Sözü** — LRCLIB üzerinden senkronize sözler

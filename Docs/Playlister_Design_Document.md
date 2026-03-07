@@ -93,6 +93,8 @@ Modüler Mixin tabanlı mimari kullanılmaktadır. `App` sınıfı tüm Mixin'le
 ### 5.5. Favoriler
 - Şarkı kaydetme ve listeleme
 - Sütun bazında sıralama
+- Favori listesini sıralı ve kesintisiz dinleme
+- Listeden seçili şarkıdan itibaren oynatmayı başlatma
 - Tekli indirme/silme (satır bazında butonlar)
 - Toplu indirme (Tümünü İndir / Durdur toggle)
 - İndirme durumu ikonları ile anlık gösterim
