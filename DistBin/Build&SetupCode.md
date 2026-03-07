@@ -24,7 +24,7 @@ python -m nuitka --standalone --windows-console-mode=disable --enable-plugin=tk-
 
 [Setup]
 AppName=Playlister
-AppVersion=v14.2
+AppVersion=v14.5
 DefaultDirName={autopf}\Playlister
 DefaultGroupName=Playlister
 UninstallDisplayIcon={app}\Playlister.exe
