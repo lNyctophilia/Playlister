@@ -1,22 +1,30 @@
-Build Code
+--------------------------------------
 
----------------------
+1. olarak :
+-core/constants.py sürüm güncellemesi yap
+-Setup kodunda ve installer.iss kodunda sürüm güncellemesi yap
 
-python -m nuitka --standalone --windows-console-mode=disable --enable-plugin=tk-inter --include-package=core --include-package=ui --include-package=utils --include-package=services --include-module=vlc --include-package=yt_dlp --include-package-data=ytmusicapi --include-data-files=Requriements/libvlc.dll=./libvlc.dll --include-data-files=Requriements/libvlccore.dll=./libvlccore.dll --include-data-dir=Requriements/plugins=plugins --include-data-files=Requriements/ffmpeg.exe=./ffmpeg.exe --include-data-files=Docs/Screenshots/icon.ico=./icon.ico --include-data-files=Docs/Screenshots/Playlister256x256RoundedCorner.png=./Playlister256x256RoundedCorner.png --windows-icon-from-ico=Docs/Screenshots/icon.ico --output-dir=DistBin Code/Playlister.py
-
-# KRİTİK ADIM: Nuitka bazen plugins klasöründeki alt klasörleri eksik kopyalayabiliyor. 
-# Derleme bittikten sonra şu komutu çalıştırarak eklentileri manuel olarak tamamlayın (Kesin Çözüm):
-robocopy Requriements\plugins DistBin\Playlister.dist\plugins /E
+--------------------------------------
 
 
-Setup Code (Inno Setup)
 
----------------------
+2. olarak (Terminale Build Code) :
+
+--------------------------------------
+
+
+python -m nuitka --standalone --windows-console-mode=disable --enable-plugin=tk-inter --enable-plugin=anti-bloat --jobs=8 --lto=no --include-package=core --include-package=ui --include-package=utils --include-package=services --follow-import-to=vlc --follow-import-to=yt_dlp --include-package-data=ytmusicapi --include-data-files=Requriements/libvlc.dll=./libvlc.dll --include-data-files=Requriements/libvlccore.dll=./libvlccore.dll --include-data-dir=Requriements/plugins=./plugins --include-data-files=Requriements/ffmpeg.exe=./ffmpeg.exe --include-data-files=Docs/Screenshots/icon.ico=./icon.ico --include-data-files=Docs/Screenshots/Playlister256x256RoundedCorner.png=./Playlister256x256RoundedCorner.png --windows-icon-from-ico=Docs/Screenshots/icon.ico --output-dir=DistBin Code/Playlister.py ; robocopy Requriements\plugins DistBin\Playlister.dist\plugins /E
+
+
+
+3. olarak (Inno Setup Code) :
+
+--------------------------------------
 
 
 [Setup]
 AppName=Playlister
-AppVersion=v13.13
+AppVersion=v14.2
 DefaultDirName={autopf}\Playlister
 DefaultGroupName=Playlister
 UninstallDisplayIcon={app}\Playlister.exe

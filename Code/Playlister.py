@@ -58,6 +58,7 @@ from ui.view_player import ViewPlayer
 from ui.view_settings import ViewSettings
 from ui.context_menu import ContextMenuMixin
 from ui import theme as T
+from services.github_updater import check_for_updates
 
 class App(UiShared, ContextMenuMixin, ViewSearch, ViewCharts, ViewGenre, ViewFav, ViewPlayer, ViewSettings):
     def __init__(self, root):
@@ -178,6 +179,8 @@ class App(UiShared, ContextMenuMixin, ViewSearch, ViewCharts, ViewGenre, ViewFav
         
         self.stop_listing = False
         self.current_search_id = None
+        
+        check_for_updates(self.root)
 
     def stop_current_listing(self):
         self.stop_listing = True

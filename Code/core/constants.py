@@ -16,5 +16,6 @@ DOWNLOAD_DIR = os.path.join(os.path.expanduser("~"), "Music", "Playlister")
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 ARCHIVE_FILE = os.path.join(DOWNLOAD_DIR, "archive.txt")
 
-
-
+APP_VERSION = "v14.2"
+GITHUB_REPO_URL = "https://api.github.com/repos/lNyctophilia/Playlister/releases/latest"
+GITHUB_RELEASE_URL = "https://github.com/lNyctophilia/Playlister/releases/latest"
