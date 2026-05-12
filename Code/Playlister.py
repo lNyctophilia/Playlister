@@ -199,6 +199,20 @@ class App(UiShared, ContextMenuMixin, ViewSearch, ViewCharts, ViewGenre, ViewFav
         self.combo_genre_country.bind("<<ComboboxSelected>>", self.save_ui_states)
         self.combo_country.bind("<<ComboboxSelected>>", self.save_ui_states)
         
+        if "search_limit" in conf:
+            self.entry_search_limit.delete(0, tk.END)
+            self.entry_search_limit.insert(0, conf["search_limit"])
+        if "genre_limit" in conf:
+            self.entry_genre_limit.delete(0, tk.END)
+            self.entry_genre_limit.insert(0, conf["genre_limit"])
+        if "chart_limit" in conf:
+            self.entry_chart_limit.delete(0, tk.END)
+            self.entry_chart_limit.insert(0, conf["chart_limit"])
+
+        self.entry_search_limit.bind("<KeyRelease>", self.save_ui_states)
+        self.entry_genre_limit.bind("<KeyRelease>", self.save_ui_states)
+        self.entry_chart_limit.bind("<KeyRelease>", self.save_ui_states)
+        
         self.stop_listing = False
         self.current_search_id = None
         
@@ -212,6 +226,9 @@ class App(UiShared, ContextMenuMixin, ViewSearch, ViewCharts, ViewGenre, ViewFav
             "genre": self.combo_genre.get(),
             "genre_country": self.combo_genre_country.get(),
             "chart_country": self.combo_country.get(),
+            "search_limit": self.entry_search_limit.get(),
+            "genre_limit": self.entry_genre_limit.get(),
+            "chart_limit": self.entry_chart_limit.get(),
             "loop_state": getattr(self, 'loop_state', 1),
             "is_shuffling": getattr(self, 'is_shuffling', False)
         }

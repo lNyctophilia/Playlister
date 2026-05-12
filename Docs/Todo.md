@@ -1,4 +1,0 @@
-
-- Playlister ilk başta favorilerdeki random oynat toggle'ı kapalı olmasına rağmen random oynatıyo aç kapa yapınca düzeliyo onu ilk başta kapalı yapalım modu ve toggle da kapalı gözüksün ve tekrarla butonu ise en başta aktif olarak gelsin
-
-- Sanatçı ve şarkı seçme combobox daki seçimler kaydedilsin aynı şekilde popülerlik şeyide kaydedilsin, ve bu projede seçimsel işte comboboxların tamamı kaydedilsin, ayrıca şarkı oynatma seçenekleride yani sıralı oynat tekrar oynat random oynat gibi butonların seçimleride kaydedilsin ve en başta sıralı oynat açık ve random oynat kapalı gelsin otomatik olarak kullanıcı değiştirdiği zaman onun seçimleri kaydedilsin ve başlangıçta onlar yüklensin
