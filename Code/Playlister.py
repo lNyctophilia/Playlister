@@ -136,7 +136,7 @@ class App(UiShared, ContextMenuMixin, ViewSearch, ViewCharts, ViewGenre, ViewFav
         self.is_dragging_time = False
         
         self.current_play_mode = "other"
-        self.loop_state = 0
+        self.loop_state = 1
         self.is_shuffling = False
         self.current_playlist = []
         self.current_playlist_index = -1
@@ -177,10 +177,45 @@ class App(UiShared, ContextMenuMixin, ViewSearch, ViewCharts, ViewGenre, ViewFav
         encrypted_key = conf.get("lastfm_api_key", "")
         self.lastfm_api_key = decrypt_text(encrypted_key) if encrypted_key else ""
         
+        self.loop_state = conf.get("loop_state", 1)
+        self.is_shuffling = conf.get("is_shuffling", False)
+        self.update_loop_ui()
+        self.update_shuffle_ui()
+        
+        if "search_mode" in conf:
+            self.search_mode_var.set(conf["search_mode"])
+        if "tab_mode" in conf:
+            self.tab_mode_var.set(conf["tab_mode"])
+            self.on_tab_combobox_selected()
+        if "genre" in conf:
+            self.combo_genre.set(conf["genre"])
+        if "genre_country" in conf:
+            self.combo_genre_country.set(conf["genre_country"])
+        if "chart_country" in conf:
+            self.combo_country.set(conf["chart_country"])
+            
+        self.combo_search_mode.bind("<<ComboboxSelected>>", self.save_ui_states)
+        self.combo_genre.bind("<<ComboboxSelected>>", self.save_ui_states)
+        self.combo_genre_country.bind("<<ComboboxSelected>>", self.save_ui_states)
+        self.combo_country.bind("<<ComboboxSelected>>", self.save_ui_states)
+        
         self.stop_listing = False
         self.current_search_id = None
         
         check_for_updates(self.root)
+
+    def save_ui_states(self, event=None):
+        from core.config_manager import save_config
+        data = {
+            "search_mode": self.search_mode_var.get(),
+            "tab_mode": self.tab_mode_var.get(),
+            "genre": self.combo_genre.get(),
+            "genre_country": self.combo_genre_country.get(),
+            "chart_country": self.combo_country.get(),
+            "loop_state": getattr(self, 'loop_state', 1),
+            "is_shuffling": getattr(self, 'is_shuffling', False)
+        }
+        save_config(data)
 
     def stop_current_listing(self):
         self.stop_listing = True

@@ -158,15 +158,19 @@ class ViewPlayer:
             self.btn_player_play.config(text="⏸")
             self.is_playing = True
 
-    def toggle_player_shuffle(self):
-        self.is_shuffling = not self.is_shuffling
+    def update_shuffle_ui(self):
         if self.is_shuffling:
             self.btn_player_shuffle.config(fg="#2ed573")
         else:
             self.btn_player_shuffle.config(fg=T.FG_SECONDARY)
 
-    def toggle_player_loop(self):
-        self.loop_state = (self.loop_state + 1) % 3
+    def toggle_player_shuffle(self):
+        self.is_shuffling = not self.is_shuffling
+        self.update_shuffle_ui()
+        if hasattr(self, 'save_ui_states'):
+            self.save_ui_states()
+
+    def update_loop_ui(self):
         if self.loop_state == 0:
             self.btn_player_loop.config(fg=T.FG_SECONDARY, text="🔁")
             self.is_looping = False
@@ -176,6 +180,12 @@ class ViewPlayer:
         elif self.loop_state == 2:
             self.btn_player_loop.config(fg="#2ed573", text="🔂")
             self.is_looping = True
+
+    def toggle_player_loop(self):
+        self.loop_state = (self.loop_state + 1) % 3
+        self.update_loop_ui()
+        if hasattr(self, 'save_ui_states'):
+            self.save_ui_states()
 
     def set_player_volume(self, val):
         if self.player:

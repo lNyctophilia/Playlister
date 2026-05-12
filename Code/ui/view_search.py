@@ -82,6 +82,9 @@ class ViewSearch:
             self.switch_search_tab("views")
         else:
             self.switch_search_tab("smart")
+            
+        if hasattr(self, 'save_ui_states'):
+            self.save_ui_states()
 
     def switch_search_tab(self, tab_type):
         self.frame_pop.pack_forget()
