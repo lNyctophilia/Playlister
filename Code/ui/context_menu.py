@@ -47,7 +47,23 @@ class ContextMenuMixin:
                                  break
                          self.set_player_mode("fav")
                      else:
-                         self.set_player_mode("other")
+                         self.current_playlist = []
+                         for child in tree.get_children(''):
+                             child_vals = tree.item(child)['values']
+                             if child_vals and len(child_vals) >= 8:
+                                 self.current_playlist.append({
+                                     'video_id': str(child_vals[7]),
+                                     'title': str(child_vals[1]),
+                                     'artist': str(child_vals[2]),
+                                     'album': str(child_vals[3]),
+                                     'views_text': str(child_vals[4]),
+                                     'duration': str(child_vals[5])
+                                 })
+                         for i, s in enumerate(self.current_playlist):
+                             if str(s.get('video_id')) == str(v):
+                                 self.current_playlist_index = i
+                                 break
+                         self.set_player_mode("search")
                      self.play_music_start(v, t)
                      
                  menu.add_command(label="▶ Müziği Oynat", command=lambda v=video_id, t=song_title, tr=tree: context_play_action(v, t, tr))

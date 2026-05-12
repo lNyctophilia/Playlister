@@ -44,7 +44,7 @@ class ViewPlayer:
                                             activebackground=T.BORDER, activeforeground="#ffffff",
                                             cursor="hand2")
         self.btn_player_shuffle.pack(side=tk.LEFT, padx=5)
-        self.btn_player_shuffle.pack_forget()
+
 
         info_frame = tk.Frame(self.player_frame, bg=T.BG_PLAYER)
         info_frame.grid(row=0, column=1, sticky="ew", padx=10, pady=(5,0))
@@ -78,17 +78,6 @@ class ViewPlayer:
 
     def set_player_mode(self, mode):
         self.current_play_mode = mode
-        if mode == "fav":
-            if hasattr(self, 'btn_player_shuffle'):
-                self.btn_player_shuffle.pack(side=tk.LEFT, padx=5)
-        else:
-            if hasattr(self, 'btn_player_shuffle'):
-                self.btn_player_shuffle.pack_forget()
-            self.loop_state = 0
-            self.is_looping = False
-            self.btn_player_loop.config(fg=T.FG_SECONDARY, text="🔁")
-            self.is_shuffling = False
-            self.btn_player_shuffle.config(fg=T.FG_SECONDARY)
 
     def play_music_start(self, video_id, title_info="Yükleniyor..."):
         self.is_loading_next = True
@@ -177,23 +166,16 @@ class ViewPlayer:
             self.btn_player_shuffle.config(fg=T.FG_SECONDARY)
 
     def toggle_player_loop(self):
-        if self.current_play_mode == "fav":
-            self.loop_state = (self.loop_state + 1) % 3
-            if self.loop_state == 0:
-                self.btn_player_loop.config(fg=T.FG_SECONDARY, text="🔁")
-                self.is_looping = False
-            elif self.loop_state == 1:
-                self.btn_player_loop.config(fg="#2ed573", text="🔁")
-                self.is_looping = False
-            elif self.loop_state == 2:
-                self.btn_player_loop.config(fg="#2ed573", text="🔂")
-                self.is_looping = True
-        else:
-            self.is_looping = not self.is_looping
-            if self.is_looping:
-                self.btn_player_loop.config(fg="#2ed573")
-            else:
-                self.btn_player_loop.config(fg=T.FG_SECONDARY)
+        self.loop_state = (self.loop_state + 1) % 3
+        if self.loop_state == 0:
+            self.btn_player_loop.config(fg=T.FG_SECONDARY, text="🔁")
+            self.is_looping = False
+        elif self.loop_state == 1:
+            self.btn_player_loop.config(fg="#2ed573", text="🔁")
+            self.is_looping = False
+        elif self.loop_state == 2:
+            self.btn_player_loop.config(fg="#2ed573", text="🔂")
+            self.is_looping = True
 
     def set_player_volume(self, val):
         if self.player:
@@ -218,7 +200,7 @@ class ViewPlayer:
                     if self.is_looping:
                         self.player.play()
                     else:
-                        if self.current_play_mode == "fav" and self.loop_state == 1:
+                        if self.loop_state == 1 and self.current_playlist:
                             self.is_loading_next = True
                             self.root.after(100, self.play_next_in_playlist)
                         else:
