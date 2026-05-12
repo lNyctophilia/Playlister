@@ -302,43 +302,68 @@ class ViewSearch:
 
     def search_song_thread(self, query, target_count, search_token):
         try:
+            import yt_dlp
+
             if self.stop_listing or self.current_search_id != search_token: return
-            self.update_status(f"Şarkı aranıyor: {query}...", "blue")
-            
-            results = self.yt.search(query=query, filter="songs", limit=target_count)
-            
+            self.update_status(f"YouTube'da aranıyor: {query}...", "blue")
+
+            ydl_opts = {
+                'quiet': True,
+                'no_warnings': True,
+                'extract_flat': True,
+                'skip_download': True,
+                'nocheckcertificate': True,
+                'ignoreerrors': True,
+                'default_search': f'ytsearch{target_count}',
+            }
+
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(f"ytsearch{target_count}:{query}", download=False)
+
             if self.stop_listing or self.current_search_id != search_token: return
-            if not results:
+
+            entries = info.get('entries', []) if info else []
+            if not entries:
                 self.update_status("Sonuç bulunamadı.", "red")
                 return
 
             song_list = []
-            
-            for i, song in enumerate(results):
+            for entry in entries:
                 if self.stop_listing or self.current_search_id != search_token:
                     return
-                    
-                video_id = song.get('videoId')
-                if not video_id: continue
-                
-                artists = song.get('artists', [])
-                artist_text = ", ".join([a['name'] for a in artists])
-                
+
+                video_id = entry.get('id', '')
+                if not video_id:
+                    continue
+
+                raw_duration = entry.get('duration')
+                if raw_duration:
+                    mins, secs = divmod(int(raw_duration), 60)
+                    duration_text = f"{mins}:{secs:02d}"
+                else:
+                    duration_text = ""
+
+                view_count = entry.get('view_count')
+                if view_count is not None:
+                    views_text = self.format_view_count(str(view_count))
+                else:
+                    views_text = "Veri Yok"
+
                 data = {
-                    "title": song.get('title', 'Bilinmiyor'),
-                    "artist": artist_text,
-                    "album": song.get('album', {}).get('name', 'Single'),
-                    "views_text": song.get('views', 'Veri Yok'),
-                    "duration": song.get('duration', ''),
+                    "title": entry.get('title', 'Bilinmiyor'),
+                    "artist": entry.get('uploader', entry.get('channel', 'Bilinmiyor')),
+                    "album": "YouTube",
+                    "views_text": views_text,
+                    "duration": duration_text,
                     "video_id": video_id
                 }
                 song_list.append(data)
-                
+
             if self.stop_listing or self.current_search_id != search_token: return
-            
+
             self.populate_tabs(song_list, song_list, song_list)
-            self.update_status(f"Tamamlandı. {len(song_list)} sonuç bulundu.", "green")
-            
+            self.update_status(f"Tamamlandı. {len(song_list)} sonuç bulundu. (YouTube)", "green")
+
         except Exception as e:
             if not self.stop_listing and self.current_search_id == search_token:
                 self.update_status(f"Hata: {e}", "red")
