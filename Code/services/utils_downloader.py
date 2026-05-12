@@ -77,48 +77,60 @@ class Downloader:
         return None
 
     @staticmethod
+    def _load_archive_ids():
+        if not os.path.exists(ARCHIVE_FILE):
+            return set()
+        try:
+            with open(ARCHIVE_FILE, "r") as f:
+                ids = set()
+                for line in f:
+                    parts = line.strip().split()
+                    if len(parts) >= 2:
+                        ids.add(parts[1])
+                return ids
+        except:
+            return set()
+
+    @staticmethod
     def is_downloaded(video_id=None, artist=None, title=None):
+        if video_id:
+            archive_ids = Downloader._load_archive_ids()
+            return video_id in archive_ids
         return Downloader.get_file_path(video_id, artist, title) is not None
 
     @staticmethod
     def get_downloads_cache():
-        """
-        Klasördeki dosyaları tek seferde okuyup hafızaya alır.
-        Dönüş: (set_of_basenames, list_of_all_filenames)
-        """
         Downloader.ensure_dir()
         try:
             all_files = os.listdir(DOWNLOAD_DIR)
-            # Uzantısız isim seti (Hızlı erişim için)
             basenames = {os.path.splitext(f)[0] for f in all_files}
-            return basenames, all_files
+            archive_ids = Downloader._load_archive_ids()
+            return basenames, all_files, archive_ids
         except:
-            return set(), []
+            return set(), [], set()
 
     @staticmethod
     def is_downloaded_cached(cache_data, video_id=None, artist=None, title=None):
-        """
-        Disk I/O yapmadan verilen cache üzerinden kontrol sağlar.
-        """
         if not cache_data:
             return False
-            
-        basenames, all_files = cache_data
-        
-        # 1. İsim ile kontrol (Hızlı - O(1))
+
+        basenames, all_files, archive_ids = cache_data
+
+        if video_id and video_id in archive_ids:
+            return True
+
         if artist and title:
             title = Downloader.strip_parentheses(title)
             base_name = f"{Downloader.clean_filename(artist)} - {Downloader.clean_filename(title)}"
             if base_name in basenames:
                 return True
-                
-        # 2. ID ile kontrol (Fallback - Cache üzerinde döngü)
+
         if video_id:
-             id_tag = f"[{video_id}]"
-             for f in all_files:
-                 if id_tag in f:
-                     return True
-        
+            id_tag = f"[{video_id}]"
+            for f in all_files:
+                if id_tag in f:
+                    return True
+
         return False
 
     @staticmethod
