@@ -28,6 +28,10 @@ class ViewFav:
         T.style_button(self.btn_download_all, bg=T.BTN_INFO, hover_bg=T.BTN_INFO_HOVER)
         self.btn_download_all.pack(side=tk.RIGHT, padx=5)
 
+        self.btn_update_lyrics = tk.Button(top_frame, text="Lyrics Güncelle", command=self.update_all_lyrics_ui)
+        T.style_button(self.btn_update_lyrics, bg=T.BTN_CONFIRM, hover_bg=T.BTN_CONFIRM_HOVER)
+        self.btn_update_lyrics.pack(side=tk.RIGHT, padx=5)
+
         self.btn_delete_all_dl = tk.Button(top_frame, text="Tüm İndirilenleri Sil", command=self.delete_all_downloads_ui)
         T.style_button(self.btn_delete_all_dl, bg=T.BTN_DANGER, hover_bg=T.BTN_DANGER_HOVER)
         self.btn_delete_all_dl.pack(side=tk.RIGHT, padx=5)
@@ -140,6 +144,7 @@ class ViewFav:
         if not hasattr(self, 'favorites') or not self.favorites:
             self.btn_download_all.config(state=tk.DISABLED)
             self.btn_delete_all_dl.config(state=tk.DISABLED)
+            if hasattr(self, 'btn_update_lyrics'): self.btn_update_lyrics.config(state=tk.DISABLED)
             return
 
         total = len(self.favorites)
@@ -158,8 +163,10 @@ class ViewFav:
             
         if downloaded == 0:
             self.btn_delete_all_dl.config(state=tk.DISABLED)
+            if hasattr(self, 'btn_update_lyrics'): self.btn_update_lyrics.config(state=tk.DISABLED)
         else:
             self.btn_delete_all_dl.config(state=tk.NORMAL)
+            if hasattr(self, 'btn_update_lyrics'): self.btn_update_lyrics.config(state=tk.NORMAL)
 
     def on_fav_list_click(self, event):
         try:
@@ -396,3 +403,64 @@ class ViewFav:
             os.startfile(path)
         except Exception as e:
             messagebox.showerror("Hata", f"Klasör açılamadı: {e}")
+
+    def update_all_lyrics_ui(self):
+        if getattr(self, '_is_updating_lyrics', False):
+            self._cancel_lyrics_update = True
+            self.btn_update_lyrics.config(text="Duruyor...", state=tk.DISABLED)
+            return
+
+        favs = self.load_favorites()
+        if not favs:
+            messagebox.showinfo("Bilgi", "Favori listeniz boş.")
+            return
+
+        to_update = []
+        dl_cache = Downloader.get_downloads_cache()
+        
+        for s in favs:
+            if Downloader.is_downloaded_cached(dl_cache, s['video_id'], s.get('artist'), s.get('title')):
+                if not Downloader.is_lrc_downloaded(s.get('artist'), s.get('title')):
+                    to_update.append(s)
+        
+        if not to_update:
+            messagebox.showinfo("Bilgi", "İndirilen tüm şarkıların senkron sözleri (.lrc) mevcut.")
+            return
+            
+        count = len(to_update)
+        if not messagebox.askyesno("Lyrics Güncelle", f"{count} adet şarkı için lyrics aranacak. Onaylıyor musunuz?"):
+            return
+            
+        self._is_updating_lyrics = True
+        self._cancel_lyrics_update = False
+        self.btn_update_lyrics.config(text="Durdur", bg=T.BTN_DANGER)
+        T.apply_hover(self.btn_update_lyrics, T.BTN_DANGER, T.BTN_DANGER_HOVER)
+        
+        threading.Thread(target=self.update_lyrics_thread, args=(to_update,), daemon=True).start()
+
+    def update_lyrics_thread(self, songs):
+        total = len(songs)
+        import time
+        for i, s in enumerate(songs):
+            if self.stop_listing or getattr(self, '_cancel_lyrics_update', False):
+                self.update_status("Lyrics güncelleme iptal edildi.", "orange")
+                break
+                
+            self.update_status(f"Lyrics Aranıyor ({i+1}/{total}): {s['title']}...", "blue")
+            
+            dur = parse_duration(s.get('duration', ''))
+            Downloader.download_lyrics(s.get('title', ''), s.get('artist', ''), s.get('album', ''), dur)
+            
+            if i < total - 1 and not getattr(self, '_cancel_lyrics_update', False):
+                time.sleep(1)
+            
+        if not getattr(self, '_cancel_lyrics_update', False):
+            self.update_status("Tüm eksik lyrics güncellemeleri tamamlandı!", "green")
+            
+        self._is_updating_lyrics = False
+        self._cancel_lyrics_update = False
+        
+        self.root.after(0, lambda: self.btn_update_lyrics.config(
+            text="Lyrics Güncelle", state=tk.NORMAL, bg=T.BTN_CONFIRM
+        ))
+        self.root.after(0, lambda: T.apply_hover(self.btn_update_lyrics, T.BTN_CONFIRM, T.BTN_CONFIRM_HOVER))
